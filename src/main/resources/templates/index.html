@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Shop - Cửa hàng thực phẩm trực tuyến</title>
+    <link rel="stylesheet" th:href="@{/css/modern-style.css}">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="/" class="logo">🍔 Food Shop</a>
+            <div class="nav-links">
+                <a href="/">Trang chủ</a>
+                <a href="/cart" class="cart-icon">
+                    🛒 Giỏ hàng
+                    <span class="cart-count">0</span>
+                </a>
+                <a href="/orders">📦 Đơn hàng</a>
+                <a href="/login" id="loginLink">Đăng nhập</a>
+                <a href="/admin" id="adminLink" style="display: none;">Admin</a>
+            </div>
+        </nav>
+    </header>
+    
+    <section class="category-section">
+        <div class="category-container">
+            <h2 class="category-title">Danh mục sản phẩm</h2>
+            <div class="category-filter">
+                <button class="category-btn active" data-category="all">Tất cả</button>
+                <button class="category-btn" data-category="Đồ ăn nhanh">🍔 Đồ ăn nhanh</button>
+                <button class="category-btn" data-category="Đồ ngọt">🍰 Đồ ngọt</button>
+                <button class="category-btn" data-category="Đồ uống">🥤 Đồ uống</button>
+            </div>
+        </div>
+    </section>
+    
+    <main>
+        <h1 class="section-title">Sản phẩm nổi bật</h1>
+        <div class="product-grid" id="productGrid">
+            <div class="product-card" th:each="product : ${products}" th:data-category="${product.category}">
+                <img class="product-image" th:src="@{'/img/' + ${product.image}}" th:alt="${product.name}">
+                <div class="product-info">
+                    <span class="product-category" th:text="${product.category}"></span>
+                    <h3 class="product-name" th:text="${product.name}"></h3>
+                    <p class="product-description" th:text="${product.description}"></p>
+                    <div class="product-footer">
+                        <span class="price" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + 'đ'"></span>
+                        <button class="btn-add-cart" th:data-id="${product.id}">
+                            Thêm vào giỏ
+                        </button>
+                    </div>
+                    <div style="margin-top: 0.5rem;">
+                        <span class="stock-badge" 
+                              th:classappend="${product.stock > 20} ? 'in-stock' : (${product.stock > 0} ? 'low-stock' : 'out-of-stock')"
+                              th:text="'Còn ' + ${product.stock} + ' sản phẩm'">
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script th:src="@{/js/main.js}"></script>
+</body>
+</html>

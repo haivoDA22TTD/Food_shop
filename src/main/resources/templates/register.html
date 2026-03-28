@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký - Food Shop</title>
+    <link rel="stylesheet" th:href="@{/css/modern-style.css}">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="/" class="logo">🍔 Food Shop</a>
+            <div class="nav-links">
+                <a href="/">Trang chủ</a>
+                <a href="/login">Đăng nhập</a>
+            </div>
+        </nav>
+    </header>
+    
+    <div class="auth-container">
+        <h2 class="auth-title">Đăng ký tài khoản</h2>
+        <form id="registerForm">
+            <div class="form-group">
+                <label>Tên đăng nhập</label>
+                <input type="text" name="username" id="username" required placeholder="Nhập tên đăng nhập">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" id="email" required placeholder="Nhập email">
+            </div>
+            <div class="form-group">
+                <label>Số điện thoại</label>
+                <input type="tel" name="phone" id="phone" placeholder="Nhập số điện thoại">
+            </div>
+            <div class="form-group">
+                <label>Địa chỉ</label>
+                <input type="text" name="address" id="address" placeholder="Nhập địa chỉ">
+            </div>
+            <div class="form-group">
+                <label>Mật khẩu</label>
+                <input type="password" name="password" id="password" required placeholder="Nhập mật khẩu">
+            </div>
+            <button type="submit" class="btn-primary">Đăng ký</button>
+        </form>
+        <div class="auth-footer">
+            <p>Đã có tài khoản? <a href="/login">Đăng nhập ngay</a></p>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const userData = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value,
+                password: document.getElementById('password').value
+            };
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+                
+                if (response.ok) {
+                    alert('Đăng ký thành công! Vui lòng đăng nhập.');
+                    window.location.href = '/login';
+                } else {
+                    alert('Đăng ký thất bại! Tên đăng nhập có thể đã tồn tại.');
+                }
+            } catch (error) {
+                alert('Có lỗi xảy ra: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
