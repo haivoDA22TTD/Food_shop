@@ -118,7 +118,7 @@
                     <tr th:each="product : ${products}">
                         <td th:text="${product.id}"></td>
                         <td>
-                            <img th:src="@{'/img/' + ${product.image}}" th:alt="${product.name}">
+                            <img th:src="${product.image.startsWith('http') ? product.image : '/img/' + product.image}" th:alt="${product.name}">
                         </td>
                         <td th:text="${product.name}"></td>
                         <td th:text="${product.category}"></td>

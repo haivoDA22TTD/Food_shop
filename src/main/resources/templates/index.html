@@ -42,7 +42,7 @@
         <div class="product-grid" id="productGrid">
             <div class="product-card" th:each="product : ${products}" th:data-category="${product.category}">
                 <a th:href="@{'/product/' + ${product.id}}" style="text-decoration: none; color: inherit;">
-                    <img class="product-image" th:src="@{'/img/' + ${product.image}}" th:alt="${product.name}">
+                    <img class="product-image" th:src="${product.image.startsWith('http') ? product.image : '/img/' + product.image}" th:alt="${product.name}">
                 </a>
                 <div class="product-info">
                     <span class="product-category" th:text="${product.category}"></span>
