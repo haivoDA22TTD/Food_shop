@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${product.name} + ' - Food Shop'">Chi tiết sản phẩm</title>
+    <link rel="stylesheet" th:href="@{/css/modern-style.css}">
+    <link rel="stylesheet" th:href="@{/css/animations.css}">
+    <style>
+        .product-detail-container {
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 2rem;
+        }
+        
+        .product-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+        }
+        
+        .product-image-large {
+            width: 100%;
+            height: 500px;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+        
+        .product-detail-info h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+        }
+        
+        .rating-summary {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .rating-stars {
+            font-size: 1.5rem;
+            color: #fbbf24;
+        }
+        
+        .rating-text {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+        
+        .product-price-large {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+        
+        .product-description {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+        
+        .product-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .btn-add-to-cart {
+            flex: 1;
+            padding: 1rem 2rem;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .btn-add-to-cart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3);
+        }
+        
+        .reviews-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .reviews-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .review-card {
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 1rem;
+        }
+        
+        .review-card:last-child {
+            border-bottom: none;
+        }
+        
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        
+        .review-user {
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        .review-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .review-rating {
+            color: #fbbf24;
+            font-size: 1.2rem;
+        }
+        
+        .review-comment {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .review-form {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .star-rating {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .star {
+            cursor: pointer;
+            color: #ddd;
+            transition: var(--transition);
+        }
+        
+        .star:hover,
+        .star.active {
+            color: #fbbf24;
+        }
+        
+        @media (max-width: 768px) {
+            .product-detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="/" class="logo">🍔 Food Shop</a>
+            <div class="nav-links">
+                <a href="/">Trang chủ</a>
+                <a href="/cart">🛒 Giỏ hàng</a>
+                <a href="/orders">📦 Đơn hàng</a>
+                <a href="/login" id="loginLink">Đăng nhập</a>
+                <a href="/admin" id="adminLink" style="display: none;">Admin</a>
+            </div>
+        </nav>
+    </header>
+    
+    <div class="product-detail-container">
+        <div class="product-detail-grid">
+            <div>
+                <img th:src="@{'/img/' + ${product.image}}" th:alt="${product.name}" class="product-image-large">
+            </div>
+            
+            <div class="product-detail-info">
+                <span class="product-category" th:text="${product.category}"></span>
+                <h1 th:text="${product.name}"></h1>
+                
+                <div class="rating-summary">
+                    <div class="rating-stars">
+                        <span th:each="i : ${#numbers.sequence(1, fullStars)}">★</span><span th:each="i : ${#numbers.sequence(1, emptyStars)}">☆</span>
+                    </div>
+                    <span class="rating-text" th:text="${#numbers.formatDecimal(avgRating, 1, 1)} + '/5'"></span>
+                    <span style="color: #666;" th:text="'(' + ${reviewCount} + ' đánh giá)'"></span>
+                </div>
+                
+                <div class="product-price-large" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + 'đ'"></div>
+                
+                <p class="product-description" th:text="${product.description}"></p>
+                
+                <div>
+                    <span class="stock-badge" 
+                          th:classappend="${product.stock > 20} ? 'in-stock' : (${product.stock > 0} ? 'low-stock' : 'out-of-stock')"
+                          th:text="'Còn ' + ${product.stock} + ' sản phẩm'">
+                    </span>
+                </div>
+                
+                <div class="product-actions">
+                    <button class="btn-add-to-cart" th:data-id="${product.id}" onclick="addToCart(this)" 
+                            th:disabled="${product.stock == 0}">
+                        <span th:if="${product.stock > 0}">🛒 Thêm vào giỏ hàng</span>
+                        <span th:if="${product.stock == 0}">Hết hàng</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="reviews-section">
+            <div class="reviews-header">
+                <h2>📝 Đánh giá sản phẩm</h2>
+            </div>
+            
+            <!-- Review Form -->
+            <div th:if="${canReview}" class="review-form">
+                <h3 style="margin-bottom: 1rem;">Viết đánh giá của bạn</h3>
+                <div class="star-rating" id="starRating">
+                    <span class="star" data-rating="1">★</span>
+                    <span class="star" data-rating="2">★</span>
+                    <span class="star" data-rating="3">★</span>
+                    <span class="star" data-rating="4">★</span>
+                    <span class="star" data-rating="5">★</span>
+                </div>
+                <div class="form-group">
+                    <label>Nhận xét của bạn</label>
+                    <textarea id="reviewComment" rows="4" placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm..."></textarea>
+                </div>
+                <button class="btn-primary" onclick="submitReview()">Gửi đánh giá</button>
+            </div>
+            
+            <div th:if="${hasReviewed}" style="background: #d1fae5; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; color: #065f46;">
+                ✓ Bạn đã đánh giá sản phẩm này
+            </div>
+            
+            <div th:if="${!canReview and !hasReviewed}" style="background: #fef3c7; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; color: #92400e;">
+                ℹ️ Bạn cần mua và nhận hàng thành công để đánh giá sản phẩm này
+            </div>
+            
+            <!-- Debug info (remove in production) -->
+            <div th:if="${#authentication.principal != 'anonymousUser'}" style="background: #e0f2fe; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.85rem; color: #0369a1;">
+                🔍 Debug: canReview=<span th:text="${canReview}"></span>, hasReviewed=<span th:text="${hasReviewed}"></span>
+            </div>
+            
+            <!-- Reviews List -->
+            <div id="reviewsList">
+                <div th:if="${reviews.isEmpty()}" style="text-align: center; padding: 2rem; color: #666;">
+                    Chưa có đánh giá nào cho sản phẩm này
+                </div>
+                
+                <div class="review-card" th:each="review : ${reviews}">
+                    <div class="review-header">
+                        <div>
+                            <div class="review-user" th:text="${review.user.username}"></div>
+                            <div class="review-rating" th:text="${'★'.repeat(review.rating)} + ${'☆'.repeat(5 - review.rating)}"></div>
+                        </div>
+                        <div class="review-date" th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy HH:mm')}"></div>
+                    </div>
+                    <p class="review-comment" th:text="${review.comment}"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script th:src="@{/js/notifications.js}"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const product = /*[[${product}]]*/ {};
+        const canReviewFromServer = /*[[${canReview}]]*/ false;
+        const hasReviewedFromServer = /*[[${hasReviewed}]]*/ false;
+        /*]]>*/
+        
+        let selectedRating = 0;
+        let canReview = canReviewFromServer;
+        
+        // Check if user can review via API (for JWT auth)
+        async function checkCanReview() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.log('No token, cannot review');
+                return;
+            }
+            
+            try {
+                // Load user's orders
+                const response = await fetch('/api/orders/my-orders', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (!response.ok) {
+                    console.log('Failed to load orders');
+                    return;
+                }
+                
+                const orders = await response.json();
+                console.log('📦 User orders:', orders);
+                
+                // Check if user has delivered order with this product
+                const hasDeliveredOrder = orders.some(order => 
+                    order.status === 'DELIVERED' && 
+                    order.orderItems && 
+                    order.orderItems.some(item => item.product && item.product.id === product.id)
+                );
+                
+                console.log('✅ Has delivered order with product:', hasDeliveredOrder);
+                
+                // Check if already reviewed
+                const reviewsResponse = await fetch(`/api/reviews/product/${product.id}`);
+                if (reviewsResponse.ok) {
+                    const reviews = await reviewsResponse.json();
+                    const username = localStorage.getItem('username');
+                    const hasReviewed = reviews.some(r => r.user && r.user.username === username);
+                    
+                    console.log('⭐ Already reviewed:', hasReviewed);
+                    
+                    canReview = hasDeliveredOrder && !hasReviewed;
+                    
+                    // Update UI
+                    updateReviewUI(canReview, hasReviewed);
+                }
+            } catch (error) {
+                console.error('Error checking review status:', error);
+            }
+        }
+        
+        function updateReviewUI(canReview, hasReviewed) {
+            const reviewForm = document.querySelector('.review-form');
+            const hasReviewedMsg = document.querySelector('[style*="background: #d1fae5"]');
+            const cannotReviewMsg = document.querySelector('[style*="background: #fef3c7"]');
+            
+            // Hide all messages first
+            if (reviewForm) reviewForm.style.display = 'none';
+            if (hasReviewedMsg) hasReviewedMsg.style.display = 'none';
+            if (cannotReviewMsg) cannotReviewMsg.style.display = 'none';
+            
+            if (canReview) {
+                if (reviewForm) reviewForm.style.display = 'block';
+            } else if (hasReviewed) {
+                if (hasReviewedMsg) hasReviewedMsg.style.display = 'block';
+            } else {
+                if (cannotReviewMsg) cannotReviewMsg.style.display = 'block';
+            }
+            
+            console.log('🎨 UI updated: canReview=' + canReview + ', hasReviewed=' + hasReviewed);
+        }
+        
+        // Star rating interaction
+        document.querySelectorAll('.star').forEach(star => {
+            star.addEventListener('click', function() {
+                selectedRating = parseInt(this.dataset.rating);
+                updateStars();
+            });
+            
+            star.addEventListener('mouseenter', function() {
+                const rating = parseInt(this.dataset.rating);
+                document.querySelectorAll('.star').forEach((s, index) => {
+                    if (index < rating) {
+                        s.classList.add('active');
+                    } else {
+                        s.classList.remove('active');
+                    }
+                });
+            });
+        });
+        
+        document.getElementById('starRating')?.addEventListener('mouseleave', updateStars);
+        
+        function updateStars() {
+            document.querySelectorAll('.star').forEach((star, index) => {
+                if (index < selectedRating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        }
+        
+        async function submitReview() {
+            if (selectedRating === 0) {
+                toast.warning('Vui lòng chọn số sao đánh giá!');
+                return;
+            }
+            
+            const comment = document.getElementById('reviewComment').value.trim();
+            if (!comment) {
+                toast.warning('Vui lòng nhập nhận xét!');
+                return;
+            }
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                toast.error('Vui lòng đăng nhập!');
+                return;
+            }
+            
+            // Find delivered order with this product
+            const ordersResponse = await fetch('/api/orders/my-orders', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            
+            if (!ordersResponse.ok) {
+                toast.error('Không thể tải thông tin đơn hàng!');
+                return;
+            }
+            
+            const orders = await ordersResponse.json();
+            const deliveredOrder = orders.find(order => 
+                order.status === 'DELIVERED' && 
+                order.orderItems.some(item => item.product.id === product.id)
+            );
+            
+            if (!deliveredOrder) {
+                toast.error('Không tìm thấy đơn hàng phù hợp!');
+                return;
+            }
+            
+            loading.show('Đang gửi đánh giá...');
+            
+            try {
+                const response = await fetch('/api/reviews/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        productId: product.id,
+                        orderId: deliveredOrder.id,
+                        rating: selectedRating,
+                        comment: comment
+                    })
+                });
+                
+                loading.hide();
+                
+                if (response.ok) {
+                    showSuccessModal(
+                        'Đánh giá thành công!',
+                        'Cảm ơn bạn đã đánh giá sản phẩm.',
+                        () => window.location.reload()
+                    );
+                } else {
+                    const error = await response.json();
+                    toast.error(error.error || 'Có lỗi xảy ra!');
+                }
+            } catch (error) {
+                loading.hide();
+                toast.error('Lỗi: ' + error.message);
+            }
+        }
+        
+        function addToCart(button) {
+            const productId = button.dataset.id;
+            let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            
+            const existingItem = cart.find(item => item.id == productId);
+            if (existingItem) {
+                existingItem.quantity++;
+            } else {
+                cart.push({ id: productId, quantity: 1 });
+            }
+            
+            localStorage.setItem('cart', JSON.stringify(cart));
+            toast.success('Đã thêm vào giỏ hàng!');
+        }
+        
+        // Check login status
+        function checkLoginStatus() {
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+            const role = localStorage.getItem('role');
+            
+            const loginLink = document.getElementById('loginLink');
+            const adminLink = document.getElementById('adminLink');
+            
+            if (token && username) {
+                loginLink.textContent = '👤 ' + username;
+                loginLink.href = '#';
+                loginLink.onclick = function(e) {
+                    e.preventDefault();
+                    if (confirm('Bạn có muốn đăng xuất?')) {
+                        localStorage.clear();
+                        window.location.href = '/';
+                    }
+                };
+                
+                if (role && role.includes('ADMIN')) {
+                    adminLink.style.display = 'inline-block';
+                }
+            }
+        }
+        
+        checkLoginStatus();
+        
+        // Check review status when page loads (for JWT auth users)
+        if (localStorage.getItem('token')) {
+            checkCanReview();
+        }
+    </script>
+</body>
+</html>
