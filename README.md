@@ -10,7 +10,7 @@
 
 **Ứng dụng bán hàng thực phẩm trực tuyến với Spring Boot, JWT Authentication, và Cloudinary**
 
-[Demo Live](https://food-shop-iswi.onrender.com) • [Báo cáo lỗi](https://github.com/yourusername/food-shop/issues) • [Yêu cầu tính năng](https://github.com/yourusername/food-shop/issues)
+[Demo Live](https://food-shop-iswi.onrender.com) • [Báo cáo lỗi](https://github.com/haivoDA22TTD/Food_shop/issues) • [Yêu cầu tính năng](https://github.com/yourusername/food-shop/issues)
 
 </div>
 
@@ -141,50 +141,6 @@
 - 📦 Maven 3.6+
 - 🐳 Docker (tùy chọn)
 
-### Clone Repository
-
-```bash
-git clone https://github.com/yourusername/food-shop.git
-cd food-shop
-```
-
-### Cài đặt Dependencies
-
-```bash
-mvn clean install
-```
-
-### Cấu hình Database
-
-```sql
-CREATE DATABASE food_shop;
-```
-
-### Chạy ứng dụng
-
-#### Cách 1: Maven
-
-```bash
-mvn spring-boot:run
-```
-
-#### Cách 2: JAR file
-
-```bash
-mvn clean package
-java -jar target/food-shop-1.0.0.jar
-```
-
-#### Cách 3: Docker
-
-```bash
-docker build -t food-shop .
-docker run -p 8080:8080 food-shop
-```
-
-Truy cập: `http://localhost:8080`
-
----
 
 ## ⚙️ Cấu hình
 
@@ -195,17 +151,7 @@ Dự án sử dụng 2 profiles:
 - **dev** - Local development (mặc định)
 - **prod** - Production deployment
 
-### Environment Variables
 
-#### Development (Local)
-
-Không cần cấu hình, sử dụng giá trị mặc định:
-
-```properties
-# Tài khoản admin mặc định
-Username: admin
-Password: admin123
-```
 
 #### Production (Render/Railway)
 
@@ -257,18 +203,7 @@ CLOUDINARY_FOLDER=food-shop
 3. Set Environment Variables (xem file `RENDER_COPY_PASTE.txt`)
 4. Deploy
 
-#### Bước 3: Cấu hình Cloudinary
 
-1. Tạo tài khoản [Cloudinary](https://cloudinary.com)
-2. Copy API credentials
-3. Set environment variables
-
-📖 **Hướng dẫn chi tiết**: 
-- `DEPLOYMENT.md` - Deploy đầy đủ
-- `CLOUDINARY_SETUP.md` - Cấu hình Cloudinary
-- `DOCKER_DEPLOY.md` - Deploy với Docker
-
----
 
 ## 📚 API Documentation
 
@@ -306,21 +241,7 @@ CLOUDINARY_FOLDER=food-shop
 
 ---
 
-## 📸 Screenshots
 
-### Trang chủ
-![Homepage](docs/screenshots/homepage.png)
-
-### Giỏ hàng
-![Cart](docs/screenshots/cart.png)
-
-### Admin Dashboard
-![Admin Dashboard](docs/screenshots/admin-dashboard.png)
-
-### Quản lý sản phẩm
-![Product Management](docs/screenshots/product-management.png)
-
----
 
 ## 🤝 Đóng góp
 
@@ -342,11 +263,10 @@ Dự án này được phân phối dưới giấy phép MIT. Xem file `LICENSE`
 
 ## 👨‍💻 Tác giả
 
-**Your Name**
+**haivoDA22TTD(haivoDev)**
 
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: your.email@example.com
-- LinkedIn: [Your Name](https://linkedin.com/in/yourprofile)
+- GitHub: [haivoDA22TTDe](https://github.com/haivoDA22TTD)
+- Email: 110122068@st.tvu.edu.vn
 
 ---
 
@@ -365,9 +285,9 @@ Dự án này được phân phối dưới giấy phép MIT. Xem file `LICENSE`
 
 Nếu bạn có câu hỏi hoặc cần hỗ trợ:
 
-- 📧 Email: your.email@example.com
-- 💬 Issues: [GitHub Issues](https://github.com/yourusername/food-shop/issues)
-- 📖 Documentation: [Wiki](https://github.com/yourusername/food-shop/wiki)
+- 📧 Email: 110122068@st.tvu.edu.vn
+- 💬 Issues: [GitHub Issues](https://github.com/haivoDA22TTD/Food-shop/issues)
+
 
 ---
 
@@ -375,6 +295,6 @@ Nếu bạn có câu hỏi hoặc cần hỗ trợ:
 
 **⭐ Nếu bạn thấy dự án hữu ích, hãy cho một star nhé! ⭐**
 
-Made with ❤️ by [Your Name](https://github.com/yourusername)
+Made with ❤️ by [Your Name](https://github.com/haivoDA22TTD)
 
 </div>
