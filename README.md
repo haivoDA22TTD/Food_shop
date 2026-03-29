@@ -286,7 +286,7 @@ Dự án này được phân phối dưới giấy phép MIT. Xem file `LICENSE`
 Nếu bạn có câu hỏi hoặc cần hỗ trợ:
 
 - 📧 Email: 110122068@st.tvu.edu.vn
-- 💬 Issues: [GitHub Issues](https://github.com/haivoDA22TTD/Food-shop/issues)
+- 💬 Issues: [GitHub Issues](https://github.com/haivoDA22TTD/Food_shop/issues)
 
 
 ---
@@ -295,6 +295,6 @@ Nếu bạn có câu hỏi hoặc cần hỗ trợ:
 
 **⭐ Nếu bạn thấy dự án hữu ích, hãy cho một star nhé! ⭐**
 
-Made with ❤️ by [Your Name](https://github.com/haivoDA22TTD)
+Made with ❤️ by [haivoDA22TTD](https://github.com/haivoDA22TTD)
 
 </div>
