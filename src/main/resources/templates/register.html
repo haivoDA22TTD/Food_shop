@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng ký - Food Shop</title>
     <link rel="stylesheet" th:href="@{/css/modern-style.css}">
+    <link rel="stylesheet" th:href="@{/css/animations.css}">
 </head>
 <body>
     <header>
@@ -47,6 +48,7 @@
         </div>
     </div>
     
+    <script th:src="@{/js/notifications.js}"></script>
     <script>
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -59,6 +61,8 @@
                 password: document.getElementById('password').value
             };
             
+            loading.show('Đang đăng ký...');
+            
             try {
                 const response = await fetch('/api/auth/register', {
                     method: 'POST',
@@ -68,14 +72,20 @@
                     body: JSON.stringify(userData)
                 });
                 
+                loading.hide();
+                
                 if (response.ok) {
-                    alert('Đăng ký thành công! Vui lòng đăng nhập.');
-                    window.location.href = '/login';
+                    showSuccessModal(
+                        'Đăng ký thành công!',
+                        'Tài khoản của bạn đã được tạo. Vui lòng đăng nhập.',
+                        () => window.location.href = '/login'
+                    );
                 } else {
-                    alert('Đăng ký thất bại! Tên đăng nhập có thể đã tồn tại.');
+                    toast.error('Đăng ký thất bại! Tên đăng nhập có thể đã tồn tại.');
                 }
             } catch (error) {
-                alert('Có lỗi xảy ra: ' + error.message);
+                loading.hide();
+                toast.error('Có lỗi xảy ra: ' + error.message);
             }
         });
     </script>

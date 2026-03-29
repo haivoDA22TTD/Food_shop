@@ -277,8 +277,8 @@
                         <td th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + 'đ'"></td>
                         <td>
                             <span class="status-badge" 
-                                  th:classappend="${order.status == T(com.example.foodshop.entity.Order.OrderStatus).PENDING} ? 'status-pending' : 
-                                                  (${order.status == T(com.example.foodshop.entity.Order.OrderStatus).CONFIRMED} ? 'status-confirmed' : 'status-delivered')"
+                                  th:classappend="${order.status.name() == 'PENDING'} ? 'status-pending' : 
+                                                  (${order.status.name() == 'CONFIRMED'} ? 'status-confirmed' : 'status-delivered')"
                                   th:text="${order.status}">
                             </span>
                         </td>

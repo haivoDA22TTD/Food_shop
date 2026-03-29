@@ -33,10 +33,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function addToCart(productId) {
-    // Get cart from localStorage
     let cart = JSON.parse(localStorage.getItem('cart') || '[]');
     
-    // Check if product already in cart
     const existingItem = cart.find(item => item.id === productId);
     if (existingItem) {
         existingItem.quantity += 1;
@@ -44,14 +42,11 @@ function addToCart(productId) {
         cart.push({ id: productId, quantity: 1 });
     }
     
-    // Save to localStorage
     localStorage.setItem('cart', JSON.stringify(cart));
-    
-    // Update cart count
     updateCartCount();
     
-    // Show notification
-    alert('Đã thêm sản phẩm vào giỏ hàng!');
+    // Show toast notification instead of alert
+    toast.success('Đã thêm sản phẩm vào giỏ hàng!');
 }
 
 function updateCartCount() {

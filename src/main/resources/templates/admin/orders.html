@@ -234,25 +234,25 @@
                         <td th:text="${order.paymentMethod ?: 'COD'}"></td>
                         <td>
                             <span class="status-badge" 
-                                  th:classappend="${order.status == T(com.example.foodshop.entity.Order.OrderStatus).PENDING} ? 'status-pending' : 
-                                                  (${order.status == T(com.example.foodshop.entity.Order.OrderStatus).CONFIRMED} ? 'status-confirmed' : 
-                                                  (${order.status == T(com.example.foodshop.entity.Order.OrderStatus).SHIPPING} ? 'status-shipping' :
-                                                  (${order.status == T(com.example.foodshop.entity.Order.OrderStatus).DELIVERED} ? 'status-delivered' : 'status-cancelled')))"
+                                  th:classappend="${order.status.name() == 'PENDING'} ? 'status-pending' : 
+                                                  (${order.status.name() == 'CONFIRMED'} ? 'status-confirmed' : 
+                                                  (${order.status.name() == 'SHIPPING'} ? 'status-shipping' :
+                                                  (${order.status.name() == 'DELIVERED'} ? 'status-delivered' : 'status-cancelled')))"
                                   th:text="${order.status}">
                             </span>
                         </td>
                         <td th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
                         <td>
                             <button class="btn-action btn-view" th:onclick="'viewOrder(' + ${order.id} + ')'">Chi tiết</button>
-                            <select th:if="${order.status != T(com.example.foodshop.entity.Order.OrderStatus).DELIVERED && order.status != T(com.example.foodshop.entity.Order.OrderStatus).CANCELLED}"
+                            <select th:if="${order.status.name() != 'DELIVERED' && order.status.name() != 'CANCELLED'}"
                                     th:onchange="'updateOrderStatus(' + ${order.id} + ', this.value)'"
                                     style="padding: 0.5rem; border-radius: 6px; border: 2px solid var(--primary-color); background: white; cursor: pointer; margin-left: 0.5rem;">
                                 <option value="">Cập nhật trạng thái</option>
-                                <option value="PENDING" th:selected="${order.status == T(com.example.foodshop.entity.Order.OrderStatus).PENDING}">Chờ xác nhận</option>
-                                <option value="CONFIRMED" th:selected="${order.status == T(com.example.foodshop.entity.Order.OrderStatus).CONFIRMED}">Xác nhận</option>
-                                <option value="SHIPPING" th:selected="${order.status == T(com.example.foodshop.entity.Order.OrderStatus).SHIPPING}">Đang giao</option>
-                                <option value="DELIVERED" th:selected="${order.status == T(com.example.foodshop.entity.Order.OrderStatus).DELIVERED}">Đã giao</option>
-                                <option value="CANCELLED" th:selected="${order.status == T(com.example.foodshop.entity.Order.OrderStatus).CANCELLED}">Hủy đơn</option>
+                                <option value="PENDING" th:selected="${order.status.name() == 'PENDING'}">Chờ xác nhận</option>
+                                <option value="CONFIRMED" th:selected="${order.status.name() == 'CONFIRMED'}">Xác nhận</option>
+                                <option value="SHIPPING" th:selected="${order.status.name() == 'SHIPPING'}">Đang giao</option>
+                                <option value="DELIVERED" th:selected="${order.status.name() == 'DELIVERED'}">Đã giao</option>
+                                <option value="CANCELLED" th:selected="${order.status.name() == 'CANCELLED'}">Hủy đơn</option>
                             </select>
                         </td>
                     </tr>

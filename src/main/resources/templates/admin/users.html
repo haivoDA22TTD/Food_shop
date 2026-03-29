@@ -178,7 +178,7 @@
                         <td th:text="${user.address ?: 'N/A'}"></td>
                         <td>
                             <span class="role-badge" 
-                                  th:classappend="${user.role == T(com.example.foodshop.entity.User.Role).ADMIN} ? 'role-admin' : 'role-customer'"
+                                  th:classappend="${user.role.name() == 'ADMIN'} ? 'role-admin' : 'role-customer'"
                                   th:text="${user.role}">
                             </span>
                         </td>
@@ -186,7 +186,7 @@
                         <td>
                             <button class="btn-action btn-view" th:onclick="'viewUser(' + ${user.id} + ')'">Xem</button>
                             <button class="btn-action btn-delete" 
-                                    th:if="${user.role != T(com.example.foodshop.entity.User.Role).ADMIN}"
+                                    th:if="${user.role.name() != 'ADMIN'}"
                                     th:onclick="'deleteUser(' + ${user.id} + ', \'' + ${user.username} + '\')'">
                                 Xóa
                             </button>

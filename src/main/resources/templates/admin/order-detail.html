@@ -76,10 +76,10 @@
             <div class="detail-header">
                 <h1>Chi tiết đơn hàng #<span th:text="${order.id}"></span></h1>
                 <span class="status-badge" 
-                      th:classappend="${order.status == T(com.example.foodshop.entity.Order.OrderStatus).PENDING} ? 'status-pending' : 
-                                      (${order.status == T(com.example.foodshop.entity.Order.OrderStatus).CONFIRMED} ? 'status-confirmed' : 
-                                      (${order.status == T(com.example.foodshop.entity.Order.OrderStatus).SHIPPING} ? 'status-shipping' :
-                                      (${order.status == T(com.example.foodshop.entity.Order.OrderStatus).DELIVERED} ? 'status-delivered' : 'status-cancelled')))"
+                      th:classappend="${order.status.name() == 'PENDING'} ? 'status-pending' : 
+                                      (${order.status.name() == 'CONFIRMED'} ? 'status-confirmed' : 
+                                      (${order.status.name() == 'SHIPPING'} ? 'status-shipping' :
+                                      (${order.status.name() == 'DELIVERED'} ? 'status-delivered' : 'status-cancelled')))"
                       th:text="${order.status}">
                 </span>
             </div>
@@ -143,16 +143,16 @@
             </div>
         </div>
         
-        <div class="detail-card" th:if="${order.status != T(com.example.foodshop.entity.Order.OrderStatus).DELIVERED && order.status != T(com.example.foodshop.entity.Order.OrderStatus).CANCELLED}">
+        <div class="detail-card" th:if="${order.status.name() != 'DELIVERED' && order.status.name() != 'CANCELLED'}">
             <h2 style="margin-bottom: 1.5rem; color: var(--dark-color);">Cập nhật trạng thái</h2>
             <form th:action="@{/admin/orders/update/{id}(id=${order.id})}" method="get">
                 <select name="status" required style="width: 100%; padding: 1rem; border: 2px solid var(--primary-color); border-radius: 8px; font-size: 1rem; margin-bottom: 1rem;">
                     <option value="">Chọn trạng thái mới</option>
-                    <option value="PENDING" th:selected="${order.status == T(com.example.foodshop.entity.Order.OrderStatus).PENDING}">Chờ xác nhận</option>
-                    <option value="CONFIRMED" th:selected="${order.status == T(com.example.foodshop.entity.Order.OrderStatus).CONFIRMED}">Đã xác nhận</option>
-                    <option value="SHIPPING" th:selected="${order.status == T(com.example.foodshop.entity.Order.OrderStatus).SHIPPING}">Đang giao hàng</option>
-                    <option value="DELIVERED" th:selected="${order.status == T(com.example.foodshop.entity.Order.OrderStatus).DELIVERED}">Đã giao hàng</option>
-                    <option value="CANCELLED" th:selected="${order.status == T(com.example.foodshop.entity.Order.OrderStatus).CANCELLED}">Hủy đơn</option>
+                    <option value="PENDING" th:selected="${order.status.name() == 'PENDING'}">Chờ xác nhận</option>
+                    <option value="CONFIRMED" th:selected="${order.status.name() == 'CONFIRMED'}">Đã xác nhận</option>
+                    <option value="SHIPPING" th:selected="${order.status.name() == 'SHIPPING'}">Đang giao hàng</option>
+                    <option value="DELIVERED" th:selected="${order.status.name() == 'DELIVERED'}">Đã giao hàng</option>
+                    <option value="CANCELLED" th:selected="${order.status.name() == 'CANCELLED'}">Hủy đơn</option>
                 </select>
                 <button type="submit" style="width: 100%; padding: 1rem; background: var(--gradient); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 600; cursor: pointer;">
                     Cập nhật trạng thái

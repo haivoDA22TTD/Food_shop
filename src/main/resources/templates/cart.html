@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giỏ hàng - Food Shop</title>
     <link rel="stylesheet" th:href="@{/css/modern-style.css}">
+    <link rel="stylesheet" th:href="@{/css/animations.css}">
     <style>
         .cart-container {
             max-width: 1200px;
@@ -280,6 +281,7 @@
         </div>
     </div>
     
+    <script th:src="@{/js/notifications.js}"></script>
     <script th:inline="javascript">
         /*<![CDATA[*/
         const products = /*[[${products}]]*/ [];
@@ -345,6 +347,7 @@
                 item.quantity += change;
                 if (item.quantity <= 0) {
                     cart = cart.filter(i => i.id != productId);
+                    toast.info('Đã xóa sản phẩm khỏi giỏ hàng');
                 }
                 localStorage.setItem('cart', JSON.stringify(cart));
                 loadCart();
@@ -356,6 +359,7 @@
             let cart = JSON.parse(localStorage.getItem('cart') || '[]');
             cart = cart.filter(i => i.id != productId);
             localStorage.setItem('cart', JSON.stringify(cart));
+            toast.info('Đã xóa sản phẩm khỏi giỏ hàng');
             loadCart();
             updateCartCount();
         }
@@ -387,14 +391,14 @@
         function checkout() {
             const token = localStorage.getItem('token');
             if (!token) {
-                alert('Vui lòng đăng nhập để thanh toán!');
-                window.location.href = '/login';
+                toast.warning('Vui lòng đăng nhập để thanh toán!');
+                setTimeout(() => window.location.href = '/login', 1500);
                 return;
             }
             
             const cart = JSON.parse(localStorage.getItem('cart') || '[]');
             if (cart.length === 0) {
-                alert('Giỏ hàng trống!');
+                toast.warning('Giỏ hàng trống!');
                 return;
             }
             

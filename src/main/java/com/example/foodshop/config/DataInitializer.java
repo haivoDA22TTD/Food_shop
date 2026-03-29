@@ -5,6 +5,7 @@ import com.example.foodshop.entity.User;
 import com.example.foodshop.repository.ProductRepository;
 import com.example.foodshop.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -17,36 +18,52 @@ public class DataInitializer implements CommandLineRunner {
     private final ProductRepository productRepository;
     private final PasswordEncoder passwordEncoder;
     
+    @Value("${ADMIN_USERNAME:admin}")
+    private String adminUsername;
+    
+    @Value("${ADMIN_PASSWORD:admin123}")
+    private String adminPassword;
+    
+    @Value("${ADMIN_EMAIL:admin@foodshop.com}")
+    private String adminEmail;
+    
+    @Value("${CUSTOMER_USERNAME:customer}")
+    private String customerUsername;
+    
+    @Value("${CUSTOMER_PASSWORD:customer123}")
+    private String customerPassword;
+    
     @Override
     public void run(String... args) {
         // Tạo tài khoản admin nếu chưa tồn tại
-        if (userRepository.findByUsername("admin").isEmpty()) {
+        if (userRepository.findByUsername(adminUsername).isEmpty()) {
             User admin = new User();
-            admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode("admin123"));
-            admin.setEmail("admin@foodshop.com");
+            admin.setUsername(adminUsername);
+            admin.setPassword(passwordEncoder.encode(adminPassword));
+            admin.setEmail(adminEmail);
             admin.setRole(User.Role.ADMIN);
             userRepository.save(admin);
-            System.out.println("✓ Đã tạo tài khoản admin - Username: admin, Password: admin123");
+            System.out.println("✓ Đã tạo tài khoản admin - Username: " + adminUsername);
+            System.out.println("⚠️  BẢO MẬT: Vui lòng đổi mật khẩu admin sau khi đăng nhập lần đầu!");
         }
         
-        // Tạo tài khoản khách hàng mẫu
-        if (userRepository.findByUsername("customer").isEmpty()) {
+        // Tạo tài khoản khách hàng mẫu (chỉ cho development)
+        if (userRepository.findByUsername(customerUsername).isEmpty()) {
             User customer = new User();
-            customer.setUsername("customer");
-            customer.setPassword(passwordEncoder.encode("customer123"));
+            customer.setUsername(customerUsername);
+            customer.setPassword(passwordEncoder.encode(customerPassword));
             customer.setEmail("customer@example.com");
             customer.setPhone("0123456789");
             customer.setAddress("123 Đường ABC, TP.HCM");
             customer.setRole(User.Role.CUSTOMER);
             userRepository.save(customer);
-            System.out.println("✓ Đã tạo tài khoản khách hàng - Username: customer, Password: customer123");
+            System.out.println("✓ Đã tạo tài khoản khách hàng demo - Username: " + customerUsername);
         }
         
         // Tạo sản phẩm mẫu nếu chưa có
         if (productRepository.count() == 0) {
             createSampleProducts();
-            System.out.println("✓ Đã tạo sản phẩm mẫu");
+            System.out.println("✓ Đã tạo " + productRepository.count() + " sản phẩm mẫu");
         }
     }
     
@@ -61,7 +78,6 @@ public class DataInitializer implements CommandLineRunner {
             createProduct("Kem Khoai Môn", "Kem khoai môn béo ngậy", 30000.0, "kem_khoai_mon.png", "Đồ ngọt", 35),
             createProduct("Kem Socola Lốc Xoáy", "Kem socola lốc xoáy mát lạnh", 28000.0, "kem_socola_loc_xoay.png", "Đồ ngọt", 35),
             createProduct("Matcha Latte", "Matcha latte thơm béo", 45000.0, "matcha_latte.png", "Đồ uống", 50),
-            createProduct("Pizza", "Pizza hải sản đặc biệt", 120000.0, "pizza.png", "Đồ ăn nhanh", 20),
             createProduct("Sữa Tươi Trân Châu Đường Đen", "Sữa tươi trân châu đường đen", 38000.0, "sua_tuoi_tran_chau_duong_den.png", "Đồ uống", 45),
             createProduct("Tacos", "Tacos Mexico truyền thống", 48000.0, "tacos.png", "Đồ ăn nhanh", 30),
             createProduct("Trà Sữa Khoai Môn", "Trà sữa khoai môn thơm ngon", 35000.0, "tra_sua_khoai_mon.png", "Đồ uống", 50),

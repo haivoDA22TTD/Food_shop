@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập - Food Shop</title>
     <link rel="stylesheet" th:href="@{/css/modern-style.css}">
+    <link rel="stylesheet" th:href="@{/css/animations.css}">
 </head>
 <body>
     <header>
@@ -35,12 +36,15 @@
         </div>
     </div>
     
+    <script th:src="@{/js/notifications.js}"></script>
     <script>
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
+            
+            loading.show('Đang đăng nhập...');
             
             try {
                 const response = await fetch('/api/auth/login', {
@@ -51,25 +55,30 @@
                     body: JSON.stringify({ username, password })
                 });
                 
+                loading.hide();
+                
                 if (response.ok) {
                     const data = await response.json();
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('username', data.username);
                     localStorage.setItem('role', data.role);
                     
-                    alert('Đăng nhập thành công!');
+                    toast.success('Đăng nhập thành công!');
                     
                     // Redirect based on role
-                    if (data.role.includes('ADMIN')) {
-                        window.location.href = '/admin';
-                    } else {
-                        window.location.href = '/';
-                    }
+                    setTimeout(() => {
+                        if (data.role.includes('ADMIN')) {
+                            window.location.href = '/admin';
+                        } else {
+                            window.location.href = '/';
+                        }
+                    }, 1000);
                 } else {
-                    alert('Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin.');
+                    toast.error('Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin.');
                 }
             } catch (error) {
-                alert('Có lỗi xảy ra: ' + error.message);
+                loading.hide();
+                toast.error('Có lỗi xảy ra: ' + error.message);
             }
         });
     </script>

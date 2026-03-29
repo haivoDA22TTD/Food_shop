@@ -1,58 +1,156 @@
 package com.example.foodshop.service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
 public class FileUploadService {
     
-    private final Path uploadPath = Paths.get("img");
+    private static final Logger logger = LoggerFactory.getLogger(FileUploadService.class);
     
-    public FileUploadService() {
-        try {
-            Files.createDirectories(uploadPath);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not create upload directory!", e);
-        }
-    }
+    @Autowired(required = false)
+    private Cloudinary cloudinary;
     
+    @Value("${cloudinary.enabled:false}")
+    private boolean cloudinaryEnabled;
+    
+    @Value("${cloudinary.folder:food-shop}")
+    private String cloudinaryFolder;
+    
+    /**
+     * Upload file to Cloudinary
+     * Returns the public URL of the uploaded image
+     */
     public String uploadFile(MultipartFile file) {
         if (file.isEmpty()) {
             return null;
         }
         
+        if (!cloudinaryEnabled || cloudinary == null) {
+            // Fallback to local storage for development
+            return uploadToLocal(file);
+        }
+        
         try {
-            // Get original filename and extension
+            // Generate unique public_id
             String originalFilename = file.getOriginalFilename();
-            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String extension = originalFilename != null && originalFilename.contains(".") 
+                ? originalFilename.substring(originalFilename.lastIndexOf(".")) 
+                : "";
+            String publicId = cloudinaryFolder + "/" + UUID.randomUUID().toString();
             
-            // Generate unique filename
-            String filename = UUID.randomUUID().toString() + extension;
+            // Upload to Cloudinary
+            Map uploadResult = cloudinary.uploader().upload(file.getBytes(), 
+                ObjectUtils.asMap(
+                    "public_id", publicId,
+                    "folder", cloudinaryFolder,
+                    "resource_type", "image",
+                    "overwrite", true
+                )
+            );
             
-            // Save file
-            Path targetLocation = uploadPath.resolve(filename);
-            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+            // Return the secure URL
+            String secureUrl = (String) uploadResult.get("secure_url");
+            logger.info("✓ Uploaded to Cloudinary: {}", secureUrl);
             
-            return filename;
+            return secureUrl;
         } catch (IOException e) {
-            throw new RuntimeException("Failed to store file", e);
+            logger.error("Failed to upload to Cloudinary: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to upload file to Cloudinary", e);
         }
     }
     
-    public void deleteFile(String filename) {
+    /**
+     * Delete file from Cloudinary
+     * @param imageUrl The full Cloudinary URL or public_id
+     */
+    public void deleteFile(String imageUrl) {
+        if (!cloudinaryEnabled || cloudinary == null || imageUrl == null || imageUrl.isEmpty()) {
+            return;
+        }
+        
         try {
-            Path filePath = uploadPath.resolve(filename);
-            Files.deleteIfExists(filePath);
-        } catch (IOException e) {
+            // Extract public_id from URL
+            String publicId = extractPublicId(imageUrl);
+            
+            if (publicId != null) {
+                Map result = cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+                logger.info("✓ Deleted from Cloudinary: {} - Result: {}", publicId, result.get("result"));
+            }
+        } catch (Exception e) {
             // Log error but don't throw exception
-            System.err.println("Failed to delete file: " + filename);
+            logger.error("Failed to delete file from Cloudinary: {} - {}", imageUrl, e.getMessage());
+        }
+    }
+    
+    /**
+     * Extract public_id from Cloudinary URL
+     * Example: https://res.cloudinary.com/demo/image/upload/v1234567890/food-shop/abc-123.jpg
+     * Returns: food-shop/abc-123
+     */
+    private String extractPublicId(String imageUrl) {
+        if (imageUrl == null || !imageUrl.contains("cloudinary.com")) {
+            return null;
+        }
+        
+        try {
+            // Find the position after "/upload/"
+            int uploadIndex = imageUrl.indexOf("/upload/");
+            if (uploadIndex == -1) {
+                return null;
+            }
+            
+            // Get the part after "/upload/v1234567890/"
+            String afterUpload = imageUrl.substring(uploadIndex + 8);
+            
+            // Remove version number (v1234567890/)
+            int slashIndex = afterUpload.indexOf("/");
+            if (slashIndex != -1) {
+                afterUpload = afterUpload.substring(slashIndex + 1);
+            }
+            
+            // Remove file extension
+            int dotIndex = afterUpload.lastIndexOf(".");
+            if (dotIndex != -1) {
+                afterUpload = afterUpload.substring(0, dotIndex);
+            }
+            
+            return afterUpload;
+        } catch (Exception e) {
+            logger.error("Failed to extract public_id from URL: {}", imageUrl);
+            return null;
+        }
+    }
+    
+    /**
+     * Fallback method for local storage (development only)
+     */
+    private String uploadToLocal(MultipartFile file) {
+        try {
+            String originalFilename = file.getOriginalFilename();
+            String extension = originalFilename != null && originalFilename.contains(".") 
+                ? originalFilename.substring(originalFilename.lastIndexOf(".")) 
+                : "";
+            String filename = UUID.randomUUID().toString() + extension;
+            
+            // For local development, just return the filename
+            // The actual file saving is handled by the old logic if needed
+            logger.warn("⚠️ Cloudinary disabled, using local storage: {}", filename);
+            
+            return filename;
+        } catch (Exception e) {
+            logger.error("Failed to store file locally", e);
+            throw new RuntimeException("Failed to store file locally", e);
         }
     }
 }

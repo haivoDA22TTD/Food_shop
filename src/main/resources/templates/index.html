@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Food Shop - Cửa hàng thực phẩm trực tuyến</title>
     <link rel="stylesheet" th:href="@{/css/modern-style.css}">
+    <link rel="stylesheet" th:href="@{/css/animations.css}">
+    <script th:src="@{/js/notifications.js}"></script>
 </head>
 <body>
     <header>
@@ -39,10 +41,14 @@
         <h1 class="section-title">Sản phẩm nổi bật</h1>
         <div class="product-grid" id="productGrid">
             <div class="product-card" th:each="product : ${products}" th:data-category="${product.category}">
-                <img class="product-image" th:src="@{'/img/' + ${product.image}}" th:alt="${product.name}">
+                <a th:href="@{'/product/' + ${product.id}}" style="text-decoration: none; color: inherit;">
+                    <img class="product-image" th:src="@{'/img/' + ${product.image}}" th:alt="${product.name}">
+                </a>
                 <div class="product-info">
                     <span class="product-category" th:text="${product.category}"></span>
-                    <h3 class="product-name" th:text="${product.name}"></h3>
+                    <a th:href="@{'/product/' + ${product.id}}" style="text-decoration: none; color: inherit;">
+                        <h3 class="product-name" th:text="${product.name}"></h3>
+                    </a>
                     <p class="product-description" th:text="${product.description}"></p>
                     <div class="product-footer">
                         <span class="price" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + 'đ'"></span>

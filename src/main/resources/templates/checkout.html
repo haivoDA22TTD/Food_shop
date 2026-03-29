@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thanh toán - Food Shop</title>
     <link rel="stylesheet" th:href="@{/css/modern-style.css}">
+    <link rel="stylesheet" th:href="@{/css/animations.css}">
     <style>
         .checkout-container {
             max-width: 1200px;
@@ -305,6 +306,7 @@
         </div>
     </div>
     
+    <script th:src="@{/js/notifications.js}"></script>
     <script th:inline="javascript">
         /*<![CDATA[*/
         const products = /*[[${products}]]*/ [];
@@ -331,8 +333,8 @@
         function loadOrderSummary() {
             const cart = JSON.parse(localStorage.getItem('cart') || '[]');
             if (cart.length === 0) {
-                alert('Giỏ hàng trống!');
-                window.location.href = '/cart';
+                toast.warning('Giỏ hàng trống!');
+                setTimeout(() => window.location.href = '/cart', 1500);
                 return;
             }
             
@@ -375,7 +377,7 @@
             const note = document.getElementById('note').value;
             
             if (!fullName || !phone || !email || !address) {
-                alert('Vui lòng điền đầy đủ thông tin giao hàng!');
+                toast.warning('Vui lòng điền đầy đủ thông tin giao hàng!');
                 return;
             }
             
@@ -383,8 +385,8 @@
             const token = localStorage.getItem('token');
             
             if (!token) {
-                alert('Vui lòng đăng nhập!');
-                window.location.href = '/login';
+                toast.error('Vui lòng đăng nhập!');
+                setTimeout(() => window.location.href = '/login', 1500);
                 return;
             }
             
@@ -401,6 +403,8 @@
                 items: cart
             };
             
+            loading.show('Đang xử lý đơn hàng...');
+            
             try {
                 const response = await fetch('/api/orders/create', {
                     method: 'POST',
@@ -411,18 +415,21 @@
                     body: JSON.stringify(orderData)
                 });
                 
+                loading.hide();
+                
                 if (response.ok) {
                     localStorage.removeItem('cart');
-                    alert('✅ Đặt hàng thành công!\n\n' +
-                          'Phương thức: ' + paymentMethodNames[selectedPayment] + '\n' +
-                          'Đơn hàng của bạn đang được xử lý.\n\n' +
-                          '⚠️ Lưu ý: Đây là đơn hàng giả lập cho mục đích học tập.');
-                    window.location.href = '/orders';
+                    showSuccessModal(
+                        'Đặt hàng thành công!',
+                        `Phương thức: ${paymentMethodNames[selectedPayment]}\nĐơn hàng của bạn đang được xử lý.\n\n⚠️ Đây là đơn hàng giả lập cho mục đích học tập.`,
+                        () => window.location.href = '/orders'
+                    );
                 } else {
-                    alert('Có lỗi xảy ra khi đặt hàng!');
+                    toast.error('Có lỗi xảy ra khi đặt hàng!');
                 }
             } catch (error) {
-                alert('Lỗi: ' + error.message);
+                loading.hide();
+                toast.error('Lỗi: ' + error.message);
             }
         }
         

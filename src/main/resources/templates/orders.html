@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đơn hàng của tôi - Food Shop</title>
     <link rel="stylesheet" th:href="@{/css/modern-style.css}">
+    <link rel="stylesheet" th:href="@{/css/animations.css}">
     <style>
         .orders-container {
             max-width: 1200px;
@@ -219,6 +220,7 @@
         </div>
     </div>
     
+    <script th:src="@{/js/notifications.js}"></script>
     <script th:inline="javascript">
         /*<![CDATA[*/
         const products = /*[[${products}]]*/ [];
@@ -229,10 +231,12 @@
         async function loadOrders() {
             const token = localStorage.getItem('token');
             if (!token) {
-                alert('Vui lòng đăng nhập để xem đơn hàng!');
-                window.location.href = '/login';
+                toast.warning('Vui lòng đăng nhập để xem đơn hàng!');
+                setTimeout(() => window.location.href = '/login', 1500);
                 return;
             }
+            
+            loading.show('Đang tải đơn hàng...');
             
             try {
                 console.log('Loading orders with token:', token);
@@ -243,6 +247,7 @@
                 });
                 
                 console.log('Response status:', response.status);
+                loading.hide();
                 
                 if (response.ok) {
                     allOrders = await response.json();
@@ -254,14 +259,17 @@
                     console.error('Error response:', errorText);
                     
                     if (response.status === 401) {
-                        alert('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!');
+                        toast.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!');
                         localStorage.clear();
-                        window.location.href = '/login';
+                        setTimeout(() => window.location.href = '/login', 1500);
+                    } else {
+                        toast.error('Không thể tải đơn hàng!');
                     }
                 }
             } catch (error) {
+                loading.hide();
                 console.error('Error loading orders:', error);
-                alert('Có lỗi khi tải đơn hàng: ' + error.message);
+                toast.error('Có lỗi khi tải đơn hàng: ' + error.message);
             }
         }
         
@@ -296,12 +304,20 @@
             let itemsHTML = '';
             order.orderItems.forEach(item => {
                 const product = products.find(p => p.id == item.product.id);
+                const reviewButton = order.status === 'DELIVERED' 
+                    ? `<button onclick="reviewProduct(${item.product.id}, '${item.product.name}')" 
+                              style="padding: 0.5rem 1rem; background: var(--gradient); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; margin-top: 0.5rem;">
+                           ⭐ Đánh giá
+                       </button>`
+                    : '';
+                
                 itemsHTML += `
                     <div class="order-item">
                         <img src="/img/${item.product.image}" alt="${item.product.name}" class="item-image">
                         <div class="item-info">
                             <div class="item-name">${item.product.name}</div>
                             <div class="item-quantity">Số lượng: ${item.quantity}</div>
+                            ${reviewButton}
                         </div>
                         <div class="item-price">${formatPrice(item.price * item.quantity)}</div>
                     </div>
@@ -339,6 +355,10 @@
                     </div>
                 </div>
             `;
+        }
+        
+        function reviewProduct(productId, productName) {
+            window.location.href = '/product/' + productId;
         }
         
         function filterOrders(status) {

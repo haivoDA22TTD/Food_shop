@@ -111,7 +111,7 @@ public class AdminController {
     
     @GetMapping("/orders")
     public String manageOrders(Model model) {
-        List<Order> orders = orderRepository.findAll();
+        List<Order> orders = orderRepository.findAllByOrderByCreatedAtDesc();
         
         // Calculate stats manually
         long pendingCount = 0;

@@ -1,5 +1,6 @@
 package com.example.foodshop.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ public class Review {
     
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
+    @JsonBackReference
     private Product product;
     
     @ManyToOne
@@ -22,6 +24,7 @@ public class Review {
     
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
+    @JsonBackReference
     private Order order;
     
     @Column(nullable = false)
