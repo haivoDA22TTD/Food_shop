@@ -10,7 +10,7 @@
 
 **Ứng dụng bán hàng thực phẩm trực tuyến với Spring Boot, JWT Authentication, và Cloudinary**
 
-[Demo Live](https://food-shop-iswi.onrender.com) • [Báo cáo lỗi](https://github.com/haivoDA22TTD/Food_shop/issues) • [Yêu cầu tính năng](https://github.com/yourusername/food-shop/issues)
+ [Yêu cầu tính năng](https://github.com/yourusername/food-shop/issues)
 
 </div>
 
