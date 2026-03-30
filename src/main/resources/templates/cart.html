@@ -312,9 +312,10 @@
                     const itemTotal = product.price * item.quantity;
                     subtotal += itemTotal;
                     
+                    const imageUrl = product.image.startsWith('http') ? product.image : '/img/' + product.image;
                     const cartItemHTML = `
                         <div class="cart-item" data-id="${product.id}">
-                            <img src="/img/${product.image}" alt="${product.name}" class="item-image">
+                            <img src="${imageUrl}" alt="${product.name}" class="item-image">
                             <div class="item-info">
                                 <h3>${product.name}</h3>
                                 <p class="item-price">${formatPrice(product.price)}</p>

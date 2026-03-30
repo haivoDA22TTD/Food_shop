@@ -311,9 +311,10 @@
                        </button>`
                     : '';
                 
+                const imageUrl = item.product.image.startsWith('http') ? item.product.image : '/img/' + item.product.image;
                 itemsHTML += `
                     <div class="order-item">
-                        <img src="/img/${item.product.image}" alt="${item.product.name}" class="item-image">
+                        <img src="${imageUrl}" alt="${item.product.name}" class="item-image">
                         <div class="item-info">
                             <div class="item-name">${item.product.name}</div>
                             <div class="item-quantity">Số lượng: ${item.quantity}</div>
@@ -449,9 +450,10 @@
             
             let itemsHTML = '';
             order.orderItems.forEach(item => {
+                const imageUrl = item.product.image.startsWith('http') ? item.product.image : '/img/' + item.product.image;
                 itemsHTML += `
                     <div style="display: flex; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid #eee;">
-                        <img src="/img/${item.product.image}" alt="${item.product.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                        <img src="${imageUrl}" alt="${item.product.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
                         <div style="flex: 1;">
                             <div style="font-weight: 600; margin-bottom: 0.25rem;">${item.product.name}</div>
                             <div style="color: #666; font-size: 0.9rem;">Số lượng: ${item.quantity}</div>

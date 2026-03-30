@@ -113,7 +113,7 @@
         <div class="detail-card">
             <h2 style="margin-bottom: 1.5rem; color: var(--dark-color);">Sản phẩm</h2>
             <div th:each="item : ${order.orderItems}" class="product-item">
-                <img th:src="@{'/img/' + ${item.product.image}}" th:alt="${item.product.name}" class="product-image">
+                <img th:src="${item.product.image.startsWith('http') ? item.product.image : '/img/' + item.product.image}" th:alt="${item.product.name}" class="product-image">
                 <div style="flex: 1;">
                     <div style="font-weight: 600; margin-bottom: 0.25rem;" th:text="${item.product.name}"></div>
                     <div style="color: #666;">Số lượng: <span th:text="${item.quantity}"></span></div>

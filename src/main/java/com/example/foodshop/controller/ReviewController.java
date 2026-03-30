@@ -119,6 +119,10 @@ public class ReviewController {
     public ResponseEntity<?> createReview(@RequestBody Map<String, Object> reviewData, 
                                          Authentication authentication) {
         try {
+            if (authentication == null || authentication.getName() == null) {
+                return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập"));
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
@@ -128,6 +132,11 @@ public class ReviewController {
             Integer rating = Integer.valueOf(reviewData.get("rating").toString());
             String comment = reviewData.get("comment").toString();
             
+            // Validate rating
+            if (rating < 1 || rating > 5) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Rating phải từ 1-5 sao"));
+            }
+            
             Product product = productRepository.findById(productId)
                     .orElseThrow(() -> new RuntimeException("Product not found"));
             
@@ -136,11 +145,11 @@ public class ReviewController {
             
             // Verify order belongs to user and is delivered
             if (!order.getUser().getId().equals(user.getId())) {
-                return ResponseEntity.badRequest().body("Invalid order");
+                return ResponseEntity.badRequest().body(Map.of("error", "Đơn hàng không hợp lệ"));
             }
             
             if (!Order.OrderStatus.DELIVERED.equals(order.getStatus())) {
-                return ResponseEntity.badRequest().body("Order must be delivered to review");
+                return ResponseEntity.badRequest().body(Map.of("error", "Đơn hàng phải được giao thành công mới có thể đánh giá"));
             }
             
             // Check if already reviewed
@@ -150,7 +159,7 @@ public class ReviewController {
                                   r.getOrder().getId().equals(orderId));
             
             if (alreadyReviewed) {
-                return ResponseEntity.badRequest().body("Already reviewed this product");
+                return ResponseEntity.badRequest().body(Map.of("error", "Bạn đã đánh giá sản phẩm này rồi"));
             }
             
             Review review = new Review();
@@ -162,9 +171,10 @@ public class ReviewController {
             
             reviewService.createReview(review);
             
-            return ResponseEntity.ok().body(Map.of("message", "Review created successfully"));
+            return ResponseEntity.ok().body(Map.of("message", "Đánh giá thành công", "success", true));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("error", "Lỗi: " + e.getMessage()));
         }
     }
     

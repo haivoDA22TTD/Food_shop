@@ -197,7 +197,7 @@
     <div class="product-detail-container">
         <div class="product-detail-grid">
             <div>
-                <img th:src="@{'/img/' + ${product.image}}" th:alt="${product.name}" class="product-image-large">
+                <img th:src="${product.image.startsWith('http') ? product.image : '/img/' + product.image}" th:alt="${product.name}" class="product-image-large">
             </div>
             
             <div class="product-detail-info">
