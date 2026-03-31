@@ -61,31 +61,43 @@ public class ReviewController {
             boolean canReview = false;
             boolean hasReviewed = false;
             
-            if (authentication != null && authentication.getName() != null) {
+            if (authentication != null && authentication.getName() != null && !authentication.getName().equals("anonymousUser")) {
                 String username = authentication.getName();
                 System.out.println("✓ User authenticated: " + username);
                 
                 User user = userRepository.findByUsername(username).orElse(null);
                 if (user != null) {
+                    System.out.println("✓ User found: " + user.getId());
+                    
                     // Check if already reviewed
                     hasReviewed = reviews.stream()
-                            .anyMatch(r -> r.getUser().getId().equals(user.getId()));
+                            .anyMatch(r -> r.getUser() != null && r.getUser().getId().equals(user.getId()));
                     
                     System.out.println("✓ Has reviewed: " + hasReviewed);
                     
                     if (!hasReviewed) {
                         // Check if has delivered order with this product
                         List<Order> orders = orderRepository.findByUserWithItemsOrderByCreatedAtDesc(user);
+                        System.out.println("✓ Orders loaded: " + orders.size());
+                        
                         canReview = orders.stream()
-                                .anyMatch(order -> 
-                                    Order.OrderStatus.DELIVERED.equals(order.getStatus()) &&
-                                    order.getOrderItems().stream()
-                                        .anyMatch(item -> item.getProduct().getId().equals(product.getId()))
-                                );
+                                .anyMatch(order -> {
+                                    if (!Order.OrderStatus.DELIVERED.equals(order.getStatus())) {
+                                        return false;
+                                    }
+                                    if (order.getOrderItems() == null) {
+                                        return false;
+                                    }
+                                    return order.getOrderItems().stream()
+                                            .anyMatch(item -> item.getProduct() != null && 
+                                                            item.getProduct().getId().equals(product.getId()));
+                                });
                         
                         System.out.println("✓ Can review: " + canReview);
                     }
                 }
+            } else {
+                System.out.println("✓ User not authenticated or anonymous");
             }
             
             model.addAttribute("product", product);
@@ -103,6 +115,7 @@ public class ReviewController {
         } catch (Exception e) {
             System.err.println("❌ ERROR in productDetail: " + e.getClass().getName() + " - " + e.getMessage());
             e.printStackTrace();
+            model.addAttribute("errorMessage", "Không thể tải thông tin sản phẩm: " + e.getMessage());
             return "redirect:/";
         }
     }
