@@ -34,12 +34,18 @@ public class ReviewController {
     @Transactional(readOnly = true)
     public String productDetail(@PathVariable Long id, Model model, Authentication authentication) {
         try {
+            System.out.println("🔍 Loading product detail for ID: " + id);
+            
             Product product = productRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Product not found"));
             
-            List<Review> reviews = reviewService.getProductReviews(product);
+            System.out.println("✓ Product loaded: " + product.getName());
             
-            // Calculate average rating
+            // Load reviews with eager loading
+            List<Review> reviews = reviewRepository.findByProductWithUser(product);
+            System.out.println("✓ Reviews loaded: " + reviews.size());
+            
+            // Calculate rating
             double avgRating = 0.0;
             if (!reviews.isEmpty()) {
                 avgRating = reviews.stream()
@@ -48,9 +54,39 @@ public class ReviewController {
                         .orElse(0.0);
             }
             
-            // Calculate stars for display
             int fullStars = (int) Math.round(avgRating);
             int emptyStars = 5 - fullStars;
+            
+            // Check if user can review
+            boolean canReview = false;
+            boolean hasReviewed = false;
+            
+            if (authentication != null && authentication.getName() != null) {
+                String username = authentication.getName();
+                System.out.println("✓ User authenticated: " + username);
+                
+                User user = userRepository.findByUsername(username).orElse(null);
+                if (user != null) {
+                    // Check if already reviewed
+                    hasReviewed = reviews.stream()
+                            .anyMatch(r -> r.getUser().getId().equals(user.getId()));
+                    
+                    System.out.println("✓ Has reviewed: " + hasReviewed);
+                    
+                    if (!hasReviewed) {
+                        // Check if has delivered order with this product
+                        List<Order> orders = orderRepository.findByUserWithItemsOrderByCreatedAtDesc(user);
+                        canReview = orders.stream()
+                                .anyMatch(order -> 
+                                    Order.OrderStatus.DELIVERED.equals(order.getStatus()) &&
+                                    order.getOrderItems().stream()
+                                        .anyMatch(item -> item.getProduct().getId().equals(product.getId()))
+                                );
+                        
+                        System.out.println("✓ Can review: " + canReview);
+                    }
+                }
+            }
             
             model.addAttribute("product", product);
             model.addAttribute("reviews", reviews);
@@ -58,55 +94,14 @@ public class ReviewController {
             model.addAttribute("reviewCount", reviews.size());
             model.addAttribute("fullStars", fullStars);
             model.addAttribute("emptyStars", emptyStars);
+            model.addAttribute("canReview", canReview);
+            model.addAttribute("hasReviewed", hasReviewed);
             
-            // Default values
-            model.addAttribute("canReview", false);
-            model.addAttribute("hasReviewed", false);
-            
-            // Check if user can review (must have ordered and delivered)
-            if (authentication != null && !"anonymousUser".equals(authentication.getName())) {
-                try {
-                    String username = authentication.getName();
-                    User user = userRepository.findByUsername(username).orElse(null);
-                    
-                    if (user != null) {
-                        // Check if already reviewed (simple query)
-                        boolean hasReviewed = reviewRepository.findByProduct(product).stream()
-                                .anyMatch(r -> r.getUser() != null && r.getUser().getId().equals(user.getId()));
-                        
-                        // Check if has delivered order with this product
-                        boolean canReview = false;
-                        if (!hasReviewed) {
-                            List<Order> userOrders = orderRepository.findByUserWithItemsOrderByCreatedAtDesc(user);
-                            for (Order order : userOrders) {
-                                if (Order.OrderStatus.DELIVERED.equals(order.getStatus()) && 
-                                    order.getOrderItems() != null) {
-                                    
-                                    for (var item : order.getOrderItems()) {
-                                        if (item != null && item.getProduct() != null && 
-                                            item.getProduct().getId().equals(id)) {
-                                            canReview = true;
-                                            break;
-                                        }
-                                    }
-                                    if (canReview) break;
-                                }
-                            }
-                        }
-                        
-                        model.addAttribute("canReview", canReview);
-                        model.addAttribute("hasReviewed", hasReviewed);
-                    }
-                } catch (Exception e) {
-                    System.err.println("⚠️ Error checking review permissions: " + e.getMessage());
-                    e.printStackTrace();
-                    // Continue with default values
-                }
-            }
+            System.out.println("✓ Model attributes set, returning view");
             
             return "product-detail";
         } catch (Exception e) {
-            System.err.println("❌ ERROR in productDetail: " + e.getMessage());
+            System.err.println("❌ ERROR in productDetail: " + e.getClass().getName() + " - " + e.getMessage());
             e.printStackTrace();
             return "redirect:/";
         }
