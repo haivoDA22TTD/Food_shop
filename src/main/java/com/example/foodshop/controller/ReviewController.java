@@ -54,62 +54,74 @@ public class ReviewController {
             model.addAttribute("fullStars", fullStars);
             model.addAttribute("emptyStars", emptyStars);
             
+            // Default values
+            model.addAttribute("canReview", false);
+            model.addAttribute("hasReviewed", false);
+            
             // Check if user can review (must have ordered and delivered)
-            if (authentication != null) {
-                String username = authentication.getName();
-                System.out.println("🔍 DEBUG: User logged in: " + username);
-                
-                User user = userRepository.findByUsername(username).orElse(null);
-                if (user != null) {
-                    System.out.println("🔍 DEBUG: User found in DB: " + user.getId());
+            if (authentication != null && !"anonymousUser".equals(authentication.getName())) {
+                try {
+                    String username = authentication.getName();
+                    System.out.println("🔍 DEBUG: User logged in: " + username);
                     
-                    List<Order> userOrders = orderRepository.findByUserOrderByCreatedAtDesc(user);
-                    System.out.println("🔍 DEBUG: Total orders: " + userOrders.size());
-                    
-                    // Count delivered orders with this product
-                    long deliveredOrdersWithProduct = userOrders.stream()
-                            .filter(order -> {
-                                boolean isDelivered = Order.OrderStatus.DELIVERED.equals(order.getStatus());
-                                boolean hasProduct = order.getOrderItems() != null &&
-                                        order.getOrderItems().stream()
-                                                .anyMatch(item -> item.getProduct() != null && 
-                                                                item.getProduct().getId().equals(id));
-                                
-                                if (isDelivered && hasProduct) {
-                                    System.out.println("🔍 DEBUG: Found delivered order #" + order.getId() + " with product #" + id);
+                    User user = userRepository.findByUsername(username).orElse(null);
+                    if (user != null) {
+                        System.out.println("🔍 DEBUG: User found in DB: " + user.getId());
+                        
+                        List<Order> userOrders = orderRepository.findByUserWithItemsOrderByCreatedAtDesc(user);
+                        System.out.println("🔍 DEBUG: Total orders: " + userOrders.size());
+                        
+                        // Count delivered orders with this product
+                        long deliveredOrdersWithProduct = 0;
+                        for (Order order : userOrders) {
+                            try {
+                                if (Order.OrderStatus.DELIVERED.equals(order.getStatus()) && 
+                                    order.getOrderItems() != null) {
+                                    
+                                    boolean hasProduct = order.getOrderItems().stream()
+                                            .anyMatch(item -> item != null && 
+                                                            item.getProduct() != null && 
+                                                            item.getProduct().getId().equals(id));
+                                    
+                                    if (hasProduct) {
+                                        deliveredOrdersWithProduct++;
+                                        System.out.println("🔍 DEBUG: Found delivered order #" + order.getId() + " with product #" + id);
+                                    }
                                 }
-                                
-                                return isDelivered && hasProduct;
-                            })
-                            .count();
-                    
-                    System.out.println("🔍 DEBUG: Delivered orders with product: " + deliveredOrdersWithProduct);
-                    
-                    boolean canReview = deliveredOrdersWithProduct > 0;
-                    
-                    // Check if already reviewed
-                    boolean hasReviewed = reviews.stream()
-                            .anyMatch(review -> review.getUser() != null && 
-                                              review.getUser().getId().equals(user.getId()));
-                    
-                    System.out.println("🔍 DEBUG: canReview=" + canReview + ", hasReviewed=" + hasReviewed);
-                    
-                    model.addAttribute("canReview", canReview && !hasReviewed);
-                    model.addAttribute("hasReviewed", hasReviewed);
-                } else {
-                    System.out.println("⚠️ DEBUG: User not found in DB");
-                    model.addAttribute("canReview", false);
-                    model.addAttribute("hasReviewed", false);
+                            } catch (Exception e) {
+                                System.err.println("⚠️ Error checking order #" + order.getId() + ": " + e.getMessage());
+                            }
+                        }
+                        
+                        System.out.println("🔍 DEBUG: Delivered orders with product: " + deliveredOrdersWithProduct);
+                        
+                        boolean canReview = deliveredOrdersWithProduct > 0;
+                        
+                        // Check if already reviewed
+                        boolean hasReviewed = reviews.stream()
+                                .anyMatch(review -> review.getUser() != null && 
+                                                  review.getUser().getId().equals(user.getId()));
+                        
+                        System.out.println("🔍 DEBUG: canReview=" + canReview + ", hasReviewed=" + hasReviewed);
+                        
+                        model.addAttribute("canReview", canReview && !hasReviewed);
+                        model.addAttribute("hasReviewed", hasReviewed);
+                    } else {
+                        System.out.println("⚠️ DEBUG: User not found in DB");
+                    }
+                } catch (Exception e) {
+                    System.err.println("⚠️ Error checking review permissions: " + e.getMessage());
+                    e.printStackTrace();
                 }
             } else {
-                System.out.println("⚠️ DEBUG: No authentication");
-                model.addAttribute("canReview", false);
-                model.addAttribute("hasReviewed", false);
+                System.out.println("⚠️ DEBUG: No authentication or anonymous user");
             }
             
             return "product-detail";
         } catch (Exception e) {
+            System.err.println("❌ ERROR in productDetail: " + e.getMessage());
             e.printStackTrace();
+            model.addAttribute("error", "Không thể tải thông tin sản phẩm");
             return "redirect:/";
         }
     }
