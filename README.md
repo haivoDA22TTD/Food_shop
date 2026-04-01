@@ -10,7 +10,7 @@
 
 **Ứng dụng bán hàng thực phẩm trực tuyến với Spring Boot, JWT Authentication, và Cloudinary**
 
- [Yêu cầu tính năng](https://github.com/haivoDA22TTD/food_shop/issues)
+[Demo Live](https://food-shop-iswi.onrender.com) • [Báo cáo lỗi](https://github.com/yourusername/food-shop/issues) • [Yêu cầu tính năng](https://github.com/yourusername/food-shop/issues)
 
 </div>
 
@@ -22,6 +22,7 @@
 - [Tính năng](#-tính-năng)
 - [Công nghệ sử dụng](#-công-nghệ-sử-dụng)
 - [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
+- [Desktop Application](#-desktop-application)
 - [Cài đặt](#-cài-đặt)
 - [Cấu hình](#-cấu-hình)
 - [Deployment](#-deployment)
@@ -34,14 +35,18 @@
 
 ## 🎯 Giới thiệu
 
-**Food Shop** là một ứng dụng web bán hàng thực phẩm trực tuyến được xây dựng với Spring Boot 3, cung cấp trải nghiệm mua sắm mượt mà với giao diện hiện đại và các tính năng quản lý đầy đủ.
+**Food Shop** là một hệ thống bán hàng thực phẩm hoàn chỉnh với 3 nền tảng:
+- 🌐 **Web Application** - Giao diện web hiện đại với Thymeleaf
+- 💻 **Desktop Application** - Ứng dụng Java Swing với FlatLaf Look and Feel
+- 🔌 **REST API Backend** - Spring Boot với JWT Authentication
 
 ### ✨ Điểm nổi bật
 
 - 🔐 **JWT Authentication** - Bảo mật cao với JSON Web Token
 - ☁️ **Cloudinary Integration** - Lưu trữ ảnh trên cloud, không lo mất dữ liệu
 - 🎨 **Modern UI** - Giao diện đẹp mắt với sky blue gradient theme
-- 📱 **Responsive Design** - Tương thích mọi thiết bị
+- 📱 **Responsive Design** - Web tương thích mọi thiết bị
+- 🖥️ **Desktop App** - Ứng dụng standalone không cần cài Java
 - 🐳 **Docker Ready** - Deploy dễ dàng với Docker
 - 🚀 **Production Ready** - Đã deploy trên Render + Railway
 
@@ -83,7 +88,7 @@
 | ![Hibernate](https://img.shields.io/badge/Hibernate-6.3.1-59666C?logo=hibernate) | 6.3.1 | ORM Framework |
 | ![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?logo=mysql) | 8.0 | Database |
 
-### Frontend
+### Web Frontend
 
 | Công nghệ | Mô tả |
 |-----------|-------|
@@ -91,6 +96,16 @@
 | ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white) | Markup Language |
 | ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white) | Styling |
 | ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black) | Client-side Logic |
+
+### Desktop Application
+
+| Công nghệ | Phiên bản | Mô tả |
+|-----------|-----------|-------|
+| ![Java Swing](https://img.shields.io/badge/Java%20Swing-17-orange?logo=java) | 17 | GUI Framework |
+| ![FlatLaf](https://img.shields.io/badge/FlatLaf-3.2.5-blue) | 3.2.5 | Modern Look and Feel |
+| ![OkHttp](https://img.shields.io/badge/OkHttp-4.12.0-green) | 4.12.0 | HTTP Client |
+| ![Gson](https://img.shields.io/badge/Gson-2.10.1-orange) | 2.10.1 | JSON Parser |
+| ![Maven](https://img.shields.io/badge/Maven-3.9.5-red?logo=apache-maven) | 3.9.5 | Build Tool |
 
 ### Cloud & DevOps
 
@@ -107,6 +122,13 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
+│                    Desktop Application                       │
+│         (Java Swing + FlatLaf + OkHttp + Gson)              │
+└────────────────────┬────────────────────────────────────────┘
+                     │
+                     │ REST API (JWT)
+                     │
+┌────────────────────▼────────────────────────────────────────┐
 │                         Frontend                             │
 │  (Thymeleaf + HTML/CSS/JS + Toast Notifications)           │
 └────────────────────┬────────────────────────────────────────┘
@@ -132,6 +154,122 @@
 
 ---
 
+## 💻 Desktop Application
+
+### 📥 Tải về & Cài đặt
+
+#### Cho người dùng cuối:
+
+1. **Tải file nén** `FoodShopApp.zip`
+2. **Giải nén** vào thư mục bất kỳ (ví dụ: `D:\FoodShopApp\`)
+3. **Double-click** file `FoodShop.exe` để chạy
+4. **Không cần cài đặt Java** - JRE đã được bundle sẵn!
+
+#### Cấu trúc thư mục:
+```
+FoodShopApp/
+├── FoodShop.exe              # File thực thi
+├── app/
+│   └── food-shop-swing-client-1.0.0.jar
+└── jre/                      # Java Runtime Environment
+    └── bin/
+        └── javaw.exe
+```
+
+### 🔨 Build từ source code
+
+#### Yêu cầu:
+- Java 17 JDK
+- Maven 3.6+
+- IntelliJ IDEA (khuyến nghị)
+
+#### Các bước build:
+
+1. **Clone repository:**
+```bash
+git clone https://github.com/haivoDA22TTD/food_shop.git
+cd food_shop/food-shop-swing-client
+```
+
+2. **Build với Maven:**
+```bash
+mvn clean package
+```
+
+3. **File JAR được tạo tại:**
+```
+target/food-shop-swing-client-1.0.0.jar
+```
+
+4. **Chạy JAR:**
+```bash
+java -jar target/food-shop-swing-client-1.0.0.jar
+```
+
+### 📦 Đóng gói thành EXE
+
+#### Chuẩn bị:
+
+1. **Tạo cấu trúc thư mục:**
+```
+D:\FoodShopApp\
+├── app\
+│   └── food-shop-swing-client-1.0.0.jar
+└── jre\
+    └── (copy JDK 17 vào đây)
+```
+
+2. **Copy JRE:**
+- Copy toàn bộ thư mục JDK 17 vào `jre\`
+- Hoặc download JRE 17 từ [Adoptium](https://adoptium.net/)
+
+3. **Tạo file launcher:**
+- File `FoodShop.bat` đã có sẵn trong project
+- Copy vào thư mục `D:\FoodShopApp\`
+
+4. **Convert BAT sang EXE:**
+- Download [Bat To Exe Converter](http://www.f2ko.de/en/b2e.php) (Free)
+- Load file `FoodShop.bat`
+- Convert thành `FoodShop.exe`
+
+5. **Phân phối:**
+- Nén toàn bộ thư mục `FoodShopApp\`
+- Gửi file ZIP cho users
+- Users chỉ cần giải nén và chạy `FoodShop.exe`
+
+📖 **Chi tiết**: Xem file `food-shop-swing-client/BUILD_EXE_GUIDE.md`
+
+### 🎨 Giao diện Desktop App
+
+#### Màn hình chính:
+- Grid layout hiển thị sản phẩm với ảnh từ Cloudinary
+- Hover effects với animations
+- Search và filter theo category
+- Gradient background (sky blue theme)
+
+#### Tính năng:
+- **Login/Register** - Form đăng nhập/đăng ký
+- **Product Grid** - Hiển thị sản phẩm với card design
+- **Product Detail** - Chi tiết sản phẩm + reviews
+- **Cart** - Giỏ hàng với tính tổng tiền
+- **Checkout** - Form thanh toán
+- **Orders** - Danh sách đơn hàng với status colors
+- **Reviews** - Dialog đánh giá với star rating
+
+### 🔧 Cấu hình Backend URL
+
+Mặc định app kết nối đến production backend:
+```java
+private static final String BASE_URL = "https://food-shop-iswi.onrender.com";
+```
+
+Để kết nối local backend, sửa trong `ApiClient.java`:
+```java
+private static final String BASE_URL = "http://localhost:8080";
+```
+
+---
+
 ## 💻 Cài đặt
 
 ### Yêu cầu hệ thống
@@ -141,6 +279,50 @@
 - 📦 Maven 3.6+
 - 🐳 Docker (tùy chọn)
 
+### Clone Repository
+
+```bash
+git clone https://github.com/yourusername/food-shop.git
+cd food-shop
+```
+
+### Cài đặt Dependencies
+
+```bash
+mvn clean install
+```
+
+### Cấu hình Database
+
+```sql
+CREATE DATABASE food_shop;
+```
+
+### Chạy ứng dụng
+
+#### Cách 1: Maven
+
+```bash
+mvn spring-boot:run
+```
+
+#### Cách 2: JAR file
+
+```bash
+mvn clean package
+java -jar target/food-shop-1.0.0.jar
+```
+
+#### Cách 3: Docker
+
+```bash
+docker build -t food-shop .
+docker run -p 8080:8080 food-shop
+```
+
+Truy cập: `http://localhost:8080`
+
+---
 
 ## ⚙️ Cấu hình
 
@@ -151,7 +333,17 @@ Dự án sử dụng 2 profiles:
 - **dev** - Local development (mặc định)
 - **prod** - Production deployment
 
+### Environment Variables
 
+#### Development (Local)
+
+Không cần cấu hình, sử dụng giá trị mặc định:
+
+```properties
+# Tài khoản admin mặc định
+Username: admin
+Password: admin123
+```
 
 #### Production (Render/Railway)
 
@@ -203,7 +395,18 @@ CLOUDINARY_FOLDER=food-shop
 3. Set Environment Variables (xem file `RENDER_COPY_PASTE.txt`)
 4. Deploy
 
+#### Bước 3: Cấu hình Cloudinary
 
+1. Tạo tài khoản [Cloudinary](https://cloudinary.com)
+2. Copy API credentials
+3. Set environment variables
+
+📖 **Hướng dẫn chi tiết**: 
+- `DEPLOYMENT.md` - Deploy đầy đủ
+- `CLOUDINARY_SETUP.md` - Cấu hình Cloudinary
+- `DOCKER_DEPLOY.md` - Deploy với Docker
+
+---
 
 ## 📚 API Documentation
 
@@ -241,7 +444,21 @@ CLOUDINARY_FOLDER=food-shop
 
 ---
 
+## 📸 Screenshots
 
+### Trang chủ
+![Homepage](docs/screenshots/homepage.png)
+
+### Giỏ hàng
+![Cart](docs/screenshots/cart.png)
+
+### Admin Dashboard
+![Admin Dashboard](docs/screenshots/admin-dashboard.png)
+
+### Quản lý sản phẩm
+![Product Management](docs/screenshots/product-management.png)
+
+---
 
 ## 🤝 Đóng góp
 
@@ -263,20 +480,26 @@ Dự án này được phân phối dưới giấy phép MIT. Xem file `LICENSE`
 
 ## 👨‍💻 Tác giả
 
-**haivoDA22TTD(haivoDev)**
+**haivoDA22TTD (haivoDev)**
 
-- GitHub: [haivoDA22TTDe](https://github.com/haivoDA22TTD)
-- Email: 110122068@st.tvu.edu.vn
+- 👤 GitHub: [@haivoDA22TTD](https://github.com/haivoDA22TTD)
+- 📧 Email: 110122068@st.tvu.edu.vn
+- 🎓 Sinh viên Trường Đại học Trà Vinh
+- 💼 Full Stack Developer (Spring Boot + Java Swing + Web)
 
 ---
 
 ## 🙏 Lời cảm ơn
 
-- [Spring Boot](https://spring.io/projects/spring-boot)
-- [Cloudinary](https://cloudinary.com)
-- [Render](https://render.com)
-- [Railway](https://railway.app)
+- [Spring Boot](https://spring.io/projects/spring-boot) - Backend Framework
+- [FlatLaf](https://www.formdev.com/flatlaf/) - Modern Look and Feel cho Java Swing
+- [Cloudinary](https://cloudinary.com) - Cloud Image Storage
+- [Render](https://render.com) - Backend Hosting
+- [Railway](https://railway.app) - Database Hosting
+- [OkHttp](https://square.github.io/okhttp/) - HTTP Client
+- [Gson](https://github.com/google/gson) - JSON Parser
 - [Shields.io](https://shields.io) - Badges
+- [Bat To Exe Converter](http://www.f2ko.de/en/b2e.php) - BAT to EXE Tool
 - Tất cả contributors đã đóng góp cho dự án
 
 ---
@@ -286,8 +509,9 @@ Dự án này được phân phối dưới giấy phép MIT. Xem file `LICENSE`
 Nếu bạn có câu hỏi hoặc cần hỗ trợ:
 
 - 📧 Email: 110122068@st.tvu.edu.vn
-- 💬 Issues: [GitHub Issues](https://github.com/haivoDA22TTD/Food_shop/issues)
-
+- 💬 Issues: [GitHub Issues](https://github.com/haivoDA22TTD/food_shop/issues)
+- 🐛 Bug Reports: [Report Bug](https://github.com/haivoDA22TTD/food_shop/issues/new?labels=bug)
+- ✨ Feature Requests: [Request Feature](https://github.com/haivoDA22TTD/food_shop/issues/new?labels=enhancement)
 
 ---
 
