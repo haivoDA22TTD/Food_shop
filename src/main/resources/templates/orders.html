@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn hàng của tôi - Food Shop</title>
+    <link rel="stylesheet" th:href="@{/css/modern-style.css}">
+    <link rel="stylesheet" th:href="@{/css/animations.css}">
+    <style>
+        .orders-container {
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 2rem;
+        }
+        
+        .orders-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter-tab {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid var(--primary-color);
+            background: white;
+            color: var(--primary-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        .filter-tab:hover,
+        .filter-tab.active {
+            background: var(--gradient);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+        
+        .order-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+        }
+        
+        .order-card:hover {
+            box-shadow: 0 8px 16px rgba(14, 165, 233, 0.15);
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 1rem;
+        }
+        
+        .order-id {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+        
+        .order-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .order-items {
+            margin: 1rem 0;
+        }
+        
+        .order-item {
+            display: flex;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .order-item:last-child {
+            border-bottom: none;
+        }
+        
+        .item-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        
+        .item-info {
+            flex: 1;
+        }
+        
+        .item-name {
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        .item-quantity {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .item-price {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .order-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 2px solid #eee;
+            margin-top: 1rem;
+        }
+        
+        .order-total {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-confirmed {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-shipping {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+        
+        .status-delivered {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .empty-orders {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 12px;
+        }
+        
+        .empty-orders-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="/" class="logo">🍔 Food Shop</a>
+            <div class="nav-links">
+                <a href="/">Trang chủ</a>
+                <a href="/cart">🛒 Giỏ hàng</a>
+                <a href="/orders">📦 Đơn hàng</a>
+                <a href="/login" id="loginLink">Đăng nhập</a>
+                <a href="/admin" id="adminLink" style="display: none;">Admin</a>
+            </div>
+        </nav>
+    </header>
+    
+    <div class="orders-container">
+        <div class="orders-header">
+            <h1>📦 Đơn hàng của tôi</h1>
+        </div>
+        
+        <div class="filter-tabs">
+            <button class="filter-tab active" onclick="filterOrders('all')">Tất cả</button>
+            <button class="filter-tab" onclick="filterOrders('PENDING')">Chờ xác nhận</button>
+            <button class="filter-tab" onclick="filterOrders('CONFIRMED')">Đã xác nhận</button>
+            <button class="filter-tab" onclick="filterOrders('SHIPPING')">Đang giao</button>
+            <button class="filter-tab" onclick="filterOrders('DELIVERED')">Hoàn thành</button>
+            <button class="filter-tab" onclick="filterOrders('CANCELLED')">Đã hủy</button>
+        </div>
+        
+        <div id="ordersContainer"></div>
+        
+        <div id="emptyOrders" class="empty-orders" style="display: none;">
+            <div class="empty-orders-icon">📦</div>
+            <h2>Chưa có đơn hàng nào</h2>
+            <p>Bạn chưa đặt đơn hàng nào</p>
+            <a href="/" class="btn-continue" style="display: inline-block; margin-top: 1rem; padding: 0.875rem 2rem; background: var(--gradient); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                Mua sắm ngay
+            </a>
+        </div>
+    </div>
+    
+    <script th:src="@{/js/notifications.js}"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const products = /*[[${products}]]*/ [];
+        /*]]>*/
+        
+        let allOrders = [];
+        
+        async function loadOrders() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                toast.warning('Vui lòng đăng nhập để xem đơn hàng!');
+                setTimeout(() => window.location.href = '/login', 1500);
+                return;
+            }
+            
+            loading.show('Đang tải đơn hàng...');
+            
+            try {
+                console.log('Loading orders with token:', token);
+                const response = await fetch('/api/orders/my-orders', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                loading.hide();
+                
+                if (response.ok) {
+                    allOrders = await response.json();
+                    console.log('Orders loaded:', allOrders);
+                    displayOrders(allOrders);
+                } else {
+                    console.error('Failed to load orders, status:', response.status);
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    
+                    if (response.status === 401) {
+                        toast.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!');
+                        localStorage.clear();
+                        setTimeout(() => window.location.href = '/login', 1500);
+                    } else {
+                        toast.error('Không thể tải đơn hàng!');
+                    }
+                }
+            } catch (error) {
+                loading.hide();
+                console.error('Error loading orders:', error);
+                toast.error('Có lỗi khi tải đơn hàng: ' + error.message);
+            }
+        }
+        
+        function displayOrders(orders) {
+            const container = document.getElementById('ordersContainer');
+            const emptyOrders = document.getElementById('emptyOrders');
+            
+            if (orders.length === 0) {
+                container.innerHTML = '';
+                emptyOrders.style.display = 'block';
+                return;
+            }
+            
+            emptyOrders.style.display = 'none';
+            container.innerHTML = '';
+            
+            orders.forEach(order => {
+                const orderCard = createOrderCard(order);
+                container.innerHTML += orderCard;
+            });
+        }
+        
+        function createOrderCard(order) {
+            const statusNames = {
+                'PENDING': 'Chờ xác nhận',
+                'CONFIRMED': 'Đã xác nhận',
+                'SHIPPING': 'Đang giao hàng',
+                'DELIVERED': 'Đã giao hàng',
+                'CANCELLED': 'Đã hủy'
+            };
+            
+            let itemsHTML = '';
+            order.orderItems.forEach(item => {
+                const product = products.find(p => p.id == item.product.id);
+                const reviewButton = order.status === 'DELIVERED' 
+                    ? `<button onclick="reviewProduct(${item.product.id}, '${item.product.name}')" 
+                              style="padding: 0.5rem 1rem; background: var(--gradient); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; margin-top: 0.5rem;">
+                           ⭐ Đánh giá
+                       </button>`
+                    : '';
+                
+                const imageUrl = item.product.image.startsWith('http') ? item.product.image : '/img/' + item.product.image;
+                itemsHTML += `
+                    <div class="order-item">
+                        <img src="${imageUrl}" alt="${item.product.name}" class="item-image">
+                        <div class="item-info">
+                            <div class="item-name">${item.product.name}</div>
+                            <div class="item-quantity">Số lượng: ${item.quantity}</div>
+                            ${reviewButton}
+                        </div>
+                        <div class="item-price">${formatPrice(item.price * item.quantity)}</div>
+                    </div>
+                `;
+            });
+            
+            return `
+                <div class="order-card" data-status="${order.status}">
+                    <div class="order-header">
+                        <div>
+                            <div class="order-id">Đơn hàng #${order.id}</div>
+                            <div class="order-date">${formatDate(order.createdAt)}</div>
+                        </div>
+                        <span class="status-badge status-${order.status.toLowerCase()}">
+                            ${statusNames[order.status] || order.status}
+                        </span>
+                    </div>
+                    
+                    <div class="order-items">
+                        ${itemsHTML}
+                    </div>
+                    
+                    <div style="margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                        <div style="margin-bottom: 0.5rem;"><strong>📍 Thông tin giao hàng:</strong></div>
+                        <div style="white-space: pre-line; color: #666;">${order.shippingAddress}</div>
+                        <div style="margin-top: 0.5rem;"><strong>💳 Phương thức thanh toán:</strong> ${order.paymentMethod}</div>
+                    </div>
+                    
+                    <div class="order-footer">
+                        <div class="order-total">Tổng: ${formatPrice(order.totalAmount)}</div>
+                        <button class="btn-view-detail" onclick="viewOrderDetail(${order.id})" 
+                                style="padding: 0.75rem 1.5rem; background: var(--gradient); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            Xem chi tiết
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function reviewProduct(productId, productName) {
+            window.location.href = '/product/' + productId;
+        }
+        
+        function filterOrders(status) {
+            const tabs = document.querySelectorAll('.filter-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (status === 'all') {
+                displayOrders(allOrders);
+            } else {
+                const filtered = allOrders.filter(order => order.status === status);
+                displayOrders(filtered);
+            }
+        }
+        
+        function formatPrice(price) {
+            return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
+        }
+        
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('vi-VN');
+        }
+        
+        function checkLoginStatus() {
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+            const role = localStorage.getItem('role');
+            
+            const loginLink = document.getElementById('loginLink');
+            const adminLink = document.getElementById('adminLink');
+            
+            if (token && username) {
+                loginLink.textContent = '👤 ' + username;
+                loginLink.href = '#';
+                loginLink.onclick = function(e) {
+                    e.preventDefault();
+                    if (confirm('Bạn có muốn đăng xuất?')) {
+                        localStorage.clear();
+                        window.location.href = '/';
+                    }
+                };
+                
+                if (role && role.includes('ADMIN')) {
+                    adminLink.style.display = 'inline-block';
+                }
+            }
+        }
+        
+        loadOrders();
+        checkLoginStatus();
+    </script>
+</body>
+</html>
+
+    
+    <!-- Order Detail Modal -->
+    <div id="orderModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; overflow-y: auto;">
+        <div style="max-width: 800px; margin: 2rem auto; background: white; border-radius: 12px; padding: 2rem; position: relative;">
+            <button onclick="closeModal()" style="position: absolute; top: 1rem; right: 1rem; background: #ef4444; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.5rem;">×</button>
+            
+            <h2 style="margin-bottom: 2rem; color: var(--dark-color);">Chi tiết đơn hàng</h2>
+            
+            <div id="modalContent"></div>
+        </div>
+    </div>
+    
+    <script>
+        function viewOrderDetail(orderId) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            const statusNames = {
+                'PENDING': 'Chờ xác nhận',
+                'CONFIRMED': 'Đã xác nhận',
+                'SHIPPING': 'Đang giao hàng',
+                'DELIVERED': 'Đã giao hàng',
+                'CANCELLED': 'Đã hủy'
+            };
+            
+            const statusDescriptions = {
+                'PENDING': 'Đơn hàng đang chờ người bán xác nhận',
+                'CONFIRMED': 'Đơn hàng đã được xác nhận và đang chuẩn bị',
+                'SHIPPING': 'Đơn hàng đang được giao đến bạn',
+                'DELIVERED': 'Đơn hàng đã được giao thành công',
+                'CANCELLED': 'Đơn hàng đã bị hủy'
+            };
+            
+            let itemsHTML = '';
+            order.orderItems.forEach(item => {
+                const imageUrl = item.product.image.startsWith('http') ? item.product.image : '/img/' + item.product.image;
+                itemsHTML += `
+                    <div style="display: flex; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid #eee;">
+                        <img src="${imageUrl}" alt="${item.product.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">${item.product.name}</div>
+                            <div style="color: #666; font-size: 0.9rem;">Số lượng: ${item.quantity}</div>
+                            <div style="color: var(--primary-color); font-weight: bold; margin-top: 0.25rem;">${formatPrice(item.price)} x ${item.quantity}</div>
+                        </div>
+                        <div style="font-weight: bold; color: var(--primary-color);">${formatPrice(item.price * item.quantity)}</div>
+                    </div>
+                `;
+            });
+            
+            const modalContent = `
+                <div style="background: linear-gradient(135deg, #e0f2fe, #f0f9ff); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <div>
+                            <div style="font-size: 1.3rem; font-weight: bold; color: var(--dark-color);">Đơn hàng #${order.id}</div>
+                            <div style="color: #666; margin-top: 0.25rem;">${formatDate(order.createdAt)}</div>
+                        </div>
+                        <span class="status-badge status-${order.status.toLowerCase()}" style="font-size: 1rem; padding: 0.5rem 1rem;">
+                            ${statusNames[order.status]}
+                        </span>
+                    </div>
+                    <div style="background: white; padding: 1rem; border-radius: 6px; margin-top: 1rem;">
+                        <div style="font-weight: 600; margin-bottom: 0.5rem;">📍 Trạng thái đơn hàng</div>
+                        <div style="color: #666;">${statusDescriptions[order.status]}</div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: var(--dark-color);">Sản phẩm</h3>
+                    ${itemsHTML}
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: var(--dark-color);">Thông tin giao hàng</h3>
+                    <div style="white-space: pre-line; color: #666; line-height: 1.6;">${order.shippingAddress}</div>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: var(--dark-color);">Phương thức thanh toán</h3>
+                    <div style="color: #666;">${order.paymentMethod}</div>
+                </div>
+                
+                <div style="border-top: 2px solid var(--primary-color); padding-top: 1rem;">
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                        <span>Tạm tính:</span>
+                        <span>${formatPrice(order.totalAmount - 30000)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                        <span>Phí vận chuyển:</span>
+                        <span>${formatPrice(30000)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 1rem 0; font-size: 1.3rem; font-weight: bold; color: var(--primary-color); border-top: 2px solid #eee; margin-top: 0.5rem;">
+                        <span>Tổng cộng:</span>
+                        <span>${formatPrice(order.totalAmount)}</span>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('modalContent').innerHTML = modalContent;
+            document.getElementById('orderModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal() {
+            document.getElementById('orderModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('orderModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>

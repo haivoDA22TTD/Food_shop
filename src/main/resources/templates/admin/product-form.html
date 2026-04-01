@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${product.id != null ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}"></title>
+    <link rel="stylesheet" th:href="@{/css/modern-style.css}">
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 3rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .form-title {
+            text-align: center;
+            color: var(--dark-color);
+            margin-bottom: 2rem;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        
+        .btn-cancel {
+            background: #95a5a6;
+            color: white;
+            padding: 0.875rem 2rem;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .image-upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .image-upload-area:hover {
+            border-color: var(--primary-color);
+            background: #f8f9fa;
+        }
+        
+        .image-upload-area.dragover {
+            border-color: var(--primary-color);
+            background: #e3f2fd;
+        }
+        
+        .image-preview {
+            max-width: 300px;
+            max-height: 300px;
+            margin: 1rem auto;
+            display: none;
+        }
+        
+        .image-preview img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: #999;
+            margin-bottom: 1rem;
+        }
+        
+        select {
+            width: 100%;
+            padding: 0.875rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="/" class="logo">🍔 Food Shop - Admin</a>
+            <div class="nav-links">
+                <a href="/admin/products">Quay lại</a>
+            </div>
+        </nav>
+    </header>
+    
+    <div class="form-container">
+        <h1 class="form-title" th:text="${product.id != null ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}"></h1>
+        
+        <form th:action="@{/admin/products/save}" th:object="${product}" method="post" enctype="multipart/form-data">
+            <input type="hidden" th:field="*{id}">
+            <input type="hidden" th:field="*{image}" id="currentImage">
+            
+            <div class="form-row full">
+                <div class="form-group">
+                    <label>Hình ảnh sản phẩm</label>
+                    <input type="file" name="imageFile" id="imageFile" accept="image/*" style="display: none;">
+                    <div class="image-upload-area" id="uploadArea" onclick="document.getElementById('imageFile').click()">
+                        <div class="upload-icon">📷</div>
+                        <p>Click hoặc kéo thả ảnh vào đây</p>
+                        <small style="color: #999;">Hỗ trợ: JPG, PNG, GIF (Tối đa 10MB)</small>
+                    </div>
+                    <div class="image-preview" id="imagePreview">
+                        <img id="previewImg" src="" alt="Preview">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tên sản phẩm</label>
+                    <input type="text" th:field="*{name}" required placeholder="Nhập tên sản phẩm">
+                </div>
+                
+                <div class="form-group">
+                    <label>Danh mục</label>
+                    <select th:field="*{category}" required>
+                        <option value="">Chọn danh mục</option>
+                        <option value="Đồ ăn nhanh">Đồ ăn nhanh</option>
+                        <option value="Đồ ngọt">Đồ ngọt</option>
+                        <option value="Đồ uống">Đồ uống</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Giá (VNĐ)</label>
+                    <input type="number" th:field="*{price}" required placeholder="Nhập giá" step="1000">
+                </div>
+                
+                <div class="form-group">
+                    <label>Số lượng tồn kho</label>
+                    <input type="number" th:field="*{stock}" required placeholder="Nhập số lượng">
+                </div>
+            </div>
+            
+            <div class="form-row full">
+                <div class="form-group">
+                    <label>Mô tả</label>
+                    <textarea th:field="*{description}" rows="4" placeholder="Nhập mô tả sản phẩm" 
+                              style="width: 100%; padding: 0.875rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;"></textarea>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <a href="/admin/products" class="btn-cancel">Hủy</a>
+                <button type="submit" class="btn-primary" style="width: auto; padding: 0.875rem 2rem;">
+                    <span th:text="${product.id != null ? 'Cập nhật' : 'Thêm mới'}"></span>
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        const imageFile = document.getElementById('imageFile');
+        const uploadArea = document.getElementById('uploadArea');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        const currentImage = document.getElementById('currentImage');
+        
+        // Show existing image if editing
+        if (currentImage.value) {
+            previewImg.src = '/img/' + currentImage.value;
+            imagePreview.style.display = 'block';
+        }
+        
+        // Handle file selection
+        imageFile.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                displayImage(file);
+            }
+        });
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                imageFile.files = e.dataTransfer.files;
+                displayImage(file);
+            }
+        });
+        
+        function displayImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                imagePreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Orders</title>
+</head>
+<body>
+    <h1>Test Orders Page</h1>
+    <p>Total orders: <span th:text="${orders != null ? orders.size() : 0}">0</span></p>
+    
+    <div th:if="${orders != null && !orders.empty}">
+        <h2>Orders List:</h2>
+        <ul>
+            <li th:each="order : ${orders}">
+                Order #<span th:text="${order.id}"></span> - 
+                Status: <span th:text="${order.status}"></span>
+            </li>
+        </ul>
+    </div>
+    
+    <div th:if="${orders == null || orders.empty}">
+        <p>No orders found</p>
+    </div>
+</body>
+</html>
