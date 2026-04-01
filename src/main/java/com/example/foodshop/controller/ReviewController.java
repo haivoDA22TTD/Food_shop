@@ -31,8 +31,7 @@ public class ReviewController {
     private final ReviewRepository reviewRepository;
     
     @GetMapping("/product/{id}")
-    @Transactional(readOnly = true)
-    public String productDetail(@PathVariable Long id, Model model, Authentication authentication) {
+    public String productDetail(@PathVariable Long id, Model model) {
         try {
             System.out.println("🔍 Loading product detail for ID: " + id);
             
@@ -41,81 +40,16 @@ public class ReviewController {
             
             System.out.println("✓ Product loaded: " + product.getName());
             
-            // Load reviews with eager loading
-            List<Review> reviews = reviewRepository.findByProductWithUser(product);
-            System.out.println("✓ Reviews loaded: " + reviews.size());
-            
-            // Calculate rating
-            double avgRating = 0.0;
-            if (!reviews.isEmpty()) {
-                avgRating = reviews.stream()
-                        .mapToInt(Review::getRating)
-                        .average()
-                        .orElse(0.0);
-            }
-            
-            int fullStars = (int) Math.round(avgRating);
-            int emptyStars = 5 - fullStars;
-            
-            // Check if user can review
-            boolean canReview = false;
-            boolean hasReviewed = false;
-            
-            if (authentication != null && authentication.getName() != null && !authentication.getName().equals("anonymousUser")) {
-                String username = authentication.getName();
-                System.out.println("✓ User authenticated: " + username);
-                
-                User user = userRepository.findByUsername(username).orElse(null);
-                if (user != null) {
-                    System.out.println("✓ User found: " + user.getId());
-                    
-                    // Check if already reviewed
-                    hasReviewed = reviews.stream()
-                            .anyMatch(r -> r.getUser() != null && r.getUser().getId().equals(user.getId()));
-                    
-                    System.out.println("✓ Has reviewed: " + hasReviewed);
-                    
-                    if (!hasReviewed) {
-                        // Check if has delivered order with this product
-                        List<Order> orders = orderRepository.findByUserWithItemsOrderByCreatedAtDesc(user);
-                        System.out.println("✓ Orders loaded: " + orders.size());
-                        
-                        canReview = orders.stream()
-                                .anyMatch(order -> {
-                                    if (!Order.OrderStatus.DELIVERED.equals(order.getStatus())) {
-                                        return false;
-                                    }
-                                    if (order.getOrderItems() == null) {
-                                        return false;
-                                    }
-                                    return order.getOrderItems().stream()
-                                            .anyMatch(item -> item.getProduct() != null && 
-                                                            item.getProduct().getId().equals(product.getId()));
-                                });
-                        
-                        System.out.println("✓ Can review: " + canReview);
-                    }
-                }
-            } else {
-                System.out.println("✓ User not authenticated or anonymous");
-            }
-            
+            // Only pass product to template
+            // JavaScript will load reviews and check permissions via API
             model.addAttribute("product", product);
-            model.addAttribute("reviews", reviews);
-            model.addAttribute("avgRating", avgRating);
-            model.addAttribute("reviewCount", reviews.size());
-            model.addAttribute("fullStars", fullStars);
-            model.addAttribute("emptyStars", emptyStars);
-            model.addAttribute("canReview", canReview);
-            model.addAttribute("hasReviewed", hasReviewed);
             
-            System.out.println("✓ Model attributes set, returning view");
+            System.out.println("✓ Returning view");
             
             return "product-detail";
         } catch (Exception e) {
             System.err.println("❌ ERROR in productDetail: " + e.getClass().getName() + " - " + e.getMessage());
             e.printStackTrace();
-            model.addAttribute("errorMessage", "Không thể tải thông tin sản phẩm: " + e.getMessage());
             return "redirect:/";
         }
     }
