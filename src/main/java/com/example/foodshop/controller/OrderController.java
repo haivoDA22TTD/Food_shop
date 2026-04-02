@@ -117,4 +117,94 @@ public class OrderController {
         List<Order> orders = orderRepository.findByUserOrderByCreatedAtDesc(user);
         return ResponseEntity.ok(orders);
     }
+    
+    @PostMapping("/api/orders/{orderId}/cancel")
+    @ResponseBody
+    public ResponseEntity<?> cancelOrder(@PathVariable Long orderId, Authentication authentication) {
+        try {
+            if (authentication == null) {
+                return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập"));
+            }
+            
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username).orElse(null);
+            
+            if (user == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "Không tìm thấy người dùng"));
+            }
+            
+            // Check if account is locked
+            if (user.getAccountLocked() != null && user.getAccountLocked()) {
+                return ResponseEntity.status(403).body(Map.of(
+                    "error", "Tài khoản của bạn đã bị khóa",
+                    "reason", user.getLockReason() != null ? user.getLockReason() : "Hủy đơn hàng quá nhiều lần"
+                ));
+            }
+            
+            Order order = orderRepository.findById(orderId).orElse(null);
+            
+            if (order == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "Không tìm thấy đơn hàng"));
+            }
+            
+            // Check if order belongs to user
+            if (!order.getUser().getId().equals(user.getId())) {
+                return ResponseEntity.status(403).body(Map.of("error", "Bạn không có quyền hủy đơn hàng này"));
+            }
+            
+            // Check if order can be cancelled (only PENDING or CONFIRMED)
+            if (order.getStatus() != Order.OrderStatus.PENDING && 
+                order.getStatus() != Order.OrderStatus.CONFIRMED) {
+                return ResponseEntity.status(400).body(Map.of(
+                    "error", "Không thể hủy đơn hàng đã giao hoặc đang giao"
+                ));
+            }
+            
+            // Update order status
+            order.setStatus(Order.OrderStatus.CANCELLED);
+            orderRepository.save(order);
+            
+            // Update user's cancelled orders count
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            java.time.LocalDateTime lastCancelled = user.getLastCancelledAt();
+            
+            // Reset count if it's a new month
+            if (lastCancelled == null || 
+                lastCancelled.getMonth() != now.getMonth() || 
+                lastCancelled.getYear() != now.getYear()) {
+                user.setCancelledOrdersThisMonth(1);
+            } else {
+                user.setCancelledOrdersThisMonth(user.getCancelledOrdersThisMonth() + 1);
+            }
+            
+            user.setLastCancelledAt(now);
+            
+            // Check if user should be locked (more than 3 cancellations this month)
+            if (user.getCancelledOrdersThisMonth() > 3) {
+                user.setAccountLocked(true);
+                user.setLockReason("Hủy đơn hàng quá 3 lần trong tháng " + now.getMonth().getValue() + "/" + now.getYear());
+                userRepository.save(user);
+                
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Đơn hàng đã được hủy",
+                    "warning", "Tài khoản của bạn đã bị khóa do hủy đơn hàng quá 3 lần trong tháng. Vui lòng liên hệ admin để mở khóa."
+                ));
+            }
+            
+            userRepository.save(user);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Đơn hàng đã được hủy thành công",
+                "cancelledCount", user.getCancelledOrdersThisMonth(),
+                "warning", user.getCancelledOrdersThisMonth() >= 3 ? 
+                    "Cảnh báo: Bạn đã hủy " + user.getCancelledOrdersThisMonth() + " đơn hàng trong tháng này. Hủy thêm sẽ bị khóa tài khoản." : null
+            ));
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Lỗi: " + e.getMessage()));
+        }
+    }
 }

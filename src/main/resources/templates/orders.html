@@ -349,10 +349,17 @@
                     
                     <div class="order-footer">
                         <div class="order-total">Tổng: ${formatPrice(order.totalAmount)}</div>
-                        <button class="btn-view-detail" onclick="viewOrderDetail(${order.id})" 
-                                style="padding: 0.75rem 1.5rem; background: var(--gradient); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                            Xem chi tiết
-                        </button>
+                        <div style="display: flex; gap: 1rem;">
+                            ${(order.status === 'PENDING' || order.status === 'CONFIRMED') ? 
+                                `<button onclick="cancelOrder(${order.id})" 
+                                        style="padding: 0.75rem 1.5rem; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                    ❌ Hủy đơn
+                                </button>` : ''}
+                            <button class="btn-view-detail" onclick="viewOrderDetail(${order.id})" 
+                                    style="padding: 0.75rem 1.5rem; background: var(--gradient); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                Xem chi tiết
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -407,6 +414,78 @@
                     adminLink.style.display = 'inline-block';
                 }
             }
+        }
+        
+        async function cancelOrder(orderId) {
+            if (!confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
+                return;
+            }
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                toast.error('Vui lòng đăng nhập!');
+                return;
+            }
+            
+            loading.show('Đang hủy đơn hàng...');
+            
+            try {
+                const response = await fetch(`/api/orders/${orderId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                loading.hide();
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    if (result.warning) {
+                        showSuccessModal(
+                            result.message,
+                            result.warning,
+                            () => window.location.reload()
+                        );
+                    } else {
+                        toast.success(result.message);
+                        setTimeout(() => window.location.reload(), 1500);
+                    }
+                } else {
+                    const error = await response.json();
+                    
+                    if (error.reason) {
+                        showErrorModal(
+                            error.error,
+                            error.reason
+                        );
+                    } else {
+                        toast.error(error.error || 'Không thể hủy đơn hàng!');
+                    }
+                }
+            } catch (error) {
+                loading.hide();
+                console.error('Error cancelling order:', error);
+                toast.error('Có lỗi khi hủy đơn hàng: ' + error.message);
+            }
+        }
+        
+        function showErrorModal(title, message) {
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+            modal.innerHTML = `
+                <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 500px; text-align: center;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">❌</div>
+                    <h2 style="color: #ef4444; margin-bottom: 1rem;">${title}</h2>
+                    <p style="color: #666; margin-bottom: 2rem;">${message}</p>
+                    <button onclick="this.closest('div[style*=fixed]').remove()" 
+                            style="padding: 0.75rem 2rem; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        Đóng
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
         }
         
         loadOrders();

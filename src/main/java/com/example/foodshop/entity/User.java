@@ -29,9 +29,25 @@ public class User {
     
     private LocalDateTime createdAt;
     
+    @Column(nullable = false)
+    private Integer cancelledOrdersThisMonth = 0;
+    
+    private LocalDateTime lastCancelledAt;
+    
+    @Column(nullable = false)
+    private Boolean accountLocked = false;
+    
+    private String lockReason;
+    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        if (cancelledOrdersThisMonth == null) {
+            cancelledOrdersThisMonth = 0;
+        }
+        if (accountLocked == null) {
+            accountLocked = false;
+        }
     }
     
     public enum Role {
