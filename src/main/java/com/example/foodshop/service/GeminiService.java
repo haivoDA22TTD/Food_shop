@@ -67,15 +67,6 @@ public class GeminiService {
                             .build())
                     .bodyValue(requestBody)
                     .retrieve()
-                    .onStatus(
-                        status -> status.is4xxClientError() || status.is5xxServerError(),
-                        clientResponse -> {
-                            log.error("Gemini API error - Status: {}", clientResponse.statusCode());
-                            return clientResponse.bodyToMono(String.class)
-                                .doOnNext(body -> log.error("Error body: {}", body))
-                                .then();
-                        }
-                    )
                     .bodyToMono(String.class)
                     .block();
             
