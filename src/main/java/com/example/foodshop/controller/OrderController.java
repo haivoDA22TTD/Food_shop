@@ -25,6 +25,7 @@ public class OrderController {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ProductService productService;
+    private final VoucherService voucherService;
     
     @GetMapping("/orders")
     public String viewOrders(Model model) {
@@ -92,10 +93,41 @@ public class OrderController {
         // Add shipping fee
         totalAmount += 30000;
         
+        // Store original amount
+        order.setOriginalAmount(totalAmount);
+        
+        // Apply voucher if provided
+        String voucherCode = (String) orderData.get("voucherCode");
+        double discountAmount = 0;
+        
+        if (voucherCode != null && !voucherCode.trim().isEmpty()) {
+            try {
+                java.math.BigDecimal discount = voucherService.applyVoucher(
+                    voucherCode, 
+                    java.math.BigDecimal.valueOf(totalAmount), 
+                    user
+                );
+                discountAmount = discount.doubleValue();
+                totalAmount -= discountAmount;
+                
+                order.setVoucherCode(voucherCode);
+                order.setDiscountAmount(discountAmount);
+            } catch (Exception e) {
+                return ResponseEntity.status(400).body(Map.of(
+                    "error", "Lỗi áp dụng voucher: " + e.getMessage()
+                ));
+            }
+        }
+        
         order.setOrderItems(orderItems);
         order.setTotalAmount(totalAmount);
         
         orderRepository.save(order);
+        
+        // Mark voucher as used if applied
+        if (voucherCode != null && !voucherCode.trim().isEmpty()) {
+            voucherService.markVoucherAsUsed(voucherCode);
+        }
         
         return ResponseEntity.ok(order);
     }

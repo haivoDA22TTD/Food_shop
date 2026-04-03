@@ -22,8 +22,8 @@ public class GeminiService {
     @Value("${gemini.api.key}")
     private String apiKey;
     
-    // Sử dụng Gemini 2.0 Flash - Mới nhất, nhanh nhất, thông minh nhất!
-    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
+    // Sử dụng Gemini 1.5 Flash - Stable, reliable, FREE!
+    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
     
     private final WebClient webClient;
     private final Gson gson;
@@ -41,6 +41,14 @@ public class GeminiService {
      */
     public String chat(String userMessage, String context) {
         try {
+            log.info("Chatbot request - User message: {}", userMessage);
+            
+            // Check API key
+            if (apiKey == null || apiKey.isEmpty() || apiKey.equals("${GEMINI_API_KEY}")) {
+                log.error("Gemini API key not configured!");
+                return "Xin lỗi, hệ thống chatbot chưa được cấu hình. Vui lòng liên hệ admin.";
+            }
+            
             String prompt = buildPrompt(userMessage, context);
             
             Map<String, Object> requestBody = new HashMap<>();
@@ -51,20 +59,39 @@ public class GeminiService {
             content.put("parts", List.of(part));
             requestBody.put("contents", List.of(content));
             
+            log.info("Calling Gemini API with model: gemini-1.5-flash");
+            
             String response = webClient.post()
                     .uri(uriBuilder -> uriBuilder
                             .queryParam("key", apiKey)
                             .build())
                     .bodyValue(requestBody)
                     .retrieve()
+                    .onStatus(
+                        status -> status.is4xxClientError() || status.is5xxServerError(),
+                        clientResponse -> {
+                            log.error("Gemini API error - Status: {}", clientResponse.statusCode());
+                            return clientResponse.bodyToMono(String.class)
+                                .doOnNext(body -> log.error("Error body: {}", body))
+                                .then();
+                        }
+                    )
                     .bodyToMono(String.class)
                     .block();
             
-            return extractTextFromResponse(response);
+            log.info("Gemini API response received");
+            String result = extractTextFromResponse(response);
+            log.info("Chatbot response: {}", result);
+            
+            return result;
             
         } catch (Exception e) {
-            log.error("Error calling Gemini API", e);
-            return "Xin lỗi, tôi đang gặp sự cố. Vui lòng thử lại sau.";
+            log.error("Error calling Gemini API - Message: {}, Cause: {}", 
+                e.getMessage(), 
+                e.getCause() != null ? e.getCause().getMessage() : "Unknown"
+            );
+            e.printStackTrace();
+            return "Xin lỗi, tôi đang gặp sự cố kỹ thuật. Vui lòng thử lại sau hoặc liên hệ admin.";
         }
     }
     

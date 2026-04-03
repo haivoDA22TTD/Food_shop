@@ -31,6 +31,11 @@ public class Order {
     private String shippingAddress;
     private String paymentMethod;
     
+    // Voucher fields
+    private String voucherCode;
+    private Double discountAmount;
+    private Double originalAmount; // Tổng tiền trước khi giảm giá
+    
     private LocalDateTime createdAt;
     
     @PrePersist

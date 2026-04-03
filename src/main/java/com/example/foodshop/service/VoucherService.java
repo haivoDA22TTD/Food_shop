@@ -118,7 +118,25 @@ public class VoucherService {
             throw new RuntimeException("Bạn không thể sử dụng mã giảm giá này");
         }
         
+        if (orderTotal.compareTo(voucher.getMinOrderValue()) < 0) {
+            throw new RuntimeException("Đơn hàng tối thiểu " + voucher.getMinOrderValue() + "đ để sử dụng mã này");
+        }
+        
         return voucher.calculateDiscount(orderTotal);
+    }
+    
+    /**
+     * Mark voucher as used (increment usedCount)
+     */
+    @Transactional
+    public void markVoucherAsUsed(String code) {
+        Voucher voucher = voucherRepository.findByCode(code)
+                .orElseThrow(() -> new RuntimeException("Voucher not found"));
+        
+        voucher.setUsedCount(voucher.getUsedCount() + 1);
+        voucherRepository.save(voucher);
+        
+        log.info("Voucher {} used. Count: {}/{}", code, voucher.getUsedCount(), voucher.getUsageLimit());
     }
     
     /**

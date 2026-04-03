@@ -1,20 +1,26 @@
 // Toast Notification System
 class ToastNotification {
     constructor() {
-        this.container = this.createContainer();
+        this.container = null;
     }
     
     createContainer() {
-        let container = document.querySelector('.toast-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.className = 'toast-container';
-            document.body.appendChild(container);
+        if (!this.container) {
+            let container = document.querySelector('.toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+            this.container = container;
         }
-        return container;
+        return this.container;
     }
     
     show(message, type = 'info', duration = 3000) {
+        // Ensure container exists
+        const container = this.createContainer();
+        
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
         
@@ -41,7 +47,7 @@ class ToastNotification {
             <button class="toast-close" onclick="this.parentElement.remove()">×</button>
         `;
         
-        this.container.appendChild(toast);
+        container.appendChild(toast);
         
         // Auto remove after duration
         setTimeout(() => {
@@ -135,11 +141,21 @@ function showSuccessModal(title, message, callback) {
     }
 }
 
-// Initialize global instances
-const toast = new ToastNotification();
-const loading = new LoadingOverlay();
+// Initialize global instances when DOM is ready
+let toast, loading;
 
-// Make them globally available
-window.toast = toast;
-window.loading = loading;
-window.showSuccessModal = showSuccessModal;
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initNotifications);
+} else {
+    initNotifications();
+}
+
+function initNotifications() {
+    toast = new ToastNotification();
+    loading = new LoadingOverlay();
+    
+    // Make them globally available
+    window.toast = toast;
+    window.loading = loading;
+    window.showSuccessModal = showSuccessModal;
+}

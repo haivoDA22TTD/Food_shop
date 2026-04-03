@@ -289,6 +289,29 @@
             <div class="order-summary">
                 <h2 class="section-title">📋 Đơn hàng</h2>
                 <div id="orderItems"></div>
+                
+                <!-- Voucher Section -->
+                <div style="margin: 1rem 0; padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #1f2937;">
+                        🎁 Mã giảm giá
+                    </label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input 
+                            type="text" 
+                            id="voucherInput" 
+                            placeholder="Nhập mã giảm giá"
+                            style="flex: 1; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 0.95rem;"
+                        />
+                        <button 
+                            onclick="applyVoucher()"
+                            style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;"
+                        >
+                            Áp dụng
+                        </button>
+                    </div>
+                    <div id="voucherStatus" style="margin-top: 0.5rem; font-size: 0.9rem;"></div>
+                </div>
+                
                 <div class="summary-item">
                     <span>Tạm tính:</span>
                     <span id="subtotal">0đ</span>
@@ -296,6 +319,10 @@
                 <div class="summary-item">
                     <span>Phí vận chuyển:</span>
                     <span id="shipping">30,000đ</span>
+                </div>
+                <div class="summary-item" id="discountRow" style="display: none; color: #10b981;">
+                    <span>Giảm giá:</span>
+                    <span id="discount">0đ</span>
                 </div>
                 <div class="summary-item total">
                     <span>Tổng cộng:</span>
@@ -313,6 +340,8 @@
         /*]]>*/
         
         let selectedPayment = 'cod';
+        let appliedVoucher = null;
+        let discountAmount = 0;
         
         function selectPayment(method) {
             selectedPayment = method;
@@ -328,6 +357,86 @@
                 el.classList.remove('active');
             });
             document.getElementById(method + 'Details').classList.add('active');
+        }
+        
+        async function applyVoucher() {
+            const voucherCode = document.getElementById('voucherInput').value.trim().toUpperCase();
+            const voucherStatus = document.getElementById('voucherStatus');
+            
+            if (!voucherCode) {
+                voucherStatus.innerHTML = '<span style="color: #ef4444;">⚠️ Vui lòng nhập mã giảm giá</span>';
+                return;
+            }
+            
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            let subtotal = 0;
+            cart.forEach(item => {
+                const product = products.find(p => p.id == item.id);
+                if (product) {
+                    subtotal += product.price * item.quantity;
+                }
+            });
+            
+            const shipping = 30000;
+            const total = subtotal + shipping;
+            
+            // Call API to validate voucher
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/vouchers/validate?code=${voucherCode}&orderTotal=${total}`, {
+                    headers: {
+                        'Authorization': token ? `Bearer ${token}` : ''
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    appliedVoucher = voucherCode;
+                    discountAmount = data.discountAmount;
+                    
+                    voucherStatus.innerHTML = `<span style="color: #10b981;">✓ Áp dụng thành công! Giảm ${formatPrice(discountAmount)}</span>`;
+                    document.getElementById('voucherInput').disabled = true;
+                    
+                    updateOrderSummary();
+                } else {
+                    const error = await response.text();
+                    voucherStatus.innerHTML = `<span style="color: #ef4444;">⚠️ ${error}</span>`;
+                    appliedVoucher = null;
+                    discountAmount = 0;
+                    updateOrderSummary();
+                }
+            } catch (error) {
+                voucherStatus.innerHTML = '<span style="color: #ef4444;">⚠️ Lỗi khi kiểm tra mã giảm giá</span>';
+            }
+        }
+        
+        function updateOrderSummary() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            let subtotal = 0;
+            
+            cart.forEach(item => {
+                const product = products.find(p => p.id == item.id);
+                if (product) {
+                    subtotal += product.price * item.quantity;
+                }
+            });
+            
+            const shipping = 30000;
+            const total = subtotal + shipping - discountAmount;
+            
+            document.getElementById('subtotal').textContent = formatPrice(subtotal);
+            document.getElementById('total').textContent = formatPrice(total);
+            
+            if (discountAmount > 0) {
+                document.getElementById('discountRow').style.display = 'flex';
+                document.getElementById('discount').textContent = '-' + formatPrice(discountAmount);
+            } else {
+                document.getElementById('discountRow').style.display = 'none';
+            }
+        }
+        
+        function formatPrice(price) {
+            return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
         }
         
         function loadOrderSummary() {
@@ -357,16 +466,8 @@
                 }
             });
             
-            const shipping = 30000;
-            const total = subtotal + shipping;
-            
-            document.getElementById('subtotal').textContent = formatPrice(subtotal);
-            document.getElementById('shipping').textContent = formatPrice(shipping);
-            document.getElementById('total').textContent = formatPrice(total);
-        }
-        
-        function formatPrice(price) {
-            return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
+            // Use updateOrderSummary to calculate totals
+            updateOrderSummary();
         }
         
         async function placeOrder() {
@@ -400,7 +501,8 @@
             const orderData = {
                 shippingAddress: `${fullName} - ${phone} - ${email}\n${address}${note ? '\nGhi chú: ' + note : ''}`,
                 paymentMethod: paymentMethodNames[selectedPayment],
-                items: cart
+                items: cart,
+                voucherCode: appliedVoucher // Add voucher code
             };
             
             loading.show('Đang xử lý đơn hàng...');
