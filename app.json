@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Food Shop",
+    "slug": "food-shop-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.foodshop.mobile"
+    },
+    "android": {
+      "package": "com.foodshop.mobile"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
