@@ -22,7 +22,8 @@ public class GeminiService {
     @Value("${gemini.api.key}")
     private String apiKey;
     
-    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+    // Sử dụng Gemini 2.0 Flash - Mới nhất, nhanh nhất, thông minh nhất!
+    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
     
     private final WebClient webClient;
     private final Gson gson;

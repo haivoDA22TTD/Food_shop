@@ -119,13 +119,6 @@
             <version>2.10.1</version>
         </dependency>
         
-        <!-- Google Generative AI (Gemini) -->
-        <dependency>
-            <groupId>com.google.ai.client.generativeai</groupId>
-            <artifactId>generativeai</artifactId>
-            <version>0.2.2</version>
-        </dependency>
-        
         <!-- WebClient for API calls -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
