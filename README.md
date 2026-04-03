@@ -333,17 +333,7 @@ Dự án sử dụng 2 profiles:
 - **dev** - Local development (mặc định)
 - **prod** - Production deployment
 
-### Environment Variables
 
-#### Development (Local)
-
-Không cần cấu hình, sử dụng giá trị mặc định:
-
-```properties
-# Tài khoản admin mặc định
-Username: admin
-Password: admin123
-```
 
 #### Production (Render/Railway)
 
