@@ -280,17 +280,6 @@ MySQL database hosted trên Railway.
 
 MIT License
 
-## 👨‍💻 Author
-
-Food Shop Team
-
-## 📞 Contact
-
-- Email: support@foodshop.com
-- Website: https://food-shop-iswi.onrender.com
-
----
-
 **Version:** 1.0.0  
 **Last Updated:** 04/04/2026  
 **Status:** ✅ Production Ready
@@ -304,15 +293,6 @@ Food Shop Team
 - 🔗 GitHub: [@haivoDA22TTD](https://github.com/haivoDA22TTD)
 
 
-## � Liên hệ & Hỗ trợ
-
-Nếu bạn có câu hỏi hoặc cần hỗ trợ:
-
-- 📧 Email: 110122068@st.tvu.edu.vn
-- 💬 Issues: [GitHub Issues](https://github.com/haivoDA22TTD/food_shop/issues)
-- 🐛 Bug Reports: [Report Bug](https://github.com/haivoDA22TTD/food_shop/issues/new?labels=bug)
-- ✨ Feature Requests: [Request Feature](https://github.com/haivoDA22TTD/food_shop/issues/new?labels=enhancement)
-- 🌐 Website: https://food-shop-iswi.onrender.com
 
 ---
 
