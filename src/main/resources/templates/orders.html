@@ -231,12 +231,12 @@
         async function loadOrders() {
             const token = localStorage.getItem('token');
             if (!token) {
-                toast.warning('Vui lòng đăng nhập để xem đơn hàng!');
+                if (window.toast) toast.warning('Vui lòng đăng nhập để xem đơn hàng!');
                 setTimeout(() => window.location.href = '/login', 1500);
                 return;
             }
             
-            loading.show('Đang tải đơn hàng...');
+            if (window.loading) loading.show('Đang tải đơn hàng...');
             
             try {
                 console.log('Loading orders with token:', token);
@@ -247,7 +247,7 @@
                 });
                 
                 console.log('Response status:', response.status);
-                loading.hide();
+                if (window.loading) loading.hide();
                 
                 if (response.ok) {
                     allOrders = await response.json();
@@ -259,17 +259,17 @@
                     console.error('Error response:', errorText);
                     
                     if (response.status === 401) {
-                        toast.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!');
+                        if (window.toast) toast.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!');
                         localStorage.clear();
                         setTimeout(() => window.location.href = '/login', 1500);
                     } else {
-                        toast.error('Không thể tải đơn hàng!');
+                        if (window.toast) toast.error('Không thể tải đơn hàng!');
                     }
                 }
             } catch (error) {
-                loading.hide();
+                if (window.loading) loading.hide();
                 console.error('Error loading orders:', error);
-                toast.error('Có lỗi khi tải đơn hàng: ' + error.message);
+                if (window.toast) toast.error('Có lỗi khi tải đơn hàng: ' + error.message);
             }
         }
         
