@@ -2,7 +2,9 @@ package com.example.foodshop.service;
 
 import com.example.foodshop.entity.User;
 import com.example.foodshop.entity.Voucher;
+import com.example.foodshop.entity.VoucherUsage;
 import com.example.foodshop.repository.VoucherRepository;
+import com.example.foodshop.repository.VoucherUsageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import java.util.Random;
 public class VoucherService {
     
     private final VoucherRepository voucherRepository;
+    private final VoucherUsageRepository voucherUsageRepository;
     private final Random random = new Random();
     
     /**
@@ -126,17 +129,28 @@ public class VoucherService {
     }
     
     /**
-     * Mark voucher as used (increment usedCount)
+     * Mark voucher as used (increment usedCount + save to voucher_usage)
      */
     @Transactional
-    public void markVoucherAsUsed(String code) {
+    public void markVoucherAsUsed(String code, User user, com.example.foodshop.entity.Order order, double discountAmount) {
         Voucher voucher = voucherRepository.findByCode(code)
                 .orElseThrow(() -> new RuntimeException("Voucher not found"));
         
+        // Increment used count
         voucher.setUsedCount(voucher.getUsedCount() + 1);
         voucherRepository.save(voucher);
         
-        log.info("Voucher {} used. Count: {}/{}", code, voucher.getUsedCount(), voucher.getUsageLimit());
+        // Save to voucher_usage for tracking
+        VoucherUsage usage = new VoucherUsage();
+        usage.setVoucher(voucher);
+        usage.setUser(user);
+        usage.setOrder(order);
+        usage.setDiscountAmount(BigDecimal.valueOf(discountAmount));
+        usage.setUsedAt(LocalDateTime.now());
+        voucherUsageRepository.save(usage);
+        
+        log.info("Voucher {} used by user {} for order {}. Discount: {}đ", 
+            code, user.getUsername(), order.getId(), discountAmount);
     }
     
     /**

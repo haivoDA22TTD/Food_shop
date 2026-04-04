@@ -127,7 +127,7 @@ public class OrderController {
         
         // Mark voucher as used if applied
         if (voucherCode != null && !voucherCode.trim().isEmpty()) {
-            voucherService.markVoucherAsUsed(voucherCode);
+            voucherService.markVoucherAsUsed(voucherCode, user, order, discountAmount);
         }
         
         return ResponseEntity.ok(order);
