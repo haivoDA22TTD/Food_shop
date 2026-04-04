@@ -303,10 +303,6 @@ Food Shop Team
 - 📧 Email: 110122068@st.tvu.edu.vn
 - 🔗 GitHub: [@haivoDA22TTD](https://github.com/haivoDA22TTD)
 
-## � Contact
-
-- Email: 110122068@st.tvu.edu.vn
-- Website: https://food-shop-iswi.onrender.com Native + Java Swing)
 
 ## � Liên hệ & Hỗ trợ
 
