@@ -7,6 +7,7 @@ import okhttp3.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class ApiClient {
@@ -163,10 +164,21 @@ public class ApiClient {
         try (Response response = client.newCall(request).execute()) {
             String responseBody = response.body().string();
             
+            System.out.println("Cancel order response: " + responseBody);
+            System.out.println("Response code: " + response.code());
+            
             if (!response.isSuccessful()) {
                 // Parse error response
-                CancelOrderResponse errorResponse = gson.fromJson(responseBody, CancelOrderResponse.class);
-                throw new IOException(errorResponse.error != null ? errorResponse.error : "Không thể hủy đơn hàng");
+                try {
+                    CancelOrderResponse errorResponse = gson.fromJson(responseBody, CancelOrderResponse.class);
+                    String errorMsg = errorResponse.error != null ? errorResponse.error : "Không thể hủy đơn hàng";
+                    if (errorResponse.reason != null) {
+                        errorMsg += ": " + errorResponse.reason;
+                    }
+                    throw new IOException(errorMsg);
+                } catch (Exception e) {
+                    throw new IOException("Không thể hủy đơn hàng (HTTP " + response.code() + "): " + responseBody);
+                }
             }
             
             return gson.fromJson(responseBody, CancelOrderResponse.class);
@@ -246,6 +258,117 @@ public class ApiClient {
         }
     }
     
+    // Send chat message to AI chatbot
+    public String sendChatMessage(String message) throws IOException {
+        System.out.println("Sending chat message: " + message);
+        
+        ChatRequest chatRequest = new ChatRequest(message);
+        String json = gson.toJson(chatRequest);
+        System.out.println("Request JSON: " + json);
+        
+        RequestBody body = RequestBody.create(
+            json,
+            MediaType.parse("application/json; charset=utf-8")
+        );
+        
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(BASE_URL + "/api/chatbot/chat")
+                .post(body);
+        
+        // Add auth header if logged in
+        if (isLoggedIn()) {
+            requestBuilder.addHeader("Authorization", "Bearer " + jwtToken);
+            System.out.println("Added auth header");
+        }
+        
+        Request request = requestBuilder.build();
+        
+        try (Response response = client.newCall(request).execute()) {
+            System.out.println("Response code: " + response.code());
+            
+            if (!response.isSuccessful()) {
+                String errorBody = response.body() != null ? response.body().string() : "No error body";
+                System.err.println("Chatbot error response: " + errorBody);
+                throw new IOException("Chatbot error: " + response.code() + " - " + errorBody);
+            }
+            
+            String responseBody = response.body().string();
+            System.out.println("Response body: " + responseBody);
+            
+            if (responseBody == null || responseBody.trim().isEmpty()) {
+                throw new IOException("Empty response from chatbot");
+            }
+            
+            ChatResponse chatResponse = gson.fromJson(responseBody, ChatResponse.class);
+            if (chatResponse == null || chatResponse.getResponse() == null) {
+                throw new IOException("Invalid response format from chatbot");
+            }
+            
+            System.out.println("Parsed response: " + chatResponse.getResponse());
+            return chatResponse.getResponse();
+        } catch (Exception e) {
+            System.err.println("Exception in sendChatMessage: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+    }
+    
+    // Validate voucher
+    public VoucherValidationResponse validateVoucher(String voucherCode, Double orderTotal) throws IOException {
+        System.out.println("Validating voucher: " + voucherCode + ", orderTotal: " + orderTotal);
+        
+        if (!isLoggedIn()) {
+            throw new IOException("Vui lòng đăng nhập!");
+        }
+        
+        // Use GET request with query params instead of POST with JSON body
+        String url = BASE_URL + "/api/vouchers/validate?code=" + voucherCode + "&orderTotal=" + orderTotal;
+        System.out.println("Request URL: " + url);
+        
+        Request httpRequest = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", "Bearer " + jwtToken)
+                .get()  // Changed from POST to GET
+                .build();
+        
+        try (Response response = client.newCall(httpRequest).execute()) {
+            String responseBody = response.body().string();
+            System.out.println("Response code: " + response.code());
+            System.out.println("Response body: " + responseBody);
+            
+            if (!response.isSuccessful()) {
+                // Backend returns plain text error for GET endpoint
+                throw new IOException(responseBody);
+            }
+            
+            // Parse response - backend returns Map<String, Object>
+            // We need to convert it to VoucherValidationResponse
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, Object> responseMap = gson.fromJson(responseBody, java.util.Map.class);
+            
+            VoucherValidationResponse result = new VoucherValidationResponse();
+            result.valid = responseMap.get("valid") != null ? (Boolean) responseMap.get("valid") : true;
+            result.message = "Áp dụng mã giảm giá thành công!";
+            
+            // Get discount amount
+            Object discountObj = responseMap.get("discountAmount");
+            if (discountObj instanceof Number) {
+                result.discountAmount = ((Number) discountObj).doubleValue();
+            }
+            
+            // Calculate final amount
+            result.finalAmount = orderTotal - result.discountAmount;
+            
+            System.out.println("Parsed response: valid=" + result.valid + 
+                             ", discount=" + result.discountAmount);
+            return result;
+        } catch (IOException e) {
+            System.err.println("Exception in validateVoucher: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+    }
+    
     // DTOs
     public static class LoginRequest {
         private String username;
@@ -303,12 +426,17 @@ public class ApiClient {
     public static class OrderRequest {
         private String shippingAddress;
         private String paymentMethod;
+        private String voucherCode;
         private List<OrderItemRequest> items;
         
         public OrderRequest(String shippingAddress, String paymentMethod, List<OrderItemRequest> items) {
             this.shippingAddress = shippingAddress;
             this.paymentMethod = paymentMethod;
             this.items = items;
+        }
+        
+        public void setVoucherCode(String voucherCode) {
+            this.voucherCode = voucherCode;
         }
     }
     
@@ -401,5 +529,51 @@ public class ApiClient {
         public String error;
         public String reason;
         public Integer cancelledCount;
+    }
+    
+    // Chat Request/Response
+    public static class ChatRequest {
+        private String message;
+        
+        public ChatRequest(String message) {
+            this.message = message;
+        }
+    }
+    
+    public static class ChatResponse {
+        private String message;  // Backend uses "message" not "response"
+        private String type;
+        private Map<String, Object> data;
+        
+        public String getResponse() { 
+            return message;  // Map to getResponse() for compatibility
+        }
+        
+        public String getMessage() { return message; }
+        public String getType() { return type; }
+        public Map<String, Object> getData() { return data; }
+    }
+    
+    // Voucher Validation
+    public static class VoucherValidationRequest {
+        private String code;
+        private Double orderTotal;
+        
+        public VoucherValidationRequest(String code, Double orderTotal) {
+            this.code = code;
+            this.orderTotal = orderTotal;
+        }
+    }
+    
+    public static class VoucherValidationResponse {
+        public boolean valid;
+        public String message;
+        public Double discountAmount;
+        public Double finalAmount;
+        
+        public boolean isValid() { return valid; }
+        public String getMessage() { return message; }
+        public Double getDiscountAmount() { return discountAmount; }
+        public Double getFinalAmount() { return finalAmount; }
     }
 }

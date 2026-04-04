@@ -22,6 +22,10 @@ public class CheckoutFrame extends JFrame {
     private JTextField phoneField;
     private JTextArea addressArea;
     private ButtonGroup paymentGroup;
+    private JTextField voucherField;
+    private JLabel discountLabel;
+    private JLabel totalLabel;
+    private double discountAmount = 0;
     
     public CheckoutFrame(JFrame parent) {
         this.parentFrame = parent;
@@ -128,17 +132,54 @@ public class CheckoutFrame extends JFrame {
         summaryPanel.add(createSummaryRow("Tạm tính:", formatPrice(subtotal)));
         summaryPanel.add(createSummaryRow("Phí vận chuyển:", formatPrice(shipping)));
         
+        // Voucher section
+        summaryPanel.add(Box.createVerticalStrut(10));
+        JPanel voucherPanel = new JPanel(new BorderLayout(10, 0));
+        voucherPanel.setOpaque(false);
+        voucherPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        
+        voucherField = new JTextField();
+        voucherField.setFont(new Font("Arial", Font.PLAIN, 13));
+        voucherField.setToolTipText("Nhập mã giảm giá");
+        
+        ModernButton applyVoucherBtn = new ModernButton("Áp dụng");
+        applyVoucherBtn.setPreferredSize(new Dimension(90, 35));
+        applyVoucherBtn.setFont(new Font("Arial", Font.BOLD, 12));
+        applyVoucherBtn.setColors(
+            new Color(34, 197, 94),
+            new Color(22, 163, 74),
+            new Color(21, 128, 61)
+        );
+        applyVoucherBtn.addActionListener(e -> applyVoucher());
+        
+        voucherPanel.add(voucherField, BorderLayout.CENTER);
+        voucherPanel.add(applyVoucherBtn, BorderLayout.EAST);
+        summaryPanel.add(voucherPanel);
+        
+        // Discount row (initially hidden)
+        discountLabel = new JLabel(formatPrice(0));
+        discountLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        discountLabel.setForeground(new Color(34, 197, 94));
+        JPanel discountRow = createSummaryRow("Giảm giá:", "");
+        discountRow.add(discountLabel, BorderLayout.EAST);
+        discountRow.setVisible(false);
+        summaryPanel.add(discountRow);
+        summaryPanel.add(Box.createVerticalStrut(5));
+        
         JSeparator sep = new JSeparator();
         sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 2));
-        summaryPanel.add(Box.createVerticalStrut(5));
         summaryPanel.add(sep);
         summaryPanel.add(Box.createVerticalStrut(5));
         
         JPanel totalPanel = createSummaryRow("Tổng cộng:", formatPrice(total));
         totalPanel.setBackground(new Color(224, 242, 254));
         ((JLabel) totalPanel.getComponent(0)).setFont(new Font("Arial", Font.BOLD, 16));
-        ((JLabel) totalPanel.getComponent(1)).setFont(new Font("Arial", Font.BOLD, 18));
-        ((JLabel) totalPanel.getComponent(1)).setForeground(new Color(14, 165, 233));
+        
+        totalLabel = new JLabel(formatPrice(total));
+        totalLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        totalLabel.setForeground(new Color(14, 165, 233));
+        totalPanel.add(totalLabel, BorderLayout.EAST);
+        
         summaryPanel.add(totalPanel);
         
         formPanel.add(summaryPanel);
@@ -202,6 +243,100 @@ public class CheckoutFrame extends JFrame {
         return currencyFormat.format(price) + "đ";
     }
     
+    private void applyVoucher() {
+        String voucherCode = voucherField.getText().trim();
+        if (voucherCode.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                "Vui lòng nhập mã giảm giá!",
+                "Thông báo",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        if (!apiClient.isLoggedIn()) {
+            JOptionPane.showMessageDialog(this,
+                "Bạn cần đăng nhập để sử dụng mã giảm giá!",
+                "Yêu cầu đăng nhập",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        double subtotal = cartManager.getSubtotal();
+        double shipping = 30000;
+        double total = subtotal + shipping;
+        
+        System.out.println("Applying voucher: " + voucherCode + ", total: " + total);
+        
+        SwingWorker<ApiClient.VoucherValidationResponse, Void> worker = new SwingWorker<>() {
+            @Override
+            protected ApiClient.VoucherValidationResponse doInBackground() throws Exception {
+                try {
+                    return apiClient.validateVoucher(voucherCode, total);
+                } catch (Exception e) {
+                    System.err.println("Error validating voucher: " + e.getMessage());
+                    e.printStackTrace();
+                    throw e;
+                }
+            }
+            
+            @Override
+            protected void done() {
+                try {
+                    ApiClient.VoucherValidationResponse response = get();
+                    System.out.println("Voucher validation response: valid=" + response.isValid() + 
+                                     ", discount=" + response.getDiscountAmount());
+                    
+                    if (response.isValid()) {
+                        discountAmount = response.getDiscountAmount();
+                        updateOrderSummary();
+                        
+                        JOptionPane.showMessageDialog(CheckoutFrame.this,
+                            response.getMessage(),
+                            "Thành công",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(CheckoutFrame.this,
+                            response.getMessage(),
+                            "Thông báo",
+                            JOptionPane.WARNING_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    System.err.println("Error in applyVoucher done(): " + ex.getMessage());
+                    ex.printStackTrace();
+                    
+                    String errorMsg = ex.getMessage();
+                    if (errorMsg == null || errorMsg.isEmpty()) {
+                        errorMsg = "Không thể kết nối đến server";
+                    }
+                    
+                    JOptionPane.showMessageDialog(CheckoutFrame.this,
+                        errorMsg,
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        
+        worker.execute();
+    }
+    
+    private void updateOrderSummary() {
+        double subtotal = cartManager.getSubtotal();
+        double shipping = 30000;
+        double total = subtotal + shipping - discountAmount;
+        
+        // Update discount label
+        if (discountAmount > 0) {
+            discountLabel.setText("-" + formatPrice(discountAmount));
+            discountLabel.getParent().setVisible(true);
+        } else {
+            discountLabel.getParent().setVisible(false);
+        }
+        
+        // Update total
+        totalLabel.setText(formatPrice(total));
+    }
+    
     private void handlePlaceOrder() {
         // Check if logged in
         if (!apiClient.isLoggedIn()) {
@@ -258,6 +393,12 @@ public class CheckoutFrame extends JFrame {
             paymentMethod,
             items
         );
+        
+        // Add voucher if applied
+        String voucherCode = voucherField.getText().trim();
+        if (!voucherCode.isEmpty() && discountAmount > 0) {
+            orderRequest.setVoucherCode(voucherCode);
+        }
         
         // Show loading
         JDialog loadingDialog = new JDialog(this, "Đang xử lý...", true);

@@ -1,6 +1,7 @@
 package com.example.foodshop.client.ui;
 
 import com.example.foodshop.client.api.ApiClient;
+import com.example.foodshop.client.components.ChatbotPanel;
 import com.example.foodshop.client.components.ModernButton;
 import com.example.foodshop.client.components.ProductCard;
 import com.example.foodshop.client.util.CartManager;
@@ -164,6 +165,19 @@ public class MainFrameModern extends JFrame implements CartManager.CartChangeLis
             ordersBtn.addActionListener(e -> openOrders());
             rightPanel.add(ordersBtn);
         }
+        
+        // Chatbot button
+        ModernButton chatbotBtn = new ModernButton("🤖 AI Trợ lý");
+        chatbotBtn.setFont(new Font("Arial", Font.BOLD, 13));
+        chatbotBtn.setForeground(Color.WHITE);
+        chatbotBtn.setPreferredSize(new Dimension(130, 40));
+        chatbotBtn.setColors(
+            new Color(236, 72, 153),
+            new Color(219, 39, 119),
+            new Color(190, 24, 93)
+        );
+        chatbotBtn.addActionListener(e -> openChatbot());
+        rightPanel.add(chatbotBtn);
         
         ModernButton refreshBtn = new ModernButton("🔄 Làm mới");
         refreshBtn.setFont(new Font("Arial", Font.BOLD, 13));
@@ -341,6 +355,18 @@ public class MainFrameModern extends JFrame implements CartManager.CartChangeLis
         
         OrdersFrame ordersFrame = new OrdersFrame();
         ordersFrame.setVisible(true);
+    }
+    
+    private void openChatbot() {
+        JDialog chatDialog = new JDialog(this, "🤖 AI Trợ lý - Food Shop", false);
+        chatDialog.setSize(450, 600);
+        chatDialog.setLocationRelativeTo(this);
+        chatDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        
+        ChatbotPanel chatbotPanel = new ChatbotPanel();
+        chatDialog.add(chatbotPanel);
+        
+        chatDialog.setVisible(true);
     }
     
     private void showLoginDialog() {
