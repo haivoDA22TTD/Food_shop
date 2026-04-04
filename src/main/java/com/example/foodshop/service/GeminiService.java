@@ -22,8 +22,8 @@ public class GeminiService {
     @Value("${gemini.api.key}")
     private String apiKey;
     
-    // Sử dụng Gemini Pro - Most stable and widely available
-    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+    // Sử dụng Gemini 2.5 Flash - Newest and most advanced!
+    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
     
     private final WebClient webClient;
     private final Gson gson;
@@ -60,7 +60,7 @@ public class GeminiService {
             content.put("parts", List.of(part));
             requestBody.put("contents", List.of(content));
             
-            log.info("Calling Gemini API with model: gemini-pro");
+            log.info("Calling Gemini API with model: gemini-2.5-flash");
             
             String response = webClient.post()
                     .uri(uriBuilder -> uriBuilder
