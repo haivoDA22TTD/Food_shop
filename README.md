@@ -1,500 +1,314 @@
-# 🍔 Food Shop - Spring Boot E-commerce Application
+# 🍔 Food Shop - Hệ thống đặt đồ ăn trực tuyến
 
-<div align="center">
+## 📋 Mô tả dự án
 
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen?style=for-the-badge&logo=spring-boot)
-![Java](https://img.shields.io/badge/Java-17-orange?style=for-the-badge&logo=java)
-![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?style=for-the-badge&logo=mysql)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker)
-![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
+Food Shop là hệ thống đặt đồ ăn trực tuyến đầy đủ tính năng với:
+- **Backend**: Spring Boot REST API
+- **Frontend Web**: HTML/CSS/JavaScript với Thymeleaf
+- **Desktop App**: Java Swing với FlatLaf
+- **Mobile App**: React Native (Expo)
+- **AI Chatbot**: Tích hợp Google Gemini 2.5 Flash
 
-**Ứng dụng bán hàng thực phẩm trực tuyến với Spring Boot, JWT Authentication, và Cloudinary**
+## 🚀 Tính năng chính
 
-[Demo Live](https://food-shop-iswi.onrender.com) • [Báo cáo lỗi](https://github.com/yourusername/food-shop/issues) • [Yêu cầu tính năng](https://github.com/yourusername/food-shop/issues)
+### 🌐 Web Application
+- ✅ Xem danh sách sản phẩm với phân trang
+- ✅ Tìm kiếm và lọc sản phẩm theo danh mục
+- ✅ Thêm vào giỏ hàng
+- ✅ Đặt hàng với nhiều phương thức thanh toán
+- ✅ Xem lịch sử đơn hàng
+- ✅ Hủy đơn hàng (với giới hạn 3 lần/tháng)
+- ✅ Đánh giá sản phẩm (rating + comment)
+- ✅ Chat với AI trợ lý thông minh
+- ✅ Nhận và áp dụng mã giảm giá
+- ✅ Responsive design
 
-</div>
+### 🖥️ Desktop Application (Java Swing)
+- ✅ Giao diện hiện đại với FlatLaf theme
+- ✅ Đầy đủ tính năng như web app
+- ✅ Chat với AI chatbot
+- ✅ Áp dụng voucher trong checkout
+- ✅ Xem và quản lý đơn hàng
+- ✅ Đánh giá sản phẩm
+- ✅ Đóng gói thành file EXE
 
----
+### 📱 Mobile Application (React Native)
+- ✅ Chạy trên Android/iOS với Expo
+- ✅ Navigation với React Navigation
+- ✅ Đầy đủ tính năng e-commerce
+- ✅ UI/UX thân thiện với mobile
 
-## 📋 Mục lục
+### 🤖 AI Chatbot (Google Gemini)
+- ✅ Tích hợp Gemini 2.5 Flash API
+- ✅ Tự động phân tích intent (voucher, product search, order)
+- ✅ Tạo mã giảm giá tự động (WELCOME, COMEBACK, VIP, DEAL)
+- ✅ Tư vấn sản phẩm thông minh
+- ✅ Fallback logic khi API fail
+- ✅ Hoạt động cả khi chưa đăng nhập
 
-- [Giới thiệu](#-giới-thiệu)
-- [Tính năng](#-tính-năng)
-- [Công nghệ sử dụng](#-công-nghệ-sử-dụng)
-- [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
-- [Desktop Application](#-desktop-application)
-- [Cài đặt](#-cài-đặt)
-- [Cấu hình](#-cấu-hình)
-- [Deployment](#-deployment)
-- [API Documentation](#-api-documentation)
-- [Screenshots](#-screenshots)
-- [Đóng góp](#-đóng-góp)
-- [License](#-license)
+### 💰 Hệ thống Voucher
+- ✅ Tạo voucher tự động qua chatbot
+- ✅ Validate voucher (min order, expiry, usage limit)
+- ✅ Áp dụng voucher trong checkout
+- ✅ Tracking voucher usage history
+- ✅ Hỗ trợ 2 loại: FIXED (giảm cố định) và PERCENTAGE (giảm %)
+- ✅ Personal voucher (chỉ user cụ thể dùng được)
 
----
-
-## 🎯 Giới thiệu
-
-**Food Shop** là một hệ thống bán hàng thực phẩm hoàn chỉnh với 3 nền tảng:
-- 🌐 **Web Application** - Giao diện web hiện đại với Thymeleaf
-- 💻 **Desktop Application** - Ứng dụng Java Swing với FlatLaf Look and Feel
-- 🔌 **REST API Backend** - Spring Boot với JWT Authentication
-
-### ✨ Điểm nổi bật
-
-- 🔐 **JWT Authentication** - Bảo mật cao với JSON Web Token
-- ☁️ **Cloudinary Integration** - Lưu trữ ảnh trên cloud, không lo mất dữ liệu
-- 🎨 **Modern UI** - Giao diện đẹp mắt với sky blue gradient theme
-- 📱 **Responsive Design** - Web tương thích mọi thiết bị
-- 🖥️ **Desktop App** - Ứng dụng standalone không cần cài Java
-- 🐳 **Docker Ready** - Deploy dễ dàng với Docker
-- 🚀 **Production Ready** - Đã deploy trên Render + Railway
-
----
-
-## 🚀 Tính năng
-
-### 👤 Khách hàng
-
+### 👤 Quản lý User
 - ✅ Đăng ký/Đăng nhập với JWT
-- 🛒 Giỏ hàng với localStorage
-- 🔍 Tìm kiếm và lọc sản phẩm theo danh mục
-- 💳 Thanh toán với nhiều phương thức (COD, Bank Transfer, MoMo, Credit Card)
-- 📦 Theo dõi đơn hàng theo thời gian thực
-- ⭐ Đánh giá sản phẩm sau khi nhận hàng
-- 🔔 Thông báo toast hiện đại
+- ✅ Phân quyền ADMIN/CUSTOMER
+- ✅ Tracking số lần hủy đơn
+- ✅ Tự động khóa tài khoản nếu hủy đơn > 3 lần/tháng
 
-### 👨‍💼 Admin
+### 📦 Quản lý Đơn hàng
+- ✅ Tạo đơn hàng với voucher
+- ✅ Tracking trạng thái (PENDING, CONFIRMED, SHIPPING, DELIVERED, CANCELLED)
+- ✅ Hủy đơn hàng với validation
+- ✅ Lưu thông tin voucher đã dùng (code, discount amount, original amount)
 
-- 📊 Dashboard với thống kê tổng quan
-- 📦 Quản lý sản phẩm (CRUD)
-- 🖼️ Upload ảnh với drag-and-drop
-- 📋 Quản lý đơn hàng và cập nhật trạng thái
-- 👥 Quản lý người dùng
-- 📈 Báo cáo doanh thu và tồn kho
+### ⭐ Đánh giá Sản phẩm
+- ✅ Rating 1-5 sao
+- ✅ Comment
+- ✅ Hiển thị user đã đánh giá
+- ✅ Eager loading với JOIN FETCH
 
----
-
-## 🛠️ Công nghệ sử dụng
+## 🛠️ Tech Stack
 
 ### Backend
+- **Framework**: Spring Boot 3.2.0
+- **Database**: MySQL (Railway)
+- **Security**: Spring Security + JWT
+- **File Upload**: Cloudinary (với fallback local storage)
+- **AI**: Google Gemini 2.5 Flash API
+- **Build**: Maven
 
-| Công nghệ | Phiên bản | Mô tả |
-|-----------|-----------|-------|
-| ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen?logo=spring-boot) | 3.2.0 | Framework chính |
-| ![Java](https://img.shields.io/badge/Java-17-orange?logo=java) | 17 | Ngôn ngữ lập trình |
-| ![Spring Security](https://img.shields.io/badge/Spring%20Security-6.1.1-green?logo=spring-security) | 6.1.1 | Bảo mật & Authentication |
-| ![JWT](https://img.shields.io/badge/JWT-0.12.3-black?logo=json-web-tokens) | 0.12.3 | Token-based authentication |
-| ![Hibernate](https://img.shields.io/badge/Hibernate-6.3.1-59666C?logo=hibernate) | 6.3.1 | ORM Framework |
-| ![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?logo=mysql) | 8.0 | Database |
+### Frontend Web
+- **Template Engine**: Thymeleaf
+- **CSS**: Custom CSS với animations
+- **JavaScript**: Vanilla JS
+- **Icons**: Emoji + Unicode
 
-### Web Frontend
+### Desktop App
+- **Framework**: Java Swing
+- **UI Library**: FlatLaf (Modern Look and Feel)
+- **HTTP Client**: OkHttp
+- **JSON**: Gson
+- **Build**: Maven (JAR with dependencies)
 
-| Công nghệ | Mô tả |
-|-----------|-------|
-| ![Thymeleaf](https://img.shields.io/badge/Thymeleaf-3.1.2-green?logo=thymeleaf) | Template Engine |
-| ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white) | Markup Language |
-| ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white) | Styling |
-| ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black) | Client-side Logic |
+### Mobile App
+- **Framework**: React Native (Expo SDK 54)
+- **Navigation**: React Navigation
+- **HTTP Client**: Axios
+- **Package Manager**: npm
 
-### Desktop Application
-
-| Công nghệ | Phiên bản | Mô tả |
-|-----------|-----------|-------|
-| ![Java Swing](https://img.shields.io/badge/Java%20Swing-17-orange?logo=java) | 17 | GUI Framework |
-| ![FlatLaf](https://img.shields.io/badge/FlatLaf-3.2.5-blue) | 3.2.5 | Modern Look and Feel |
-| ![OkHttp](https://img.shields.io/badge/OkHttp-4.12.0-green) | 4.12.0 | HTTP Client |
-| ![Gson](https://img.shields.io/badge/Gson-2.10.1-orange) | 2.10.1 | JSON Parser |
-| ![Maven](https://img.shields.io/badge/Maven-3.9.5-red?logo=apache-maven) | 3.9.5 | Build Tool |
-
-### Cloud & DevOps
-
-| Công nghệ | Mô tả |
-|-----------|-------|
-| ![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?logo=cloudinary&logoColor=white) | Image Storage |
-| ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white) | Containerization |
-| ![Render](https://img.shields.io/badge/Render-46E3B7?logo=render&logoColor=white) | Backend Hosting |
-| ![Railway](https://img.shields.io/badge/Railway-0B0D0E?logo=railway&logoColor=white) | Database Hosting |
-
----
-
-## 🏗️ Kiến trúc hệ thống
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Desktop Application                       │
-│         (Java Swing + FlatLaf + OkHttp + Gson)              │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-                     │ REST API (JWT)
-                     │
-┌────────────────────▼────────────────────────────────────────┐
-│                         Frontend                             │
-│  (Thymeleaf + HTML/CSS/JS + Toast Notifications)           │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-                     │ HTTP/HTTPS
-                     │
-┌────────────────────▼────────────────────────────────────────┐
-│                    Spring Boot Backend                       │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│  │ Controllers  │  │   Services   │  │ Repositories │     │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘     │
-│         │                  │                  │              │
-│  ┌──────▼──────────────────▼──────────────────▼───────┐    │
-│  │          Spring Security + JWT Filter              │    │
-│  └────────────────────────────────────────────────────┘    │
-└────────────────────┬────────────────────┬───────────────────┘
-                     │                    │
-        ┌────────────▼──────────┐  ┌─────▼──────────┐
-        │   MySQL Database      │  │   Cloudinary   │
-        │   (Railway)           │  │  (Image CDN)   │
-        └───────────────────────┘  └────────────────┘
+2. **Cấu hình database:**
+```properties
+# src/main/resources/application.properties
+spring.datasource.url=jdbc:mysql://localhost:3306/foodshop
+spring.datasource.username=root
+spring.datasource.password=your_password
 ```
 
----
-
-## 💻 Desktop Application
-
-### 📥 Tải về & Cài đặt
-
-#### Cho người dùng cuối:
-
-1. **Tải file nén** `FoodShopApp.zip`
-2. **Giải nén** vào thư mục bất kỳ (ví dụ: `D:\FoodShopApp\`)
-3. **Double-click** file `FoodShop.exe` để chạy
-4. **Không cần cài đặt Java** - JRE đã được bundle sẵn!
-
-#### Cấu trúc thư mục:
-```
-FoodShopApp/
-├── FoodShop.exe              # File thực thi
-├── app/
-│   └── food-shop-swing-client-1.0.0.jar
-└── jre/                      # Java Runtime Environment
-    └── bin/
-        └── javaw.exe
+3. **Cấu hình Gemini API:**
+```properties
+gemini.api.key=your_gemini_api_key
 ```
 
-### 🔨 Build từ source code
-
-#### Yêu cầu:
-- Java 17 JDK
-- Maven 3.6+
-- IntelliJ IDEA (khuyến nghị)
-
-#### Các bước build:
-
-1. **Clone repository:**
-```bash
-git clone https://github.com/haivoDA22TTD/food_shop.git
-cd food_shop/food-shop-swing-client
-```
-
-2. **Build với Maven:**
-```bash
-mvn clean package
-```
-
-3. **File JAR được tạo tại:**
-```
-target/food-shop-swing-client-1.0.0.jar
-```
-
-4. **Chạy JAR:**
-```bash
-java -jar target/food-shop-swing-client-1.0.0.jar
-```
-
-### 📦 Đóng gói thành EXE
-
-#### Chuẩn bị:
-
-1. **Tạo cấu trúc thư mục:**
-```
-D:\FoodShopApp\
-├── app\
-│   └── food-shop-swing-client-1.0.0.jar
-└── jre\
-    └── (copy JDK 17 vào đây)
-```
-
-2. **Copy JRE:**
-- Copy toàn bộ thư mục JDK 17 vào `jre\`
-- Hoặc download JRE 17 từ [Adoptium](https://adoptium.net/)
-
-3. **Tạo file launcher:**
-- File `FoodShop.bat` đã có sẵn trong project
-- Copy vào thư mục `D:\FoodShopApp\`
-
-4. **Convert BAT sang EXE:**
-- Download [Bat To Exe Converter](http://www.f2ko.de/en/b2e.php) (Free)
-- Load file `FoodShop.bat`
-- Convert thành `FoodShop.exe`
-
-5. **Phân phối:**
-- Nén toàn bộ thư mục `FoodShopApp\`
-- Gửi file ZIP cho users
-- Users chỉ cần giải nén và chạy `FoodShop.exe`
-
-📖 **Chi tiết**: Xem file `food-shop-swing-client/BUILD_EXE_GUIDE.md`
-
-### 🎨 Giao diện Desktop App
-
-#### Màn hình chính:
-- Grid layout hiển thị sản phẩm với ảnh từ Cloudinary
-- Hover effects với animations
-- Search và filter theo category
-- Gradient background (sky blue theme)
-
-#### Tính năng:
-- **Login/Register** - Form đăng nhập/đăng ký
-- **Product Grid** - Hiển thị sản phẩm với card design
-- **Product Detail** - Chi tiết sản phẩm + reviews
-- **Cart** - Giỏ hàng với tính tổng tiền
-- **Checkout** - Form thanh toán
-- **Orders** - Danh sách đơn hàng với status colors
-- **Reviews** - Dialog đánh giá với star rating
-
-### 🔧 Cấu hình Backend URL
-
-Mặc định app kết nối đến production backend:
-```java
-private static final String BASE_URL = "https://food-shop-iswi.onrender.com";
-```
-
-Để kết nối local backend, sửa trong `ApiClient.java`:
-```java
-private static final String BASE_URL = "http://localhost:8080";
-```
-
----
-
-## 💻 Cài đặt
-
-### Yêu cầu hệ thống
-
-- ☕ Java 17 hoặc cao hơn
-- 🗄️ MySQL 8.0 hoặc cao hơn
-- 📦 Maven 3.6+
-- 🐳 Docker (tùy chọn)
-
-### Clone Repository
-
-```bash
-git clone https://github.com/yourusername/food-shop.git
-cd food-shop
-```
-
-### Cài đặt Dependencies
-
+4. **Build và chạy:**
 ```bash
 mvn clean install
-```
-
-### Cấu hình Database
-
-```sql
-CREATE DATABASE food_shop;
-```
-
-### Chạy ứng dụng
-
-#### Cách 1: Maven
-
-```bash
 mvn spring-boot:run
 ```
 
-#### Cách 2: JAR file
+Backend chạy tại: `http://localhost:8080`
 
-```bash
-mvn clean package
-java -jar target/food-shop-1.0.0.jar
-```
-
-#### Cách 3: Docker
-
-```bash
-docker build -t food-shop .
-docker run -p 8080:8080 food-shop
-```
+### Frontend Web
 
 Truy cập: `http://localhost:8080`
 
----
+### Desktop Application
 
-## ⚙️ Cấu hình
-
-### Spring Profiles
-
-Dự án sử dụng 2 profiles:
-
-- **dev** - Local development (mặc định)
-- **prod** - Production deployment
-
-
-
-#### Production (Render/Railway)
-
-Cần set các biến môi trường sau:
-
+1. **Build JAR:**
 ```bash
-# Spring Profile
-SPRING_PROFILES_ACTIVE=prod
-
-# Database
-SPRING_DATASOURCE_URL=jdbc:mysql://host:port/database
-DB_USERNAME=root
-DB_PASSWORD=your-password
-
-# JWT
-JWT_SECRET=your-secret-key
-JWT_EXPIRATION=86400000
-
-# Admin Account
-ADMIN_USERNAME=your-admin-username
-ADMIN_PASSWORD=your-secure-password
-ADMIN_EMAIL=admin@yourdomain.com
-
-# Cloudinary
-CLOUDINARY_ENABLED=true
-CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
-CLOUDINARY_API_SECRET=your-api-secret
-CLOUDINARY_FOLDER=food-shop
+cd food-shop-swing-client
+mvn clean package -DskipTests
 ```
 
-📖 **Chi tiết**: Xem file `SPRING_PROFILES_GUIDE.md`
+2. **Chạy:**
+```bash
+java -jar target/food-shop-swing-client-1.0-SNAPSHOT-jar-with-dependencies.jar
+```
 
----
+3. **Tạo EXE (Windows):**
+- Sử dụng file `FoodShop.bat`
+- Convert bằng Bat To Exe Converter
+- Xem hướng dẫn trong `HUONG_DAN_FILE_BAT_CUOI_CUNG.md`
 
-## 🚀 Deployment
+### Mobile Application
 
-### Deploy lên Render + Railway
+1. **Cài đặt dependencies:**
+```bash
+cd food-shop-mobile
+npm install --legacy-peer-deps
+```
 
-#### Bước 1: Setup Database trên Railway
+2. **Chạy:**
+```bash
+npx expo start
+```
 
-1. Tạo MySQL database trên [Railway](https://railway.app)
-2. Copy Public URL
+3. **Test trên thiết bị:**
+- Cài Expo Go app
+- Scan QR code
 
-#### Bước 2: Deploy Backend trên Render
+## 🌐 Deploy
 
-1. Tạo Web Service trên [Render](https://render.com)
-2. Connect GitHub repository
-3. Set Environment Variables (xem file `RENDER_COPY_PASTE.txt`)
-4. Deploy
+**Environment variables trên Render:**
+```
+SPRING_DATASOURCE_URL=jdbc:mysql://...
+SPRING_DATASOURCE_USERNAME=...
+SPRING_DATASOURCE_PASSWORD=...
+CLOUDINARY_CLOUD_NAME=...
+CLOUDINARY_API_KEY=...
+CLOUDINARY_API_SECRET=...
+GEMINI_API_KEY=...
+```
 
-#### Bước 3: Cấu hình Cloudinary
+Production URL: `https://food-shop-iswi.onrender.com`
 
-1. Tạo tài khoản [Cloudinary](https://cloudinary.com)
-2. Copy API credentials
-3. Set environment variables
+### Database (Railway)
 
-📖 **Hướng dẫn chi tiết**: 
-- `DEPLOYMENT.md` - Deploy đầy đủ
-- `CLOUDINARY_SETUP.md` - Cấu hình Cloudinary
-- `DOCKER_DEPLOY.md` - Deploy với Docker
+MySQL database hosted trên Railway.
 
----
+## 👥 Tài khoản mặc định
 
-## 📚 API Documentation
+### Admin
+- Username: `admin`
+- Password: `admin123`
+
+### Customer
+- Username: `customer`
+- Password: `customer123`
+
+## 📝 API Endpoints
 
 ### Authentication
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/register` | Đăng ký tài khoản mới |
-| POST | `/api/auth/login` | Đăng nhập và nhận JWT token |
+- `POST /api/auth/register` - Đăng ký
+- `POST /api/auth/login` - Đăng nhập
 
 ### Products
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/api/products` | Lấy danh sách sản phẩm | Public |
-| GET | `/api/products/{id}` | Lấy chi tiết sản phẩm | Public |
-| POST | `/admin/products/save` | Tạo/cập nhật sản phẩm | Admin |
-| DELETE | `/admin/products/delete/{id}` | Xóa sản phẩm | Admin |
+- `GET /api/products` - Lấy danh sách sản phẩm
+- `GET /api/products/{id}` - Lấy chi tiết sản phẩm
 
 ### Orders
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | `/api/orders/create` | Tạo đơn hàng mới | Customer |
-| GET | `/api/orders/my-orders` | Lấy đơn hàng của user | Customer |
-| GET | `/admin/orders` | Lấy tất cả đơn hàng | Admin |
-| POST | `/admin/orders/{id}/status` | Cập nhật trạng thái | Admin |
+- `POST /api/orders/create` - Tạo đơn hàng
+- `GET /api/orders/my-orders` - Lấy đơn hàng của user
+- `POST /api/orders/{id}/cancel` - Hủy đơn hàng
 
 ### Reviews
+- `GET /api/reviews/product/{productId}` - Lấy đánh giá của sản phẩm
+- `POST /api/reviews/create` - Tạo đánh giá
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | `/api/reviews/create` | Tạo đánh giá | Customer |
-| GET | `/api/reviews/product/{id}` | Lấy đánh giá sản phẩm | Public |
+### Chatbot
+- `POST /api/chatbot/chat` - Chat với AI
+- `GET /api/chatbot/suggestions` - Lấy gợi ý câu hỏi
 
----
+### Vouchers
+- `GET /api/vouchers/validate?code=...&orderTotal=...` - Validate voucher
 
-## 📸 Screenshots
+## 🔧 Các tính năng đã cập nhật gần đây
 
-### Trang chủ
-![Homepage](docs/screenshots/homepage.png)
+### ✅ Backend
+1. **VoucherService** - Fixed injection và voucher_usage tracking
+2. **ChatbotController** - Tích hợp Gemini 2.5 Flash
+3. **OrderController** - Hỗ trợ voucher trong đặt hàng
+4. **ReviewController** - API đánh giá sản phẩm
+5. **SecurityConfig** - Permit chatbot endpoint
 
-### Giỏ hàng
-![Cart](docs/screenshots/cart.png)
+### ✅ Frontend Web
+1. **chatbot.js** - Chat UI với AI
+2. **chatbot.css** - Floating button và chat window
+3. **checkout.html** - Voucher input và validation
+4. **orders.html** - Fixed JavaScript errors
+5. **notifications.js** - Wait for DOM ready
 
-### Admin Dashboard
-![Admin Dashboard](docs/screenshots/admin-dashboard.png)
+### ✅ Desktop App
+1. **ChatbotPanel** - Chat với AI trong desktop
+2. **CheckoutFrame** - Voucher validation và apply
+3. **ApiClient** - Thêm chatbot và voucher endpoints
+4. **MainFrameModern** - Thêm AI Trợ lý button
+5. **FoodShop.bat** - File BAT để tạo EXE
 
-### Quản lý sản phẩm
-![Product Management](docs/screenshots/product-management.png)
+### ✅ Mobile App
+1. Fixed PlatformConstants error
+2. Expo SDK 54 compatibility
+3. Full navigation setup
+4. API integration
 
----
 
-## 🤝 Đóng góp
+## 🐛 Troubleshooting
 
-Mọi đóng góp đều được chào đón! Vui lòng:
+### Backend không start
+- Check MySQL connection
+- Check port 8080 có bị chiếm không
+- Check environment variables
+
+### Chatbot không hoạt động
+- Check Gemini API key
+- Check API key hỗ trợ model `gemini-2.5-flash`
+- Check Render logs
+
+### Desktop app không chạy
+- Check Java 17 đã cài chưa
+- Check JAR file path đúng chưa
+- Chạy từ command line để xem logs
+
+### Mobile app không kết nối
+- Check backend URL trong API service
+- Check backend đang chạy
+- Check network connection
+
+## 🤝 Contributing
 
 1. Fork repository
-2. Tạo branch mới (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Mở Pull Request
+2. Create feature branch
+3. Commit changes
+4. Push to branch
+5. Create Pull Request
+
+## 📄 License
+
+MIT License
+
+## 👨‍💻 Author
+
+Food Shop Team
+
+## 📞 Contact
+
+- Email: support@foodshop.com
+- Website: https://food-shop-iswi.onrender.com
 
 ---
 
-## 📝 License
+**Version:** 1.0.0  
+**Last Updated:** 04/04/2026  
+**Status:** ✅ Production Ready
 
-Dự án này được phân phối dưới giấy phép MIT. Xem file `LICENSE` để biết thêm chi tiết.
-
----
-
-## 👨‍💻 Tác giả
+## 👨‍💻 Author
 
 **haivoDA22TTD (haivoDev)**
 
-- 👤 GitHub: [@haivoDA22TTD](https://github.com/haivoDA22TTD)
-- 📧 Email: 110122068@st.tvu.edu.vn
 - 🎓 Sinh viên Trường Đại học Trà Vinh
-- 💼 Full Stack Developer (Spring Boot + Java Swing + Web)
+- 📧 Email: 110122068@st.tvu.edu.vn
+- 🔗 GitHub: [@haivoDA22TTD](https://github.com/haivoDA22TTD)
 
----
+## � Contact
 
-## 🙏 Lời cảm ơn
+- Email: 110122068@st.tvu.edu.vn
+- Website: https://food-shop-iswi.onrender.com Native + Java Swing)
 
-- [Spring Boot](https://spring.io/projects/spring-boot) - Backend Framework
-- [FlatLaf](https://www.formdev.com/flatlaf/) - Modern Look and Feel cho Java Swing
-- [Cloudinary](https://cloudinary.com) - Cloud Image Storage
-- [Render](https://render.com) - Backend Hosting
-- [Railway](https://railway.app) - Database Hosting
-- [OkHttp](https://square.github.io/okhttp/) - HTTP Client
-- [Gson](https://github.com/google/gson) - JSON Parser
-- [Shields.io](https://shields.io) - Badges
-- [Bat To Exe Converter](http://www.f2ko.de/en/b2e.php) - BAT to EXE Tool
-- Tất cả contributors đã đóng góp cho dự án
-
----
-
-## 📞 Liên hệ & Hỗ trợ
+## � Liên hệ & Hỗ trợ
 
 Nếu bạn có câu hỏi hoặc cần hỗ trợ:
 
@@ -502,6 +316,7 @@ Nếu bạn có câu hỏi hoặc cần hỗ trợ:
 - 💬 Issues: [GitHub Issues](https://github.com/haivoDA22TTD/food_shop/issues)
 - 🐛 Bug Reports: [Report Bug](https://github.com/haivoDA22TTD/food_shop/issues/new?labels=bug)
 - ✨ Feature Requests: [Request Feature](https://github.com/haivoDA22TTD/food_shop/issues/new?labels=enhancement)
+- 🌐 Website: https://food-shop-iswi.onrender.com
 
 ---
 
@@ -512,3 +327,16 @@ Nếu bạn có câu hỏi hoặc cần hỗ trợ:
 Made with ❤️ by [haivoDA22TTD](https://github.com/haivoDA22TTD)
 
 </div>
+
+## 🙏 Lời cảm ơn
+
+- [Spring Boot](https://spring.io/projects/spring-boot) - Backend Framework
+- [FlatLaf](https://www.formdev.com/flatlaf/) - Modern Look and Feel cho Java Swing
+- [Cloudinary](https://cloudinary.com) - Cloud Image Storage
+- [Render](https://render.com) - Backend Hosting
+- [Railway](https://railway.app) - Database Hosting
+- [Google Gemini](https://ai.google.dev/) - AI Chatbot
+- [OkHttp](https://square.github.io/okhttp/) - HTTP Client
+- [Gson](https://github.com/google/gson) - JSON Parser
+- [Expo](https://expo.dev/) - React Native Framework
+- Tất cả contributors đã đóng góp cho dự án
