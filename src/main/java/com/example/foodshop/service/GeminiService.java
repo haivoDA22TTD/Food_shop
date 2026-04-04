@@ -22,8 +22,8 @@ public class GeminiService {
     @Value("${gemini.api.key}")
     private String apiKey;
     
-    // Sử dụng Gemini 1.5 Flash - Stable, reliable, FREE!
-    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    // Sử dụng Gemini Pro - Most stable and widely available
+    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
     
     private final WebClient webClient;
     private final Gson gson;
@@ -60,17 +60,25 @@ public class GeminiService {
             requestBody.put("contents", List.of(content));
             
             log.info("Calling Gemini API with model: gemini-1.5-flash");
+            log.info("API Key (first 10 chars): {}", apiKey.substring(0, Math.min(10, apiKey.length())));
             
-            String response = webClient.post()
-                    .uri(uriBuilder -> uriBuilder
-                            .queryParam("key", apiKey)
-                            .build())
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
+            String response = null;
+            try {
+                response = webClient.post()
+                        .uri(uriBuilder -> uriBuilder
+                                .queryParam("key", apiKey)
+                                .build())
+                        .bodyValue(requestBody)
+                        .retrieve()
+                        .bodyToMono(String.class)
+                        .block();
+                
+                log.info("Gemini API response received");
+            } catch (Exception apiError) {
+                log.error("Gemini API call failed: {}", apiError.getMessage());
+                throw apiError;
+            }
             
-            log.info("Gemini API response received");
             String result = extractTextFromResponse(response);
             log.info("Chatbot response: {}", result);
             
