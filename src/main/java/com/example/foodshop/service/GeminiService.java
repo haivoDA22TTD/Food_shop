@@ -38,6 +38,7 @@ public class GeminiService {
     
     /**
      * Gọi Gemini API để xử lý câu hỏi của user
+     * FALLBACK: Nếu Gemini lỗi, dùng logic đơn giản
      */
     public String chat(String userMessage, String context) {
         try {
@@ -45,8 +46,8 @@ public class GeminiService {
             
             // Check API key
             if (apiKey == null || apiKey.isEmpty() || apiKey.equals("${GEMINI_API_KEY}")) {
-                log.error("Gemini API key not configured!");
-                return "Xin lỗi, hệ thống chatbot chưa được cấu hình. Vui lòng liên hệ admin.";
+                log.warn("Gemini API key not configured, using fallback logic");
+                return generateFallbackResponse(userMessage);
             }
             
             String prompt = buildPrompt(userMessage, context);
@@ -59,39 +60,89 @@ public class GeminiService {
             content.put("parts", List.of(part));
             requestBody.put("contents", List.of(content));
             
-            log.info("Calling Gemini API with model: gemini-1.5-flash");
-            log.info("API Key (first 10 chars): {}", apiKey.substring(0, Math.min(10, apiKey.length())));
+            log.info("Calling Gemini API with model: gemini-pro");
             
-            String response = null;
-            try {
-                response = webClient.post()
-                        .uri(uriBuilder -> uriBuilder
-                                .queryParam("key", apiKey)
-                                .build())
-                        .bodyValue(requestBody)
-                        .retrieve()
-                        .bodyToMono(String.class)
-                        .block();
-                
-                log.info("Gemini API response received");
-            } catch (Exception apiError) {
-                log.error("Gemini API call failed: {}", apiError.getMessage());
-                throw apiError;
-            }
+            String response = webClient.post()
+                    .uri(uriBuilder -> uriBuilder
+                            .queryParam("key", apiKey)
+                            .build())
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
             
+            log.info("Gemini API response received");
             String result = extractTextFromResponse(response);
             log.info("Chatbot response: {}", result);
-            
             return result;
             
         } catch (Exception e) {
-            log.error("Error calling Gemini API - Message: {}, Cause: {}", 
-                e.getMessage(), 
-                e.getCause() != null ? e.getCause().getMessage() : "Unknown"
-            );
-            e.printStackTrace();
-            return "Xin lỗi, tôi đang gặp sự cố kỹ thuật. Vui lòng thử lại sau hoặc liên hệ admin.";
+            log.error("Gemini API error, using fallback: {}", e.getMessage());
+            return generateFallbackResponse(userMessage);
         }
+    }
+    
+    /**
+     * Fallback response khi Gemini API lỗi - Dùng logic đơn giản
+     */
+    private String generateFallbackResponse(String userMessage) {
+        String lowerMessage = userMessage.toLowerCase();
+        
+        // Chào hỏi
+        if (lowerMessage.contains("xin chào") || lowerMessage.contains("hello") || lowerMessage.contains("hi") || lowerMessage.contains("chào")) {
+            return "Xin chào! 👋 Tôi là trợ lý của Food Shop.\n\n" +
+                   "Tôi có thể giúp bạn:\n" +
+                   "• Tìm món ăn ngon\n" +
+                   "• Tạo mã giảm giá\n" +
+                   "• Tư vấn sản phẩm\n\n" +
+                   "Bạn muốn tìm món gì?";
+        }
+        
+        // Tìm món ăn
+        if (lowerMessage.contains("món") || lowerMessage.contains("có gì") || lowerMessage.contains("menu") || lowerMessage.contains("ngon")) {
+            return "Chúng tôi có nhiều món ngon:\n\n" +
+                   "🍓 Bingsu Dâu - 85,000đ\n" +
+                   "🍜 Tokbokki - 45,000đ\n" +
+                   "🍩 Donut Socola - 35,000đ\n" +
+                   "🍰 Chè Khúc Bạch - 40,000đ\n\n" +
+                   "Bạn muốn xem chi tiết món nào?";
+        }
+        
+        // Tìm theo giá
+        if (lowerMessage.contains("50") || lowerMessage.contains("rẻ") || lowerMessage.contains("giá")) {
+            return "Các món dưới 50k:\n\n" +
+                   "🍜 Tokbokki - 45,000đ\n" +
+                   "🍩 Donut Socola - 35,000đ\n" +
+                   "🍰 Chè Khúc Bạch - 40,000đ\n\n" +
+                   "Tất cả đều ngon và giá hợp lý! 😊";
+        }
+        
+        // Giao hàng
+        if (lowerMessage.contains("giao") || lowerMessage.contains("ship") || lowerMessage.contains("phí")) {
+            return "📦 Thông tin giao hàng:\n\n" +
+                   "• Phí ship: 30,000đ\n" +
+                   "• Thời gian: 30-45 phút\n" +
+                   "• Giao hàng toàn quốc\n\n" +
+                   "Đặt hàng ngay để nhận ưu đãi!";
+        }
+        
+        // Đặt hàng
+        if (lowerMessage.contains("đặt") || lowerMessage.contains("mua") || lowerMessage.contains("order")) {
+            return "Để đặt hàng:\n\n" +
+                   "1️⃣ Thêm món vào giỏ hàng\n" +
+                   "2️⃣ Vào giỏ hàng\n" +
+                   "3️⃣ Click 'Thanh toán'\n" +
+                   "4️⃣ Điền thông tin giao hàng\n\n" +
+                   "Rất đơn giản! 😊";
+        }
+        
+        // Default
+        return "Tôi có thể giúp bạn:\n\n" +
+               "• Xem menu món ăn\n" +
+               "• Tìm món theo giá\n" +
+               "• Tạo mã giảm giá\n" +
+               "• Hướng dẫn đặt hàng\n\n" +
+               "Bạn muốn biết điều gì?";
     }
     
     /**
