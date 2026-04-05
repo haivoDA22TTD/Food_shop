@@ -8,9 +8,11 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  ScrollView
+  ScrollView,
+  Alert
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from '../context/AuthContext';
 
 export default function LoginScreen({ navigation }) {
@@ -30,9 +32,14 @@ export default function LoginScreen({ navigation }) {
     setLoading(false);
 
     if (result.success) {
-      alert('Đăng nhập thành công!');
+      alert('✅ Đăng nhập thành công!');
+      // Navigate back to main app
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Main' }],
+      });
     } else {
-      alert(result.message);
+      alert('❌ ' + result.message);
     }
   };
 
@@ -43,11 +50,20 @@ export default function LoginScreen({ navigation }) {
     >
       <StatusBar style="light" />
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
+        <LinearGradient
+          colors={['#0ea5e9', '#0284c7', '#0369a1']}
+          style={styles.header}
+        >
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backButtonText}>← Quay lại</Text>
+          </TouchableOpacity>
           <Text style={styles.logo}>🍔</Text>
           <Text style={styles.title}>Food Shop</Text>
           <Text style={styles.subtitle}>Đăng nhập để tiếp tục</Text>
-        </View>
+        </LinearGradient>
 
         <View style={styles.form}>
           <View style={styles.inputGroup}>
@@ -101,15 +117,26 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0ea5e9',
+    backgroundColor: '#f8fafc',
   },
   scrollContent: {
     flexGrow: 1,
   },
   header: {
     alignItems: 'center',
-    paddingTop: 80,
+    paddingTop: 60,
     paddingBottom: 40,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 10,
+  },
+  backButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
   logo: {
     fontSize: 64,

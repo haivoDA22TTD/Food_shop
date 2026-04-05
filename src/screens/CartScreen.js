@@ -6,9 +6,11 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
-  ScrollView
+  ScrollView,
+  Alert
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
 
@@ -22,13 +24,25 @@ export default function CartScreen({ navigation }) {
 
   const handleCheckout = () => {
     if (!user) {
-      alert('Vui lòng đăng nhập để thanh toán!');
-      navigation.navigate('Login');
+      Alert.alert(
+        '🔒 Yêu cầu đăng nhập',
+        'Bạn cần đăng nhập để thanh toán đơn hàng',
+        [
+          {
+            text: 'Đăng nhập ngay',
+            onPress: () => navigation.navigate('Login')
+          },
+          {
+            text: 'Hủy',
+            style: 'cancel'
+          }
+        ]
+      );
       return;
     }
 
     if (cart.length === 0) {
-      alert('Giỏ hàng trống!');
+      Alert.alert('Thông báo', 'Giỏ hàng trống!');
       return;
     }
 
@@ -51,9 +65,14 @@ export default function CartScreen({ navigation }) {
               style={styles.quantityBtn}
               onPress={() => {
                 if (item.quantity === 1) {
-                  if (confirm('Xóa sản phẩm khỏi giỏ hàng?')) {
-                    removeFromCart(item.id);
-                  }
+                  Alert.alert(
+                    'Xác nhận',
+                    'Xóa sản phẩm khỏi giỏ hàng?',
+                    [
+                      { text: 'Hủy', style: 'cancel' },
+                      { text: 'Xóa', onPress: () => removeFromCart(item.id) }
+                    ]
+                  );
                 } else {
                   updateQuantity(item.id, -1);
                 }
@@ -77,9 +96,14 @@ export default function CartScreen({ navigation }) {
           <TouchableOpacity
             style={styles.removeBtn}
             onPress={() => {
-              if (confirm('Xóa sản phẩm khỏi giỏ hàng?')) {
-                removeFromCart(item.id);
-              }
+              Alert.alert(
+                'Xác nhận',
+                'Xóa sản phẩm khỏi giỏ hàng?',
+                [
+                  { text: 'Hủy', style: 'cancel' },
+                  { text: 'Xóa', onPress: () => removeFromCart(item.id) }
+                ]
+              );
             }}
           >
             <Text style={styles.removeBtnText}>Xóa</Text>
@@ -93,9 +117,12 @@ export default function CartScreen({ navigation }) {
     return (
       <View style={styles.container}>
         <StatusBar style="light" />
-        <View style={styles.header}>
+        <LinearGradient
+          colors={['#0ea5e9', '#0284c7']}
+          style={styles.header}
+        >
           <Text style={styles.headerTitle}>🛒 Giỏ hàng</Text>
-        </View>
+        </LinearGradient>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>🛒</Text>
           <Text style={styles.emptyTitle}>Giỏ hàng trống</Text>
@@ -118,10 +145,13 @@ export default function CartScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-      <View style={styles.header}>
+      <LinearGradient
+        colors={['#0ea5e9', '#0284c7']}
+        style={styles.header}
+      >
         <Text style={styles.headerTitle}>🛒 Giỏ hàng</Text>
         <Text style={styles.headerSubtitle}>{cart.length} sản phẩm</Text>
-      </View>
+      </LinearGradient>
 
       <FlatList
         data={cart}
@@ -131,6 +161,14 @@ export default function CartScreen({ navigation }) {
       />
 
       <View style={styles.summary}>
+        {!user && (
+          <View style={styles.loginWarning}>
+            <Text style={styles.loginWarningIcon}>🔒</Text>
+            <Text style={styles.loginWarningText}>
+              Bạn cần đăng nhập để thanh toán
+            </Text>
+          </View>
+        )}
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Tạm tính:</Text>
           <Text style={styles.summaryValue}>{formatPrice(subtotal)}</Text>
@@ -144,7 +182,9 @@ export default function CartScreen({ navigation }) {
           <Text style={styles.totalValue}>{formatPrice(total)}</Text>
         </View>
         <TouchableOpacity style={styles.checkoutBtn} onPress={handleCheckout}>
-          <Text style={styles.checkoutBtnText}>Thanh toán</Text>
+          <Text style={styles.checkoutBtnText}>
+            {user ? 'Thanh toán' : '🔒 Đăng nhập để thanh toán'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -154,12 +194,12 @@ export default function CartScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f9ff',
+    backgroundColor: '#f8fafc',
   },
   header: {
-    backgroundColor: '#0ea5e9',
-    padding: 20,
     paddingTop: 50,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
   },
   headerTitle: {
     fontSize: 28,
@@ -177,14 +217,14 @@ const styles = StyleSheet.create({
   cartItem: {
     flexDirection: 'row',
     backgroundColor: 'white',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 12,
     marginBottom: 10,
-    elevation: 2,
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
   },
   itemImage: {
     width: 80,
@@ -266,6 +306,24 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
+  },
+  loginWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef3c7',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 16,
+  },
+  loginWarningIcon: {
+    fontSize: 20,
+    marginRight: 10,
+  },
+  loginWarningText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#92400e',
+    fontWeight: '600',
   },
   summaryRow: {
     flexDirection: 'row',

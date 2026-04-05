@@ -8,9 +8,13 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
-  RefreshControl
+  RefreshControl,
+  TextInput,
+  Animated,
+  Alert
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 import api from '../config/api';
 import { CartContext } from '../context/CartContext';
 
@@ -27,7 +31,9 @@ export default function HomeScreen({ navigation }) {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const { addToCart } = useContext(CartContext);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { addToCart, cart } = useContext(CartContext);
+  const scaleAnim = new Animated.Value(1);
 
   useEffect(() => {
     fetchProducts();
@@ -35,7 +41,7 @@ export default function HomeScreen({ navigation }) {
 
   useEffect(() => {
     filterProducts();
-  }, [selectedCategory, products]);
+  }, [selectedCategory, products, searchQuery]);
 
   const fetchProducts = async () => {
     try {
@@ -55,19 +61,51 @@ export default function HomeScreen({ navigation }) {
   };
 
   const filterProducts = () => {
-    if (selectedCategory === 'all') {
-      setFilteredProducts(products);
-    } else {
-      setFilteredProducts(products.filter(p => p.category === selectedCategory));
+    let filtered = products;
+    
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(p => p.category === selectedCategory);
     }
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.description.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    setFilteredProducts(filtered);
   };
 
   const handleAddToCart = (product) => {
     if (product.stock > 0) {
       addToCart(product, 1);
-      alert('Đã thêm vào giỏ hàng!');
+      // Animate button
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 1.2,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+      ]).start();
+      Alert.alert(
+        '✅ Thành công',
+        'Đã thêm vào giỏ hàng!',
+        [{ text: 'OK' }]
+      );
     } else {
-      alert('Sản phẩm đã hết hàng!');
+      Alert.alert(
+        '❌ Hết hàng',
+        'Sản phẩm đã hết hàng!',
+        [{ text: 'OK' }]
+      );
     }
   };
 
@@ -125,15 +163,52 @@ export default function HomeScreen({ navigation }) {
     );
   }
 
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
       
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>🍔 Food Shop</Text>
-        <Text style={styles.headerSubtitle}>Đặt món ngon mỗi ngày</Text>
-      </View>
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={['#0ea5e9', '#0284c7', '#0369a1']}
+        style={styles.header}
+      >
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.headerTitle}>🍔 Food Shop</Text>
+            <Text style={styles.headerSubtitle}>Đặt món ngon mỗi ngày</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.cartButton}
+            onPress={() => navigation.navigate('Cart')}
+          >
+            <Text style={styles.cartIcon}>🛒</Text>
+            {cartItemCount > 0 && (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>{cartItemCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+        
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Tìm kiếm món ăn..."
+            placeholderTextColor="#94a3b8"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Text style={styles.clearIcon}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </LinearGradient>
 
       {/* Categories */}
       <ScrollView
@@ -173,6 +248,19 @@ export default function HomeScreen({ navigation }) {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       />
+
+      {/* Floating Chatbot Button */}
+      <TouchableOpacity
+        style={styles.chatbotButton}
+        onPress={() => navigation.navigate('Chatbot')}
+      >
+        <LinearGradient
+          colors={['#8b5cf6', '#7c3aed']}
+          style={styles.chatbotGradient}
+        >
+          <Text style={styles.chatbotIcon}>🤖</Text>
+        </LinearGradient>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -180,18 +268,24 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f9ff',
+    backgroundColor: '#f8fafc',
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f0f9ff',
+    backgroundColor: '#f8fafc',
   },
   header: {
-    backgroundColor: '#0ea5e9',
-    padding: 20,
     paddingTop: 50,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   headerTitle: {
     fontSize: 28,
@@ -202,6 +296,57 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255,255,255,0.9)',
     marginTop: 4,
+  },
+  cartButton: {
+    position: 'relative',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cartIcon: {
+    fontSize: 24,
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#ef4444',
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
+  cartBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  searchIcon: {
+    fontSize: 20,
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#1e293b',
+  },
+  clearIcon: {
+    fontSize: 20,
+    color: '#94a3b8',
+    paddingLeft: 10,
   },
   categoryScroll: {
     backgroundColor: 'white',
@@ -240,14 +385,14 @@ const styles = StyleSheet.create({
   productCard: {
     flex: 1,
     backgroundColor: 'white',
-    borderRadius: 12,
+    borderRadius: 16,
     margin: 6,
     overflow: 'hidden',
-    elevation: 2,
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
   },
   productImage: {
     width: '100%',
@@ -309,5 +454,25 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 11,
     fontWeight: '600',
+  },
+  chatbotButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  chatbotGradient: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chatbotIcon: {
+    fontSize: 32,
   },
 });

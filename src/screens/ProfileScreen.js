@@ -8,6 +8,7 @@ import {
   Alert
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from '../context/AuthContext';
 
 export default function ProfileScreen({ navigation }) {
@@ -32,9 +33,12 @@ export default function ProfileScreen({ navigation }) {
     return (
       <View style={styles.container}>
         <StatusBar style="light" />
-        <View style={styles.header}>
+        <LinearGradient
+          colors={['#0ea5e9', '#0284c7']}
+          style={styles.header}
+        >
           <Text style={styles.headerTitle}>👤 Tài khoản</Text>
-        </View>
+        </LinearGradient>
         <View style={styles.notLoggedIn}>
           <Text style={styles.notLoggedInIcon}>🔒</Text>
           <Text style={styles.notLoggedInTitle}>Chưa đăng nhập</Text>
@@ -61,9 +65,12 @@ export default function ProfileScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-      <View style={styles.header}>
+      <LinearGradient
+        colors={['#0ea5e9', '#0284c7']}
+        style={styles.header}
+      >
         <Text style={styles.headerTitle}>👤 Tài khoản</Text>
-      </View>
+      </LinearGradient>
 
       <ScrollView style={styles.content}>
         <View style={styles.profileCard}>
@@ -85,6 +92,15 @@ export default function ProfileScreen({ navigation }) {
           >
             <Text style={styles.menuIcon}>📦</Text>
             <Text style={styles.menuText}>Đơn hàng của tôi</Text>
+            <Text style={styles.menuArrow}>›</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('Chatbot')}
+          >
+            <Text style={styles.menuIcon}>🤖</Text>
+            <Text style={styles.menuText}>AI Trợ lý</Text>
             <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
 
@@ -121,12 +137,12 @@ export default function ProfileScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f9ff',
+    backgroundColor: '#f8fafc',
   },
   header: {
-    backgroundColor: '#0ea5e9',
-    padding: 20,
     paddingTop: 50,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
   },
   headerTitle: {
     fontSize: 28,
@@ -142,11 +158,11 @@ const styles = StyleSheet.create({
     padding: 30,
     borderRadius: 16,
     alignItems: 'center',
-    elevation: 2,
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
   },
   avatar: {
     width: 80,
@@ -177,11 +193,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     borderRadius: 16,
     overflow: 'hidden',
-    elevation: 2,
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
   },
   menuItem: {
     flexDirection: 'row',

@@ -13,13 +13,16 @@ import RegisterScreen from '../screens/RegisterScreen';
 import CartScreen from '../screens/CartScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ProductDetailScreen from '../screens/ProductDetailScreen';
+import CheckoutScreen from '../screens/CheckoutScreen';
+import OrdersScreen from '../screens/OrdersScreen';
+import ChatbotScreen from '../screens/ChatbotScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function TabNavigator() {
-  const { getCartCount } = useContext(CartContext);
-  const cartCount = getCartCount();
+  const { cart } = useContext(CartContext);
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <Tab.Navigator
@@ -45,6 +48,16 @@ function TabNavigator() {
           tabBarLabel: 'Trang chủ',
           tabBarIcon: ({ color, size }) => (
             <Text style={{ fontSize: 24 }}>🏠</Text>
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Orders"
+        component={OrdersScreen}
+        options={{
+          tabBarLabel: 'Đơn hàng',
+          tabBarIcon: ({ color, size }) => (
+            <Text style={{ fontSize: 24 }}>📦</Text>
           ),
         }}
       />
@@ -85,6 +98,8 @@ export default function AppNavigator() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Main" component={TabNavigator} />
         <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+        <Stack.Screen name="Checkout" component={CheckoutScreen} />
+        <Stack.Screen name="Chatbot" component={ChatbotScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
       </Stack.Navigator>

@@ -8,9 +8,11 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  ScrollView
+  ScrollView,
+  Alert
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from '../context/AuthContext';
 
 export default function RegisterScreen({ navigation }) {
@@ -43,10 +45,18 @@ export default function RegisterScreen({ navigation }) {
     setLoading(false);
 
     if (result.success) {
-      alert('Đăng ký thành công! Vui lòng đăng nhập.');
-      navigation.navigate('Login');
+      Alert.alert(
+        '✅ Đăng ký thành công!',
+        'Vui lòng đăng nhập để tiếp tục.',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Login')
+          }
+        ]
+      );
     } else {
-      alert(result.message);
+      alert('❌ ' + result.message);
     }
   };
 
@@ -57,11 +67,20 @@ export default function RegisterScreen({ navigation }) {
     >
       <StatusBar style="light" />
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
+        <LinearGradient
+          colors={['#0ea5e9', '#0284c7', '#0369a1']}
+          style={styles.header}
+        >
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backButtonText}>← Quay lại</Text>
+          </TouchableOpacity>
           <Text style={styles.logo}>🍔</Text>
           <Text style={styles.title}>Đăng ký</Text>
           <Text style={styles.subtitle}>Tạo tài khoản mới</Text>
-        </View>
+        </LinearGradient>
 
         <View style={styles.form}>
           <View style={styles.inputGroup}>
@@ -159,15 +178,26 @@ export default function RegisterScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0ea5e9',
+    backgroundColor: '#f8fafc',
   },
   scrollContent: {
     flexGrow: 1,
   },
   header: {
     alignItems: 'center',
-    paddingTop: 60,
+    paddingTop: 50,
     paddingBottom: 30,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    zIndex: 10,
+  },
+  backButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
   logo: {
     fontSize: 48,

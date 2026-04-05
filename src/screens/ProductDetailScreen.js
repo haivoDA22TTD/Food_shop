@@ -10,6 +10,7 @@ import {
   Alert
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 import api from '../config/api';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
@@ -123,7 +124,10 @@ export default function ProductDetailScreen({ route, navigation }) {
       <StatusBar style="light" />
       
       {/* Header */}
-      <View style={styles.header}>
+      <LinearGradient
+        colors={['#0ea5e9', '#0284c7']}
+        style={styles.header}
+      >
         <TouchableOpacity
           style={styles.headerButton}
           onPress={() => navigation.goBack()}
@@ -132,7 +136,7 @@ export default function ProductDetailScreen({ route, navigation }) {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Chi tiết sản phẩm</Text>
         <View style={styles.headerButton} />
-      </View>
+      </LinearGradient>
 
       <ScrollView style={styles.content}>
         {/* Product Image */}
@@ -224,16 +228,15 @@ export default function ProductDetailScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f9ff',
+    backgroundColor: '#f8fafc',
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f0f9ff',
+    backgroundColor: '#f8fafc',
   },
   header: {
-    backgroundColor: '#0ea5e9',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
