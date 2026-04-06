@@ -174,7 +174,6 @@ CLOUDINARY_API_SECRET=...
 GEMINI_API_KEY=...
 ```
 
-Production URL: `https://food-shop-iswi.onrender.com`
 
 ### Database (Railway)
 
