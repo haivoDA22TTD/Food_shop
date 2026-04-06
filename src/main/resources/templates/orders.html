@@ -391,6 +391,41 @@
             return date.toLocaleString('vi-VN');
         }
         
+        // Logout function with API call
+        async function logout() {
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                localStorage.clear();
+                window.location.href = '/';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Logout response:', data);
+                    if (window.toast) toast.success('Đăng xuất thành công!');
+                } else {
+                    console.error('Logout failed:', response.status);
+                    if (window.toast) toast.warning('Đã đăng xuất (offline)');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                if (window.toast) toast.warning('Đã đăng xuất (offline)');
+            } finally {
+                localStorage.clear();
+                setTimeout(() => window.location.href = '/', 500);
+            }
+        }
+        
         function checkLoginStatus() {
             const token = localStorage.getItem('token');
             const username = localStorage.getItem('username');
@@ -405,8 +440,7 @@
                 loginLink.onclick = function(e) {
                     e.preventDefault();
                     if (confirm('Bạn có muốn đăng xuất?')) {
-                        localStorage.clear();
-                        window.location.href = '/';
+                        logout();
                     }
                 };
                 

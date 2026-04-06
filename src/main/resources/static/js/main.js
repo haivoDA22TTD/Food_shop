@@ -62,6 +62,49 @@ function updateCartCount() {
 updateCartCount();
 
 
+// Logout function with API call
+async function logout() {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+        localStorage.clear();
+        window.location.reload();
+        return;
+    }
+    
+    try {
+        // Call logout API to blacklist token
+        const response = await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Logout response:', data);
+            if (window.toast) {
+                toast.success('Đăng xuất thành công!');
+            }
+        } else {
+            console.error('Logout failed:', response.status);
+            if (window.toast) {
+                toast.warning('Đã đăng xuất (offline)');
+            }
+        }
+    } catch (error) {
+        console.error('Logout error:', error);
+        if (window.toast) {
+            toast.warning('Đã đăng xuất (offline)');
+        }
+    } finally {
+        // Always clear local storage and reload
+        localStorage.clear();
+        setTimeout(() => window.location.reload(), 500);
+    }
+}
+
 // Check login status and update UI
 function checkLoginStatus() {
     const token = localStorage.getItem('token');
@@ -77,8 +120,7 @@ function checkLoginStatus() {
         loginLink.onclick = function(e) {
             e.preventDefault();
             if (confirm('Bạn có muốn đăng xuất?')) {
-                localStorage.clear();
-                window.location.reload();
+                logout();
             }
         };
         
