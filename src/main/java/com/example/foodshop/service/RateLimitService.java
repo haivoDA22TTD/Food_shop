@@ -21,12 +21,12 @@ public class RateLimitService {
 
     private static final Logger logger = LoggerFactory.getLogger(RateLimitService.class);
 
-    private final JedisBasedProxyManager<String> proxyManager;
+    private final JedisBasedProxyManager<byte[]> proxyManager;
     private final boolean redisAvailable;
 
     @Autowired
     public RateLimitService(JedisConnectionFactory jedisConnectionFactory) {
-        JedisBasedProxyManager<String> tempProxyManager = null;
+        JedisBasedProxyManager<byte[]> tempProxyManager = null;
         boolean available = false;
 
         try {
@@ -91,7 +91,9 @@ public class RateLimitService {
                         .build();
             };
 
-            Bucket bucket = proxyManager.builder().build(key, configSupplier);
+            // Convert String key to byte[] for Bucket4j
+            byte[] keyBytes = key.getBytes();
+            Bucket bucket = proxyManager.builder().build(keyBytes, configSupplier);
             boolean allowed = bucket.tryConsume(1);
 
             if (!allowed) {
