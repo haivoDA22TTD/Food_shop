@@ -57,7 +57,11 @@
                 
                 loading.hide();
                 
-                if (response.ok) {
+                if (response.status === 429) {
+                    // Rate limit exceeded
+                    const data = await response.json();
+                    toast.error(data.message || 'Quá nhiều lần đăng nhập. Vui lòng thử lại sau.');
+                } else if (response.ok) {
                     const data = await response.json();
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('username', data.username);

@@ -510,7 +510,11 @@
                 
                 loading.hide();
                 
-                if (response.ok) {
+                if (response.status === 429) {
+                    // Rate limit exceeded
+                    const data = await response.json();
+                    toast.error(data.message || 'Quá nhiều đánh giá. Vui lòng thử lại sau 1 giờ.');
+                } else if (response.ok) {
                     showSuccessModal(
                         'Đánh giá thành công!',
                         'Cảm ơn bạn đã đánh giá sản phẩm.',

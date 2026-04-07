@@ -146,6 +146,12 @@ class Chatbot {
             body: JSON.stringify({ message })
         });
 
+        if (response.status === 429) {
+            // Rate limit exceeded
+            const data = await response.json();
+            throw new Error(data.message || 'Bạn đang gửi tin nhắn quá nhanh. Vui lòng chờ một chút.');
+        }
+
         if (!response.ok) {
             throw new Error('API call failed');
         }
