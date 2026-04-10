@@ -179,16 +179,6 @@ GEMINI_API_KEY=...
 
 MySQL database hosted trên Railway.
 
-## 👥 Tài khoản mặc định
-
-### Admin
-- Username: `admin`
-- Password: `admin123`
-
-### Customer
-- Username: `customer`
-- Password: `customer123`
-
 ## 📝 API Endpoints
 
 ### Authentication
