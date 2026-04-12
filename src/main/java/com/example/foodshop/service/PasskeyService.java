@@ -6,10 +6,6 @@ import com.example.foodshop.entity.User;
 import com.example.foodshop.repository.PasskeyChallengeRepository;
 import com.example.foodshop.repository.PasskeyCredentialRepository;
 import com.example.foodshop.repository.UserRepository;
-import com.yubico.webauthn.*;
-import com.yubico.webauthn.data.*;
-import com.yubico.webauthn.exception.AssertionFailedException;
-import com.yubico.webauthn.exception.RegistrationFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -51,12 +46,11 @@ public class PasskeyService {
         // Generate challenge
         byte[] challengeBytes = new byte[32];
         random.nextBytes(challengeBytes);
-        ByteArray challenge = new ByteArray(challengeBytes);
-        String challengeBase64 = challenge.getBase64Url();
+        String challenge = Base64.getUrlEncoder().withoutPadding().encodeToString(challengeBytes);
         
         // Save challenge
         PasskeyChallenge passkeyChallenge = new PasskeyChallenge();
-        passkeyChallenge.setChallenge(challengeBase64);
+        passkeyChallenge.setChallenge(challenge);
         passkeyChallenge.setUserId(user.getId());
         passkeyChallenge.setUsername(username);
         passkeyChallenge.setType("registration");
@@ -64,11 +58,12 @@ public class PasskeyService {
         challengeRepository.save(passkeyChallenge);
         
         // Generate user handle
-        ByteArray userHandle = new ByteArray(user.getId().toString().getBytes());
+        String userHandle = Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(user.getId().toString().getBytes());
         
         // Build registration options
         Map<String, Object> options = new HashMap<>();
-        options.put("challenge", challengeBase64);
+        options.put("challenge", challenge);
         
         Map<String, Object> rp = new HashMap<>();
         rp.put("name", "Food Shop");
@@ -76,7 +71,7 @@ public class PasskeyService {
         options.put("rp", rp);
         
         Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("id", userHandle.getBase64Url());
+        userInfo.put("id", userHandle);
         userInfo.put("name", username);
         userInfo.put("displayName", user.getFullName() != null ? user.getFullName() : username);
         options.put("user", userInfo);
@@ -110,6 +105,7 @@ public class PasskeyService {
     
     /**
      * Verify and register a new passkey credential
+     * Simplified version - stores credential without full cryptographic verification
      */
     @Transactional
     public void registerCredential(String username, Map<String, Object> credential, String nickname) {
@@ -134,14 +130,16 @@ public class PasskeyService {
                 throw new RuntimeException("Challenge expired");
             }
             
-            // For simplified implementation, we'll trust the credential
-            // In production, you should use full Yubico WebAuthn validation
+            // Verify challenge matches
+            if (!passkeyChallenge.getUsername().equals(username)) {
+                throw new RuntimeException("Challenge username mismatch");
+            }
             
-            // Save credential
+            // Save credential (simplified - no full cryptographic verification)
             PasskeyCredential passkeyCredential = new PasskeyCredential();
             passkeyCredential.setUser(user);
             passkeyCredential.setCredentialId(credentialId);
-            passkeyCredential.setPublicKey(attestationObject); // Store attestation object
+            passkeyCredential.setPublicKey(attestationObject);
             passkeyCredential.setSignCount(0L);
             passkeyCredential.setAaguid("00000000-0000-0000-0000-000000000000");
             passkeyCredential.setNickname(nickname != null ? nickname : "Passkey");
@@ -168,19 +166,18 @@ public class PasskeyService {
         // Generate challenge
         byte[] challengeBytes = new byte[32];
         random.nextBytes(challengeBytes);
-        ByteArray challenge = new ByteArray(challengeBytes);
-        String challengeBase64 = challenge.getBase64Url();
+        String challenge = Base64.getUrlEncoder().withoutPadding().encodeToString(challengeBytes);
         
         // Save challenge
         PasskeyChallenge passkeyChallenge = new PasskeyChallenge();
-        passkeyChallenge.setChallenge(challengeBase64);
+        passkeyChallenge.setChallenge(challenge);
         passkeyChallenge.setUsername(username);
         passkeyChallenge.setType("authentication");
         passkeyChallenge.setExpiresAt(LocalDateTime.now().plusMinutes(5));
         challengeRepository.save(passkeyChallenge);
         
         Map<String, Object> options = new HashMap<>();
-        options.put("challenge", challengeBase64);
+        options.put("challenge", challenge);
         options.put("timeout", 60000);
         options.put("rpId", getRpId());
         options.put("userVerification", "required");
@@ -209,18 +206,14 @@ public class PasskeyService {
     
     /**
      * Verify passkey authentication and return username
+     * Simplified version - verifies challenge and credential existence only
      */
     @Transactional
     public String verifyAuthentication(Map<String, Object> credential) {
         try {
             String credentialId = (String) credential.get("id");
-            String rawId = (String) credential.get("rawId");
             Map<String, Object> response = (Map<String, Object>) credential.get("response");
-            
             String clientDataJSON = (String) response.get("clientDataJSON");
-            String authenticatorData = (String) response.get("authenticatorData");
-            String signature = (String) response.get("signature");
-            String userHandle = (String) response.get("userHandle");
             
             // Find credential
             PasskeyCredential passkeyCredential = credentialRepository.findByCredentialId(credentialId)
@@ -239,8 +232,8 @@ public class PasskeyService {
                 throw new RuntimeException("Challenge expired");
             }
             
-            // For simplified implementation, we trust the credential exists and is valid
-            // In production, you should use full Yubico WebAuthn signature verification
+            // Simplified verification - just check credential exists and challenge is valid
+            // In production, you should verify the signature cryptographically
             
             // Update sign count and last used
             passkeyCredential.setSignCount(passkeyCredential.getSignCount() + 1);
@@ -323,8 +316,8 @@ public class PasskeyService {
     
     private String extractChallengeFromClientData(String clientDataJSON) {
         try {
-            ByteArray decoded = ByteArray.fromBase64Url(clientDataJSON);
-            String json = new String(decoded.getBytes());
+            byte[] decoded = Base64.getUrlDecoder().decode(clientDataJSON);
+            String json = new String(decoded);
             // Simple JSON parsing
             int start = json.indexOf("\"challenge\":\"") + 13;
             int end = json.indexOf("\"", start);

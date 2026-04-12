@@ -10,14 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface PasskeyCredentialRepository extends JpaRepository<PasskeyCredential, Long> {
-    
     Optional<PasskeyCredential> findByCredentialId(String credentialId);
-    
-    List<PasskeyCredential> findByUserAndIsActiveTrue(User user);
-    
     List<PasskeyCredential> findByUser(User user);
-    
-    boolean existsByCredentialId(String credentialId);
-    
-    long countByUserAndIsActiveTrue(User user);
+    List<PasskeyCredential> findByUserAndIsActiveTrue(User user);
 }

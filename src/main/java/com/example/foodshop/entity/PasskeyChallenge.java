@@ -43,7 +43,7 @@ public class PasskeyChallenge {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         if (expiresAt == null) {
-            expiresAt = createdAt.plusMinutes(5); // 5 minutes expiry
+            expiresAt = createdAt.plusMinutes(5);
         }
     }
     
