@@ -93,10 +93,10 @@ public class PasskeyService {
         options.put("attestation", "none");
         
         Map<String, Object> authenticatorSelection = new HashMap<>();
-        authenticatorSelection.put("authenticatorAttachment", "platform");
+        // Don't specify authenticatorAttachment - allow both platform and cross-platform
         authenticatorSelection.put("requireResidentKey", false);
         authenticatorSelection.put("residentKey", "preferred");
-        authenticatorSelection.put("userVerification", "required");
+        authenticatorSelection.put("userVerification", "preferred"); // Preferred instead of required
         options.put("authenticatorSelection", authenticatorSelection);
         
         logger.info("Generated registration options for user: {}", username);
@@ -180,7 +180,7 @@ public class PasskeyService {
         options.put("challenge", challenge);
         options.put("timeout", 60000);
         // Don't set rpId - let browser use current domain automatically
-        options.put("userVerification", "required");
+        options.put("userVerification", "preferred"); // Preferred instead of required
         
         // Get user's credentials (optional - for better UX)
         if (username != null && !username.isEmpty()) {
