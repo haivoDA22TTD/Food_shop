@@ -73,7 +73,7 @@ public class PasskeyService {
         Map<String, Object> userInfo = new HashMap<>();
         userInfo.put("id", userHandle);
         userInfo.put("name", username);
-        userInfo.put("displayName", user.getFullName() != null ? user.getFullName() : username);
+        userInfo.put("displayName", username);
         options.put("user", userInfo);
         
         List<Map<String, Object>> pubKeyCredParams = new ArrayList<>();
