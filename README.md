@@ -279,7 +279,7 @@ MIT License
 
 - 🎓 Sinh viên Trường Đại học Trà Vinh
 - 📧 Email: 110122068@st.tvu.edu.vn
-- 🔗 GitHub: [@haivoDA22TTD](https://github.com/haivoDA22TTD)
+- 🔗 GitHub: [haivoDA22TTD](https://github.com/haivoDA22TTD)
 
 
 
