@@ -36,9 +36,9 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/login", "/register", "/product/**", "/api/auth/**", "/api/products/**", "/css/**", "/js/**", "/img/**").permitAll()
+                .requestMatchers("/", "/login", "/register", "/product/**", "/profile", "/api/auth/**", "/api/products/**", "/api/passkey/login/**", "/css/**", "/js/**", "/img/**").permitAll()
                 .requestMatchers("/admin/**").permitAll()
-                .requestMatchers("/orders/**", "/reviews/**", "/cart/**", "/checkout/**", "/api/orders/**", "/api/reviews/**").permitAll()
+                .requestMatchers("/orders/**", "/reviews/**", "/cart/**", "/checkout/**", "/api/orders/**", "/api/reviews/**", "/api/passkey/**").permitAll()
                 .anyRequest().permitAll()
             )
             .sessionManagement(session -> session

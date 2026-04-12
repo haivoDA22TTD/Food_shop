@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ sơ - Food Shop</title>
+    <link rel="stylesheet" th:href="@{/css/modern-style.css}">
+    <link rel="stylesheet" th:href="@{/css/animations.css}">
+    <style>
+        .profile-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .profile-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #333;
+            border-bottom: 2px solid #ff6b6b;
+            padding-bottom: 10px;
+        }
+        
+        .passkey-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .passkey-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .passkey-item:hover {
+            border-color: #ff6b6b;
+            box-shadow: 0 2px 8px rgba(255,107,107,0.2);
+        }
+        
+        .passkey-info {
+            flex: 1;
+        }
+        
+        .passkey-nickname {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .passkey-meta {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .passkey-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn-delete:hover {
+            background: #c82333;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="/" class="logo">🍔 Food Shop</a>
+            <div class="nav-links">
+                <a href="/">Trang chủ</a>
+                <a href="/cart">Giỏ hàng</a>
+                <a href="/orders">Đơn hàng</a>
+                <a href="/profile">Hồ sơ</a>
+                <a href="#" id="logoutBtn">Đăng xuất</a>
+            </div>
+        </nav>
+    </header>
+    
+    <div class="profile-container">
+        <div class="profile-section">
+            <h2 class="section-title">Thông tin tài khoản</h2>
+            <p><strong>Tên đăng nhập:</strong> <span id="usernameDisplay"></span></p>
+            <p><strong>Vai trò:</strong> <span id="roleDisplay"></span></p>
+        </div>
+        
+        <div class="profile-section" id="passkeySection" style="display: none;">
+            <h2 class="section-title">🔐 Quản lý Passkey</h2>
+            <p style="color: #666; margin-bottom: 20px;">
+                Passkey cho phép bạn đăng nhập nhanh chóng và an toàn bằng sinh trắc học (vân tay, khuôn mặt) 
+                hoặc mã PIN thiết bị mà không cần nhập mật khẩu.
+            </p>
+            
+            <button id="addPasskeyBtn" class="btn-primary" style="margin-bottom: 20px;">
+                ➕ Thêm Passkey mới
+            </button>
+            
+            <div id="passkeyListContainer">
+                <ul id="passkeyList" class="passkey-list"></ul>
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">🔑</div>
+                    <p>Bạn chưa có Passkey nào</p>
+                    <p style="font-size: 0.9rem; color: #999;">Nhấn nút "Thêm Passkey mới" để bắt đầu</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script th:src="@{/js/notifications.js}"></script>
+    <script th:src="@{/js/passkey.js}"></script>
+    <script>
+        // Check authentication
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+        const role = localStorage.getItem('role');
+        
+        if (!token || !username) {
+            window.location.href = '/login';
+        }
+        
+        // Display user info
+        document.getElementById('usernameDisplay').textContent = username;
+        document.getElementById('roleDisplay').textContent = role === 'ROLE_ADMIN' ? 'Quản trị viên' : 'Khách hàng';
+        
+        // Check if passkey is supported
+        if (PasskeyManager.isSupported()) {
+            document.getElementById('passkeySection').style.display = 'block';
+            loadPasskeys();
+        }
+        
+        // Load user's passkeys
+        async function loadPasskeys() {
+            try {
+                const passkeys = await PasskeyManager.list();
+                displayPasskeys(passkeys);
+            } catch (error) {
+                console.error('Failed to load passkeys:', error);
+                toast.error('Không thể tải danh sách Passkey');
+            }
+        }
+        
+        // Display passkeys
+        function displayPasskeys(passkeys) {
+            const list = document.getElementById('passkeyList');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (passkeys.length === 0) {
+                list.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            list.style.display = 'block';
+            emptyState.style.display = 'none';
+            
+            list.innerHTML = passkeys.map(passkey => `
+                <li class="passkey-item">
+                    <div class="passkey-info">
+                        <div class="passkey-nickname">🔐 ${passkey.nickname}</div>
+                        <div class="passkey-meta">
+                            Tạo: ${new Date(passkey.createdAt).toLocaleDateString('vi-VN')}
+                            ${passkey.lastUsedAt ? ` | Dùng lần cuối: ${new Date(passkey.lastUsedAt).toLocaleDateString('vi-VN')}` : ''}
+                        </div>
+                    </div>
+                    <div class="passkey-actions">
+                        <button class="btn-delete" onclick="deletePasskey(${passkey.id})">Xóa</button>
+                    </div>
+                </li>
+            `).join('');
+        }
+        
+        // Add new passkey
+        document.getElementById('addPasskeyBtn').addEventListener('click', async function() {
+            const nickname = prompt('Đặt tên cho Passkey này (ví dụ: iPhone, Laptop):');
+            if (!nickname) return;
+            
+            loading.show('Đang tạo Passkey...');
+            
+            try {
+                await PasskeyManager.register(nickname);
+                loading.hide();
+                toast.success('Passkey đã được thêm thành công!');
+                loadPasskeys();
+            } catch (error) {
+                loading.hide();
+                toast.error('Không thể thêm Passkey: ' + error.message);
+            }
+        });
+        
+        // Delete passkey
+        async function deletePasskey(passkeyId) {
+            if (!confirm('Bạn có chắc muốn xóa Passkey này?')) return;
+            
+            loading.show('Đang xóa Passkey...');
+            
+            try {
+                await PasskeyManager.delete(passkeyId);
+                loading.hide();
+                toast.success('Passkey đã được xóa');
+                loadPasskeys();
+            } catch (error) {
+                loading.hide();
+                toast.error('Không thể xóa Passkey: ' + error.message);
+            }
+        }
+        
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            try {
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+            
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            localStorage.removeItem('role');
+            window.location.href = '/login';
+        });
+    </script>
+</body>
+</html>

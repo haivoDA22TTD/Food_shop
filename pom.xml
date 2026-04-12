@@ -146,6 +146,18 @@
             <artifactId>bucket4j-redis</artifactId>
             <version>8.10.1</version>
         </dependency>
+        
+        <!-- WebAuthn4J for Passkey/WebAuthn support -->
+        <dependency>
+            <groupId>com.webauthn4j</groupId>
+            <artifactId>webauthn4j-core</artifactId>
+            <version>0.21.4.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>com.webauthn4j</groupId>
+            <artifactId>webauthn4j-util</artifactId>
+            <version>0.21.4.RELEASE</version>
+        </dependency>
     </dependencies>
     
     <build>

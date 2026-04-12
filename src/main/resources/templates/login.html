@@ -31,13 +31,62 @@
             </div>
             <button type="submit" class="btn-primary">Đăng nhập</button>
         </form>
+        
+        <!-- Passkey Login Option -->
+        <div id="passkeySection" style="margin-top: 20px; text-align: center; display: none;">
+            <div style="display: flex; align-items: center; margin: 20px 0;">
+                <hr style="flex: 1; border: none; border-top: 1px solid #ddd;">
+                <span style="padding: 0 10px; color: #666;">hoặc</span>
+                <hr style="flex: 1; border: none; border-top: 1px solid #ddd;">
+            </div>
+            <button type="button" id="passkeyLoginBtn" class="btn-secondary" style="width: 100%;">
+                🔐 Đăng nhập với Passkey
+            </button>
+        </div>
+        
         <div class="auth-footer">
             <p>Chưa có tài khoản? <a href="/register">Đăng ký ngay</a></p>
         </div>
     </div>
     
     <script th:src="@{/js/notifications.js}"></script>
+    <script th:src="@{/js/passkey.js}"></script>
     <script>
+        // Check if passkey is supported and show the button
+        if (PasskeyManager.isSupported()) {
+            document.getElementById('passkeySection').style.display = 'block';
+        }
+        
+        // Passkey login handler
+        document.getElementById('passkeyLoginBtn').addEventListener('click', async function() {
+            loading.show('Đang xác thực với Passkey...');
+            
+            try {
+                const result = await PasskeyManager.login();
+                
+                loading.hide();
+                
+                // Save token and user info
+                localStorage.setItem('token', result.token);
+                localStorage.setItem('username', result.username);
+                localStorage.setItem('role', result.role);
+                
+                toast.success(result.message || 'Đăng nhập thành công với Passkey!');
+                
+                // Redirect based on role
+                setTimeout(() => {
+                    if (result.role.includes('ADMIN')) {
+                        window.location.href = '/admin';
+                    } else {
+                        window.location.href = '/';
+                    }
+                }, 1000);
+            } catch (error) {
+                loading.hide();
+                toast.error('Đăng nhập Passkey thất bại: ' + error.message);
+            }
+        });
+        
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             

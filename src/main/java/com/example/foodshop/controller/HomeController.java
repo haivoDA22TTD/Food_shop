@@ -26,4 +26,9 @@ public class HomeController {
     public String register() {
         return "register";
     }
+    
+    @GetMapping("/profile")
+    public String profile() {
+        return "profile";
+    }
 }

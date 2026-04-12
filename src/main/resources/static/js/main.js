@@ -113,6 +113,7 @@ function checkLoginStatus() {
     
     const loginLink = document.getElementById('loginLink');
     const adminLink = document.getElementById('adminLink');
+    const profileLink = document.getElementById('profileLink');
     
     if (token && username) {
         loginLink.textContent = '👤 ' + username;
@@ -123,6 +124,11 @@ function checkLoginStatus() {
                 logout();
             }
         };
+        
+        // Show profile link for logged in users
+        if (profileLink) {
+            profileLink.style.display = 'inline-block';
+        }
         
         // Show admin link if user is admin
         if (role && role.includes('ADMIN')) {
