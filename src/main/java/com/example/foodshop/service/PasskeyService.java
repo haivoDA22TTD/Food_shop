@@ -67,7 +67,7 @@ public class PasskeyService {
         
         Map<String, Object> rp = new HashMap<>();
         rp.put("name", "Food Shop");
-        rp.put("id", getRpId());
+        // Don't set RP ID - let browser use current domain automatically
         options.put("rp", rp);
         
         Map<String, Object> userInfo = new HashMap<>();
@@ -179,7 +179,7 @@ public class PasskeyService {
         Map<String, Object> options = new HashMap<>();
         options.put("challenge", challenge);
         options.put("timeout", 60000);
-        options.put("rpId", getRpId());
+        // Don't set rpId - let browser use current domain automatically
         options.put("userVerification", "required");
         
         // Get user's credentials (optional - for better UX)
