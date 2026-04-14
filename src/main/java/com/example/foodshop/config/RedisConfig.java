@@ -30,6 +30,12 @@ public class RedisConfig {
     @Value("${spring.data.redis.password:}")
     private String redisPassword;
 
+    @Value("${spring.data.redis.username:}")
+    private String redisUsername;
+
+    @Value("${spring.data.redis.ssl.enabled:false}")
+    private boolean redisSslEnabled;
+
     @Bean
     public JedisConnectionFactory jedisConnectionFactory() {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
@@ -78,13 +84,22 @@ public class RedisConfig {
             logger.info("Using individual Redis properties for connection");
             config.setHostName(redisHost);
             config.setPort(redisPort);
+            if (redisUsername != null && !redisUsername.isEmpty()) {
+                config.setUsername(redisUsername);
+            }
             if (redisPassword != null && !redisPassword.isEmpty()) {
                 config.setPassword(redisPassword);
             }
-            logger.info("Redis connection configured: {}:{}", redisHost, redisPort);
+            logger.info("Redis connection configured: {}:{} (SSL: {})", redisHost, redisPort, redisSslEnabled);
         }
         
         JedisConnectionFactory factory = new JedisConnectionFactory(config);
+        
+        // Enable SSL if configured
+        if (redisSslEnabled) {
+            factory.setUseSsl(true);
+            logger.info("✅ Redis SSL enabled");
+        }
         
         // Test connection on startup
         try {
