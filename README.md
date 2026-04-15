@@ -237,11 +237,6 @@ MySQL database hosted trên Railway.
 
 ## 🐛 Troubleshooting
 
-### Backend không start
-- Check MySQL connection
-- Check port 8080 có bị chiếm không
-- Check environment variables
-
 ### Chatbot không hoạt động
 - Check Gemini API key
 - Check API key hỗ trợ model `gemini-2.5-flash`
