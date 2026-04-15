@@ -40,18 +40,19 @@ public class RateLimitService {
             String host = jedisConnectionFactory.getHostName();
             int port = jedisConnectionFactory.getPort();
             String password = jedisConnectionFactory.getPassword();
+            boolean useSsl = jedisConnectionFactory.isUseSsl();
 
             JedisPool jedisPool;
             if (password != null && !password.isEmpty()) {
-                jedisPool = new JedisPool(poolConfig, host, port, 2000, password);
+                jedisPool = new JedisPool(poolConfig, host, port, 2000, password, useSsl);
             } else {
-                jedisPool = new JedisPool(poolConfig, host, port, 2000);
+                jedisPool = new JedisPool(poolConfig, host, port, 2000, null, useSsl);
             }
 
             // Test connection
             try (var jedis = jedisPool.getResource()) {
                 jedis.ping();
-                logger.info("✅ Rate limiting Redis connection successful");
+                logger.info("✅ Rate limiting Redis connection successful (SSL: {})", useSsl);
             }
 
             tempProxyManager = JedisBasedProxyManager.builderFor(jedisPool)
