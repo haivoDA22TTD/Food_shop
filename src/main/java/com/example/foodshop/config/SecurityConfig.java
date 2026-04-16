@@ -44,6 +44,10 @@ public class SecurityConfig {
                 .anyRequest().permitAll()
             )
             .oauth2Login(oauth2 -> oauth2
+                .loginPage("/login")
+                .authorizationEndpoint(authorization -> authorization
+                    .baseUri("/oauth2/authorize")
+                )
                 .successHandler(oAuth2LoginSuccessHandler)
             )
             .formLogin(form -> form.disable())
