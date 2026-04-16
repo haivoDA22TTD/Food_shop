@@ -2,15 +2,16 @@ package com.example.foodshop.security;
 
 import com.example.foodshop.entity.User;
 import com.example.foodshop.repository.UserRepository;
-import com.example.foodshop.service.JwtService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import com.example.foodshop.service.CustomUserDetailsService;
 
 import java.io.IOException;
 
@@ -19,7 +20,8 @@ import java.io.IOException;
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final UserRepository userRepository;
-    private final JwtService jwtService;
+    private final JwtUtil jwtUtil;
+    private final CustomUserDetailsService userDetailsService;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -51,7 +53,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         }
         
         // Generate JWT token
-        String token = jwtService.generateToken(user.getUsername());
+        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
+        String token = jwtUtil.generateToken(userDetails);
         
         // Redirect to frontend with token
         String redirectUrl = String.format("/oauth2/redirect?token=%s", token);
