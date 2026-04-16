@@ -21,6 +21,9 @@ public class User {
     @Column(nullable = false)
     private String email;
     
+    @Column(unique = true)
+    private String googleId; // Google OAuth2 ID
+    
     private String phone;
     private String address;
     

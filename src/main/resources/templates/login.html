@@ -6,6 +6,167 @@
     <title>Đăng nhập - Food Shop</title>
     <link rel="stylesheet" th:href="@{/css/modern-style.css}">
     <link rel="stylesheet" th:href="@{/css/animations.css}">
+    <style>
+        .auth-container {
+            max-width: 420px;
+            margin: 80px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .auth-title {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            box-shadow: 0 0 0 3px rgba(255,107,107,0.1);
+        }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,107,107,0.4);
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 24px 0;
+        }
+        
+        .divider hr {
+            flex: 1;
+            border: none;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .divider span {
+            padding: 0 16px;
+            color: #999;
+            font-size: 14px;
+        }
+        
+        .btn-passkey {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-passkey:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+        }
+        
+        .btn-google {
+            width: 100%;
+            padding: 14px;
+            background: white;
+            color: #444;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        
+        .btn-google:hover {
+            background: #f8f9fa;
+            border-color: #dadce0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .btn-google img {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .auth-footer {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .auth-footer p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .auth-footer a {
+            color: #ff6b6b;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 480px) {
+            .auth-container {
+                margin: 40px 20px;
+                padding: 30px 24px;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -33,15 +194,29 @@
         </form>
         
         <!-- Passkey Login Option -->
-        <div id="passkeySection" style="margin-top: 20px; text-align: center; display: none;">
-            <div style="display: flex; align-items: center; margin: 20px 0;">
-                <hr style="flex: 1; border: none; border-top: 1px solid #ddd;">
-                <span style="padding: 0 10px; color: #666;">hoặc</span>
-                <hr style="flex: 1; border: none; border-top: 1px solid #ddd;">
+        <div id="passkeySection" style="display: none;">
+            <div class="divider">
+                <hr>
+                <span>hoặc</span>
+                <hr>
             </div>
-            <button type="button" id="passkeyLoginBtn" class="btn-secondary" style="width: 100%;">
-                🔐 Đăng nhập với Passkey
+            <button type="button" id="passkeyLoginBtn" class="btn-passkey">
+                <span>🔐</span>
+                <span>Đăng nhập với Passkey</span>
             </button>
+        </div>
+        
+        <!-- Google Login Option -->
+        <div>
+            <div class="divider">
+                <hr>
+                <span>hoặc</span>
+                <hr>
+            </div>
+            <a href="/oauth2/authorization/google" class="btn-google">
+                <img src="https://www.google.com/favicon.ico" alt="Google">
+                <span>Đăng nhập với Google</span>
+            </a>
         </div>
         
         <div class="auth-footer">

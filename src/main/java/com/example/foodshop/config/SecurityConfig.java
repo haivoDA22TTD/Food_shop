@@ -1,6 +1,7 @@
 package com.example.foodshop.config;
 
 import com.example.foodshop.security.JwtAuthenticationFilter;
+import com.example.foodshop.security.OAuth2LoginSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -36,10 +38,13 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/login", "/register", "/product/**", "/profile", "/api/auth/**", "/api/products/**", "/api/passkey/login/**", "/css/**", "/js/**", "/img/**").permitAll()
+                .requestMatchers("/", "/login", "/register", "/product/**", "/profile", "/api/auth/**", "/api/products/**", "/api/passkey/login/**", "/css/**", "/js/**", "/img/**", "/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers("/admin/**").permitAll()
                 .requestMatchers("/orders/**", "/reviews/**", "/cart/**", "/checkout/**", "/api/orders/**", "/api/reviews/**", "/api/passkey/**").permitAll()
                 .anyRequest().permitAll()
+            )
+            .oauth2Login(oauth2 -> oauth2
+                .successHandler(oAuth2LoginSuccessHandler)
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

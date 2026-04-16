@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng nhập thành công</title>
+</head>
+<body>
+    <script th:inline="javascript">
+        const token = /*[[${token}]]*/ '';
+        
+        // Save token to localStorage
+        localStorage.setItem('token', token);
+        
+        // Redirect to home page
+        window.location.href = '/';
+    </script>
+    
+    <p>Đang chuyển hướng...</p>
+</body>
+</html>
