@@ -7,6 +7,7 @@ import com.example.foodshop.security.JwtUtil;
 import com.example.foodshop.service.CustomUserDetailsService;
 import com.example.foodshop.service.TokenBlacklistService;
 import com.example.foodshop.service.UserService;
+import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -82,6 +83,36 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of(
                 "error", "Invalid token: " + e.getMessage()
             ));
+        }
+    }
+    
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(@CookieValue(value = "auth_token", required = false) String token) {
+        if (token == null || token.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
+        }
+        
+        try {
+            // Check if token is blacklisted
+            if (tokenBlacklistService.isTokenBlacklisted(token)) {
+                return ResponseEntity.status(401).body(Map.of("error", "Token is blacklisted"));
+            }
+            
+            String username = jwtUtil.extractUsername(token);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            
+            if (jwtUtil.validateToken(token, userDetails)) {
+                String role = userDetails.getAuthorities().iterator().next().getAuthority();
+                return ResponseEntity.ok(Map.of(
+                    "username", username,
+                    "role", role,
+                    "authenticated", true
+                ));
+            } else {
+                return ResponseEntity.status(401).body(Map.of("error", "Invalid token"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid token: " + e.getMessage()));
         }
     }
 }

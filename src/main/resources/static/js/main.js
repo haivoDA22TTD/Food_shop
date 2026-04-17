@@ -106,35 +106,122 @@ async function logout() {
 }
 
 // Check login status and update UI
-function checkLoginStatus() {
-    const token = localStorage.getItem('token');
-    const username = localStorage.getItem('username');
-    const role = localStorage.getItem('role');
-    
-    const loginLink = document.getElementById('loginLink');
-    const adminLink = document.getElementById('adminLink');
-    const profileLink = document.getElementById('profileLink');
-    
-    if (token && username) {
-        loginLink.textContent = '👤 ' + username;
-        loginLink.href = '#';
-        loginLink.onclick = function(e) {
-            e.preventDefault();
-            if (confirm('Bạn có muốn đăng xuất?')) {
-                logout();
+async function checkLoginStatus() {
+    try {
+        // Call API to check if user is authenticated via cookie
+        const response = await fetch('/api/auth/me', {
+            credentials: 'include' // Important: send cookies
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const username = data.username;
+            const role = data.role;
+            
+            // Update UI
+            const loginLink = document.getElementById('loginLink');
+            const adminLink = document.getElementById('adminLink');
+            const profileLink = document.getElementById('profileLink');
+            
+            if (loginLink) {
+                loginLink.textContent = '👤 ' + username;
+                loginLink.href = '#';
+                loginLink.onclick = function(e) {
+                    e.preventDefault();
+                    if (confirm('Bạn có muốn đăng xuất?')) {
+                        logoutWithCookie();
+                    }
+                };
             }
-        };
-        
-        // Show profile link for logged in users
-        if (profileLink) {
-            profileLink.style.display = 'inline-block';
+            
+            // Show profile link for logged in users
+            if (profileLink) {
+                profileLink.style.display = 'inline-block';
+            }
+            
+            // Show admin link if user is admin
+            if (role && role.includes('ADMIN') && adminLink) {
+                adminLink.style.display = 'inline-block';
+            }
+            
+            // Store in localStorage for backward compatibility
+            localStorage.setItem('username', username);
+            localStorage.setItem('role', role);
+        } else {
+            // Not authenticated, check localStorage for old token
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+            const role = localStorage.getItem('role');
+            
+            if (token && username) {
+                // Old token-based auth
+                const loginLink = document.getElementById('loginLink');
+                const adminLink = document.getElementById('adminLink');
+                const profileLink = document.getElementById('profileLink');
+                
+                if (loginLink) {
+                    loginLink.textContent = '👤 ' + username;
+                    loginLink.href = '#';
+                    loginLink.onclick = function(e) {
+                        e.preventDefault();
+                        if (confirm('Bạn có muốn đăng xuất?')) {
+                            logout();
+                        }
+                    };
+                }
+                
+                if (profileLink) {
+                    profileLink.style.display = 'inline-block';
+                }
+                
+                if (role && role.includes('ADMIN') && adminLink) {
+                    adminLink.style.display = 'inline-block';
+                }
+            }
         }
-        
-        // Show admin link if user is admin
-        if (role && role.includes('ADMIN')) {
-            adminLink.style.display = 'inline-block';
-        }
+    } catch (error) {
+        console.error('Error checking login status:', error);
     }
+}
+
+// Logout function for cookie-based auth
+async function logoutWithCookie() {
+    try {
+        // Get token from cookie
+        const token = getCookie('auth_token');
+        
+        if (token) {
+            // Call logout API to blacklist token
+            const response = await fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                if (window.toast) {
+                    toast.success('Đăng xuất thành công!');
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Logout error:', error);
+    } finally {
+        // Clear cookie by setting expiry to past
+        document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        localStorage.clear();
+        setTimeout(() => window.location.href = '/', 500);
+    }
+}
+
+// Helper function to get cookie value
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
 }
 
 // Call on page load
