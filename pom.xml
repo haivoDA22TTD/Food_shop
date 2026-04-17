@@ -159,6 +159,13 @@
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
         
+        <!-- Micrometer Prometheus Pushgateway (for pushing metrics to Grafana Cloud) -->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_pushgateway</artifactId>
+            <version>0.16.0</version>
+        </dependency>
+        
         <!-- Loki Logback Appender for Logs -->
         <dependency>
             <groupId>com.github.loki4j</groupId>
