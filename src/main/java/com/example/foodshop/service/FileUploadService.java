@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 package com.example.foodshop.service;
 
 import com.cloudinary.Cloudinary;
