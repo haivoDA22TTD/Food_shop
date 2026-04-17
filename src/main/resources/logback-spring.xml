@@ -25,6 +25,9 @@
                         <username>${lokiUsername}</username>
                         <password>${lokiPassword}</password>
                     </auth>
+                    <!-- Timeout settings to prevent blocking -->
+                    <requestTimeoutMs>5000</requestTimeoutMs>
+                    <connectionTimeoutMs>5000</connectionTimeoutMs>
                 </http>
                 <format>
                     <label>
@@ -42,6 +45,27 @@
                         </pattern>
                     </message>
                 </format>
+                <!-- Batch settings for better performance -->
+                <batchSize>100</batchSize>
+                <batchTimeoutMs>10000</batchTimeoutMs>
+                <!-- Drop logs if Loki is unavailable (don't block) -->
+                <dropRateLimitedBatches>true</dropRateLimitedBatches>
+                <verbose>false</verbose>
+            </then>
+        </if>
+    </appender>
+    
+    <!-- Async wrapper for Loki to prevent blocking -->
+    <appender name="ASYNC_LOKI" class="ch.qos.logback.classic.AsyncAppender">
+        <if condition='property("lokiUrl").length() &gt; 0'>
+            <then>
+                <appender-ref ref="LOKI"/>
+                <!-- Don't block if queue is full -->
+                <neverBlock>true</neverBlock>
+                <!-- Queue size -->
+                <queueSize>512</queueSize>
+                <!-- Discard logs when queue is 80% full -->
+                <discardingThreshold>0</discardingThreshold>
             </then>
         </if>
     </appender>
@@ -51,7 +75,7 @@
         <appender-ref ref="CONSOLE"/>
         <if condition='property("lokiUrl").length() &gt; 0'>
             <then>
-                <appender-ref ref="LOKI"/>
+                <appender-ref ref="ASYNC_LOKI"/>
             </then>
         </if>
     </root>
