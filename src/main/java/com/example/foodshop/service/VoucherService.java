@@ -130,11 +130,17 @@ public class VoucherService {
     
     /**
      * Mark voucher as used (increment usedCount + save to voucher_usage)
+     * Uses pessimistic locking to prevent race conditions
      */
     @Transactional
     public void markVoucherAsUsed(String code, User user, com.example.foodshop.entity.Order order, double discountAmount) {
-        Voucher voucher = voucherRepository.findByCode(code)
+        Voucher voucher = voucherRepository.findByCodeWithLock(code)
                 .orElseThrow(() -> new RuntimeException("Voucher not found"));
+        
+        // Double-check voucher is still valid after acquiring lock
+        if (voucher.getUsedCount() >= voucher.getUsageLimit()) {
+            throw new RuntimeException("Voucher usage limit exceeded");
+        }
         
         // Increment used count
         voucher.setUsedCount(voucher.getUsedCount() + 1);

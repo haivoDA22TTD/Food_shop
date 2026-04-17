@@ -5,7 +5,11 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_username", columnList = "username"),
+    @Index(name = "idx_email", columnList = "email"),
+    @Index(name = "idx_google_id", columnList = "googleId")
+})
 @Data
 public class User {
     @Id

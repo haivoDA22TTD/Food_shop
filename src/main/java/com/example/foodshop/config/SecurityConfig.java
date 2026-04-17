@@ -38,9 +38,7 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/login", "/register", "/product/**", "/profile", "/api/auth/**", "/api/products/**", "/api/passkey/login/**", "/css/**", "/js/**", "/img/**", "/oauth2/**", "/login/oauth2/**").permitAll()
-                .requestMatchers("/admin/**").permitAll()
-                .requestMatchers("/orders/**", "/reviews/**", "/cart/**", "/checkout/**", "/api/orders/**", "/api/reviews/**", "/api/passkey/**").permitAll()
+                // Cho phép tất cả để dễ test và bán hàng
                 .anyRequest().permitAll()
             )
             .oauth2Login(oauth2 -> oauth2

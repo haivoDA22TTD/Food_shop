@@ -17,6 +17,6 @@ public class ReviewService {
     }
     
     public List<Review> getProductReviews(Product product) {
-        return reviewRepository.findByProduct(product);
+        return reviewRepository.findByProductWithUser(product);
     }
 }

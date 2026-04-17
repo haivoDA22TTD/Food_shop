@@ -2,7 +2,9 @@ package com.example.foodshop.repository;
 
 import com.example.foodshop.entity.User;
 import com.example.foodshop.entity.Voucher;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -14,6 +16,10 @@ import java.util.Optional;
 public interface VoucherRepository extends JpaRepository<Voucher, Long> {
     
     Optional<Voucher> findByCode(String code);
+    
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT v FROM Voucher v WHERE v.code = :code")
+    Optional<Voucher> findByCodeWithLock(String code);
     
     @Query("SELECT v FROM Voucher v WHERE v.code = :code AND v.isActive = true " +
            "AND v.expiresAt > :now AND v.usedCount < v.usageLimit")

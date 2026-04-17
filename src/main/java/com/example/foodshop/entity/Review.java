@@ -6,7 +6,11 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reviews")
+@Table(name = "reviews", indexes = {
+    @Index(name = "idx_product_id", columnList = "product_id"),
+    @Index(name = "idx_user_id", columnList = "user_id"),
+    @Index(name = "idx_order_id", columnList = "order_id")
+})
 @Data
 public class Review {
     @Id
@@ -18,7 +22,7 @@ public class Review {
     @JsonBackReference
     private Product product;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
     

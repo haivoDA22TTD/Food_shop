@@ -107,16 +107,14 @@ public class ChatbotService {
      * Xử lý tìm kiếm sản phẩm
      */
     private ChatResponse handleProductSearch(String message, User user) {
-        List<Product> allProducts = productRepository.findAll();
+        // Tìm sản phẩm phù hợp bằng database query thay vì load all
+        List<Product> matchedProducts = productRepository.searchProducts(message);
         
-        // Build context cho Gemini
-        String productsContext = buildProductsContext(allProducts);
+        // Build context chỉ với matched products
+        String productsContext = buildProductsContext(matchedProducts);
         
         // Gọi Gemini để tư vấn
         String aiResponse = geminiService.chat(message, productsContext);
-        
-        // Tìm sản phẩm phù hợp
-        List<Product> matchedProducts = findMatchingProducts(message, allProducts);
         
         Map<String, Object> data = new HashMap<>();
         if (!matchedProducts.isEmpty()) {
@@ -168,10 +166,8 @@ public class ChatbotService {
      * Xử lý chat chung
      */
     private ChatResponse handleGeneralChat(String message, User user) {
-        List<Product> allProducts = productRepository.findAll();
-        String productsContext = buildProductsContext(allProducts);
-        
-        String aiResponse = geminiService.chat(message, productsContext);
+        // Không load products cho general chat, chỉ chat đơn giản
+        String aiResponse = geminiService.chat(message, "");
         
         return ChatResponse.builder()
                 .message(aiResponse)
@@ -199,17 +195,7 @@ public class ChatbotService {
         return context.toString();
     }
     
-    private List<Product> findMatchingProducts(String message, List<Product> allProducts) {
-        String lowerMessage = message.toLowerCase();
-        
-        return allProducts.stream()
-                .filter(p -> 
-                        p.getName().toLowerCase().contains(lowerMessage) ||
-                        p.getDescription().toLowerCase().contains(lowerMessage) ||
-                        p.getCategory().toLowerCase().contains(lowerMessage)
-                )
-                .collect(Collectors.toList());
-    }
+
     
     private String formatDiscount(Voucher voucher) {
         if (voucher.getDiscountType() == Voucher.DiscountType.PERCENTAGE) {

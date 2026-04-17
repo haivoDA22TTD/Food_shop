@@ -27,13 +27,41 @@ public class FileUploadService {
     @Value("${cloudinary.folder:food-shop}")
     private String cloudinaryFolder;
     
+    // Allowed image MIME types
+    private static final Set<String> ALLOWED_MIME_TYPES = Set.of(
+        "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"
+    );
+    
+    // Max file size: 5MB
+    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
+    
     /**
      * Upload file to Cloudinary
      * Returns the public URL of the uploaded image
      */
     public String uploadFile(MultipartFile file) {
         if (file.isEmpty()) {
-            return null;
+            throw new RuntimeException("File is empty");
+        }
+        
+        // Validate file type
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_MIME_TYPES.contains(contentType.toLowerCase())) {
+            throw new RuntimeException("Invalid file type. Only images are allowed (JPEG, PNG, GIF, WebP)");
+        }
+        
+        // Validate file size
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new RuntimeException("File size exceeds 5MB limit");
+        }
+        
+        // Validate file extension
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename != null) {
+            String extension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
+            if (!Set.of("jpg", "jpeg", "png", "gif", "webp").contains(extension)) {
+                throw new RuntimeException("Invalid file extension");
+            }
         }
         
         if (!cloudinaryEnabled || cloudinary == null) {
