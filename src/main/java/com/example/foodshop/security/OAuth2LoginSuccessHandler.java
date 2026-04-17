@@ -1,7 +1,7 @@
 package com.example.foodshop.security;
 
 import com.example.foodshop.entity.User;
-import com.example.foodshop.repository.UserRepository;
+import com.example.foodshop.service.OAuth2UserService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,7 +12,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import com.example.foodshop.service.CustomUserDetailsService;
 
 import java.io.IOException;
@@ -22,12 +21,11 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    private final UserRepository userRepository;
+    private final OAuth2UserService oAuth2UserService;
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
 
     @Override
-    @Transactional
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
         
@@ -47,45 +45,14 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                 return;
             }
             
-            // Find or create user
+            // Find or create user using service
             User user;
-            
-            // First, try to find by Google ID
-            var userByGoogleId = userRepository.findByGoogleId(googleId);
-            if (userByGoogleId.isPresent()) {
-                user = userByGoogleId.get();
-                log.info("Found existing user by Google ID: {}", user.getUsername());
-            } else {
-                // Check if email already exists
-                var userByEmail = userRepository.findByEmail(email);
-                if (userByEmail.isPresent()) {
-                    // Link Google account to existing user
-                    user = userByEmail.get();
-                    log.info("Linking Google account to existing user: {}", user.getUsername());
-                    user.setGoogleId(googleId);
-                    user = userRepository.save(user);
-                } else {
-                    // Create new user with unique username
-                    String baseUsername = email.split("@")[0];
-                    String username = baseUsername;
-                    int counter = 1;
-                    
-                    // Ensure unique username
-                    while (userRepository.findByUsername(username).isPresent()) {
-                        username = baseUsername + "_" + counter;
-                        counter++;
-                    }
-                    
-                    log.info("Creating new user with username: {}", username);
-                    User newUser = new User();
-                    newUser.setEmail(email);
-                    newUser.setUsername(username);
-                    newUser.setPassword(null); // Null password for OAuth users
-                    newUser.setRole(User.Role.CUSTOMER);
-                    newUser.setGoogleId(googleId);
-                    user = userRepository.save(newUser);
-                    log.info("Successfully created new user: {}", user.getUsername());
-                }
+            try {
+                user = oAuth2UserService.findOrCreateUser(email, googleId, name);
+            } catch (IllegalStateException e) {
+                log.error("OAuth2 error: {}", e.getMessage());
+                response.sendRedirect("/login?error=oauth_conflict");
+                return;
             }
             
             // Check if account is locked
