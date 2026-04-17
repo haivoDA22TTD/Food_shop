@@ -227,6 +227,31 @@
     <script th:src="@{/js/notifications.js}"></script>
     <script th:src="@{/js/passkey.js}"></script>
     <script>
+        // Check for OAuth2 errors in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        
+        if (error) {
+            let errorMessage = '';
+            switch(error) {
+                case 'oauth_failed':
+                    errorMessage = 'Đăng nhập Google thất bại. Vui lòng thử lại.';
+                    break;
+                case 'account_locked':
+                    errorMessage = 'Tài khoản của bạn đã bị khóa.';
+                    break;
+                case 'oauth_error':
+                    errorMessage = 'Có lỗi xảy ra khi đăng nhập với Google. Vui lòng thử lại.';
+                    break;
+                default:
+                    errorMessage = 'Đăng nhập thất bại. Vui lòng thử lại.';
+            }
+            toast.error(errorMessage);
+            
+            // Remove error from URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        
         // Check if passkey is supported and show the button
         if (PasskeyManager.isSupported()) {
             document.getElementById('passkeySection').style.display = 'block';

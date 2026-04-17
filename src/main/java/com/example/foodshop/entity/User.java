@@ -18,7 +18,7 @@ public class User {
     @Column(nullable = true)
     private String password; // Nullable for OAuth2 users
     
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
     
     @Column(unique = true)

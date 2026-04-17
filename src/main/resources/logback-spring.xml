@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="food-shop"/>
+    <springProperty scope="context" name="lokiUrl" source="LOKI_URL" defaultValue=""/>
+    <springProperty scope="context" name="lokiUsername" source="LOKI_USERNAME" defaultValue=""/>
+    <springProperty scope="context" name="lokiPassword" source="LOKI_PASSWORD" defaultValue=""/>
+    
+    <!-- Console Appender (cho local development) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    
+    <!-- Loki Appender (cho production) -->
+    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+        <!-- Chỉ enable nếu có LOKI_URL -->
+        <if condition='property("lokiUrl").length() &gt; 0'>
+            <then>
+                <http>
+                    <url>${lokiUrl}</url>
+                    <auth>
+                        <username>${lokiUsername}</username>
+                        <password>${lokiPassword}</password>
+                    </auth>
+                </http>
+                <format>
+                    <label>
+                        <pattern>app=${appName},env=production,host=${HOSTNAME:-localhost}</pattern>
+                    </label>
+                    <message>
+                        <pattern>
+                            {
+                                "level": "%level",
+                                "logger": "%logger",
+                                "thread": "%thread",
+                                "message": "%message",
+                                "exception": "%ex"
+                            }
+                        </pattern>
+                    </message>
+                </format>
+            </then>
+        </if>
+    </appender>
+    
+    <!-- Root Logger -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <if condition='property("lokiUrl").length() &gt; 0'>
+            <then>
+                <appender-ref ref="LOKI"/>
+            </then>
+        </if>
+    </root>
+    
+    <!-- Application Loggers -->
+    <logger name="com.example.foodshop" level="INFO"/>
+    <logger name="org.springframework.web" level="WARN"/>
+    <logger name="org.springframework.security" level="WARN"/>
+    <logger name="org.hibernate" level="WARN"/>
+</configuration>
