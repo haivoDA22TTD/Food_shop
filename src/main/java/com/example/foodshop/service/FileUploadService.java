@@ -71,8 +71,7 @@ public class FileUploadService {
         }
         
         try {
-            // Generate unique public_id
-            String originalFilename = file.getOriginalFilename();
+            // Generate unique public_id (reuse originalFilename from above)
             String extension = originalFilename != null && originalFilename.contains(".") 
                 ? originalFilename.substring(originalFilename.lastIndexOf(".")) 
                 : "";
