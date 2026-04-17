@@ -3,6 +3,7 @@ package com.example.foodshop.security;
 import com.example.foodshop.entity.User;
 import com.example.foodshop.service.OAuth2UserService;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -68,9 +69,16 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             
             log.info("OAuth2 login successful for user: {}", user.getUsername());
             
-            // Redirect to frontend with token
-            String redirectUrl = String.format("/oauth2/redirect?token=%s", token);
-            getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+            // Set token in secure HttpOnly cookie instead of URL
+            Cookie authCookie = new Cookie("auth_token", token);
+            authCookie.setHttpOnly(true);  // Prevent JavaScript access (XSS protection)
+            authCookie.setSecure(true);     // Only send over HTTPS
+            authCookie.setPath("/");        // Available for entire application
+            authCookie.setMaxAge(86400);    // 24 hours (same as JWT expiration)
+            response.addCookie(authCookie);
+            
+            // Redirect to home page (token is in cookie, not URL)
+            getRedirectStrategy().sendRedirect(request, response, "/");
             
         } catch (Exception e) {
             log.error("OAuth2 login error: ", e);

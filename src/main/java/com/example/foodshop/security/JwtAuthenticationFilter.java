@@ -4,6 +4,7 @@ import com.example.foodshop.service.CustomUserDetailsService;
 import com.example.foodshop.service.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -32,17 +33,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         
-        final String authorizationHeader = request.getHeader("Authorization");
-        
         String username = null;
         String jwt = null;
         
+        // Try to get token from Authorization header first
+        final String authorizationHeader = request.getHeader("Authorization");
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
             try {
                 username = jwtUtil.extractUsername(jwt);
             } catch (Exception e) {
-                logger.debug("Failed to extract username from token: {}", e.getMessage());
+                logger.debug("Failed to extract username from Authorization header: {}", e.getMessage());
+            }
+        }
+        
+        // If no token in header, try to get from cookie (for OAuth2 login)
+        if (jwt == null && request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("auth_token".equals(cookie.getName())) {
+                    jwt = cookie.getValue();
+                    try {
+                        username = jwtUtil.extractUsername(jwt);
+                        logger.debug("Token found in cookie for user: {}", username);
+                    } catch (Exception e) {
+                        logger.debug("Failed to extract username from cookie: {}", e.getMessage());
+                    }
+                    break;
+                }
             }
         }
         
