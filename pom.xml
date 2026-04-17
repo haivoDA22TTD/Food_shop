@@ -165,6 +165,13 @@
             <artifactId>loki-logback-appender</artifactId>
             <version>1.4.2</version>
         </dependency>
+        
+        <!-- Janino for Logback conditional processing -->
+        <dependency>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>janino</artifactId>
+            <version>3.1.10</version>
+        </dependency>
     </dependencies>
     
     <build>
