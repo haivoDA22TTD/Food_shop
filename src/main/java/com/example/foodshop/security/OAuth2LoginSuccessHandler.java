@@ -40,14 +40,21 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                     User newUser = new User();
                     newUser.setEmail(email);
                     newUser.setUsername(email.split("@")[0] + "_" + System.currentTimeMillis());
-                    newUser.setPassword(""); // No password for OAuth users
+                    newUser.setPassword(""); // Empty password for OAuth users
                     newUser.setRole(User.Role.CUSTOMER);
                     newUser.setGoogleId(googleId);
-                    return userRepository.save(newUser);
+                    
+                    try {
+                        return userRepository.save(newUser);
+                    } catch (Exception e) {
+                        // If save fails, try to find by googleId
+                        return userRepository.findByGoogleId(googleId)
+                                .orElseThrow(() -> new RuntimeException("Failed to create user: " + e.getMessage()));
+                    }
                 });
         
         // Update Google ID if not set
-        if (user.getGoogleId() == null) {
+        if (user.getGoogleId() == null || user.getGoogleId().isEmpty()) {
             user.setGoogleId(googleId);
             userRepository.save(user);
         }
