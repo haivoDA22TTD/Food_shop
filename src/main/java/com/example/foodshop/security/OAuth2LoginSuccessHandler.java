@@ -69,13 +69,20 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             
             log.info("OAuth2 login successful for user: {}", user.getUsername());
             
-            // Set token in secure HttpOnly cookie instead of URL
+            // Determine if we're in production (HTTPS) or development (HTTP)
+            boolean isSecure = request.isSecure() || 
+                              request.getHeader("X-Forwarded-Proto") != null && 
+                              request.getHeader("X-Forwarded-Proto").equals("https");
+            
+            // Set token in HttpOnly cookie instead of URL
             Cookie authCookie = new Cookie("auth_token", token);
-            authCookie.setHttpOnly(true);  // Prevent JavaScript access (XSS protection)
-            authCookie.setSecure(true);     // Only send over HTTPS
+            authCookie.setHttpOnly(true);   // Prevent JavaScript access (XSS protection)
+            authCookie.setSecure(isSecure); // Only use Secure flag on HTTPS
             authCookie.setPath("/");        // Available for entire application
             authCookie.setMaxAge(86400);    // 24 hours (same as JWT expiration)
             response.addCookie(authCookie);
+            
+            log.info("✅ Cookie set - Secure: {}, Path: /, MaxAge: 86400", isSecure);
             
             // Redirect to home page (token is in cookie, not URL)
             getRedirectStrategy().sendRedirect(request, response, "/");
