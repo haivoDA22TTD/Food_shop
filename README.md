@@ -383,8 +383,8 @@ Production URL: `https://food-shop-iswi.onrender.com`
 
 MIT License
 
-**Version:** 1.0.0  
-**Last Updated:** 16/04/2026  
+**Version:** Service discovery
+**Last Updated:** 18/04/2026  
 **Status:** ✅ Production Ready
 
 ## 👨‍💻 Author
