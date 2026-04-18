@@ -37,8 +37,8 @@ const PasskeyManager = {
         }
 
         try {
-            // Get registration options from server
-            const token = localStorage.getItem('token');
+            // Get token from localStorage or cookie
+            const token = localStorage.getItem('token') || this.getCookie('auth_token');
             if (!token) {
                 throw new Error('Vui lòng đăng nhập trước');
             }
@@ -48,7 +48,8 @@ const PasskeyManager = {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
-                }
+                },
+                credentials: 'include' // Send cookies
             });
 
             if (!optionsResponse.ok) {
@@ -100,6 +101,7 @@ const PasskeyManager = {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include', // Send cookies
                 body: JSON.stringify({
                     credential: credentialData,
                     nickname: nickname
@@ -208,7 +210,7 @@ const PasskeyManager = {
 
     // Get list of user's passkeys
     async list() {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token') || this.getCookie('auth_token');
         if (!token) {
             throw new Error('Vui lòng đăng nhập trước');
         }
@@ -217,7 +219,8 @@ const PasskeyManager = {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`
-            }
+            },
+            credentials: 'include' // Send cookies
         });
 
         if (!response.ok) {
@@ -230,7 +233,7 @@ const PasskeyManager = {
 
     // Delete a passkey
     async delete(passkeyId) {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token') || this.getCookie('auth_token');
         if (!token) {
             throw new Error('Vui lòng đăng nhập trước');
         }
@@ -239,7 +242,8 @@ const PasskeyManager = {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`
-            }
+            },
+            credentials: 'include' // Send cookies
         });
 
         if (!response.ok) {
@@ -248,6 +252,14 @@ const PasskeyManager = {
         }
 
         return await response.json();
+    },
+    
+    // Helper to get cookie
+    getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
     }
 };
 

@@ -142,24 +142,72 @@
     <script th:src="@{/js/notifications.js}"></script>
     <script th:src="@{/js/passkey.js}"></script>
     <script>
-        // Check authentication
-        const token = localStorage.getItem('token');
-        const username = localStorage.getItem('username');
-        const role = localStorage.getItem('role');
-        
-        if (!token || !username) {
-            window.location.href = '/login';
+        // Helper function to get cookie
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
         }
         
-        // Display user info
-        document.getElementById('usernameDisplay').textContent = username;
-        document.getElementById('roleDisplay').textContent = role === 'ROLE_ADMIN' ? 'Quản trị viên' : 'Khách hàng';
-        
-        // Check if passkey is supported
-        if (PasskeyManager.isSupported()) {
-            document.getElementById('passkeySection').style.display = 'block';
-            loadPasskeys();
+        // Check authentication (both localStorage and cookie)
+        async function checkAuth() {
+            const token = localStorage.getItem('token');
+            const cookieToken = getCookie('auth_token');
+            
+            // If no token at all, redirect to login
+            if (!token && !cookieToken) {
+                window.location.href = '/login';
+                return null;
+            }
+            
+            // If we have cookie but no localStorage, fetch user info from API
+            if (cookieToken && !token) {
+                try {
+                    const response = await fetch('/api/auth/me', {
+                        credentials: 'include'
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        // Store in localStorage for this session
+                        localStorage.setItem('username', data.username);
+                        localStorage.setItem('role', data.role);
+                        return data;
+                    } else {
+                        window.location.href = '/login';
+                        return null;
+                    }
+                } catch (error) {
+                    console.error('Auth check failed:', error);
+                    window.location.href = '/login';
+                    return null;
+                }
+            }
+            
+            // Return existing localStorage data
+            return {
+                username: localStorage.getItem('username'),
+                role: localStorage.getItem('role'),
+                token: token
+            };
         }
+        
+        // Initialize page
+        (async function() {
+            const userData = await checkAuth();
+            if (!userData) return; // Redirected to login
+            
+            // Display user info
+            document.getElementById('usernameDisplay').textContent = userData.username;
+            document.getElementById('roleDisplay').textContent = userData.role === 'ROLE_ADMIN' ? 'Quản trị viên' : 'Khách hàng';
+            
+            // Check if passkey is supported
+            if (PasskeyManager.isSupported()) {
+                document.getElementById('passkeySection').style.display = 'block';
+                loadPasskeys();
+            }
+        })();
         
         // Load user's passkeys
         async function loadPasskeys() {
@@ -241,20 +289,31 @@
         document.getElementById('logoutBtn').addEventListener('click', async function(e) {
             e.preventDefault();
             
-            try {
-                await fetch('/api/auth/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-            } catch (error) {
-                console.error('Logout error:', error);
+            const token = localStorage.getItem('token');
+            const cookieToken = getCookie('auth_token');
+            const authToken = token || cookieToken;
+            
+            if (authToken) {
+                try {
+                    await fetch('/api/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        credentials: 'include'
+                    });
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
             }
             
-            localStorage.removeItem('token');
-            localStorage.removeItem('username');
-            localStorage.removeItem('role');
+            // Clear cookie
+            document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            
+            // Clear localStorage
+            localStorage.clear();
+            
+            // Redirect to login
             window.location.href = '/login';
         });
     </script>

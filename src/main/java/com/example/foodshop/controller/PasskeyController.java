@@ -153,13 +153,34 @@ public class PasskeyController {
         }
     }
     
-    // Helper method to get current username from security context
+    // Helper method to get current username from security context or cookie
     private String getCurrentUsername() {
+        // Try security context first
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated() 
                 && !"anonymousUser".equals(authentication.getPrincipal())) {
             return authentication.getName();
         }
+        return null;
+    }
+    
+    // Helper to get token from request header or cookie
+    private String getTokenFromRequest(jakarta.servlet.http.HttpServletRequest request) {
+        // Try Authorization header first
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        
+        // Try cookie
+        if (request.getCookies() != null) {
+            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+                if ("auth_token".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        
         return null;
     }
 }
