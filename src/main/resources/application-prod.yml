@@ -1,5 +1,5 @@
 server:
-  port: ${PORT:8761}
+  port: ${PORT:10000}
 
 spring:
   application:
@@ -11,10 +11,10 @@ eureka:
     hostname: ${RENDER_EXTERNAL_URL:eureka-server.onrender.com}
     # KHÔNG dùng IP vì Render free tier không có static IP
     prefer-ip-address: false
-    # Dùng HTTPS nếu có (Render tự động cung cấp)
-    secure-port-enabled: true
-    secure-port: 443
-    non-secure-port-enabled: false
+    # Render tự động handle HTTPS, app chỉ cần bind vào $PORT
+    non-secure-port-enabled: true
+    non-secure-port: ${PORT:10000}
+    secure-port-enabled: false
     # Health check - tăng thời gian vì Render có thể sleep
     lease-renewal-interval-in-seconds: 30
     lease-expiration-duration-in-seconds: 90
@@ -25,7 +25,7 @@ eureka:
     register-with-eureka: false
     fetch-registry: false
     service-url:
-      # Dùng HTTPS cho Render
+      # Dùng HTTPS cho Render (không cần port vì Render tự route)
       defaultZone: https://${eureka.instance.hostname}/eureka/
   
   server:
