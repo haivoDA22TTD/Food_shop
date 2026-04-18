@@ -1,0 +1,62 @@
+server:
+  port: ${PORT:8761}
+
+spring:
+  application:
+    name: eureka-server
+
+eureka:
+  instance:
+    # ⚠️ Render Free Tier: Dùng public URL thay vì hostname
+    hostname: ${RENDER_EXTERNAL_URL:eureka-server.onrender.com}
+    # KHÔNG dùng IP vì Render free tier không có static IP
+    prefer-ip-address: false
+    # Dùng HTTPS nếu có (Render tự động cung cấp)
+    secure-port-enabled: true
+    secure-port: 443
+    non-secure-port-enabled: false
+    # Health check - tăng thời gian vì Render có thể sleep
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+    # Instance ID unique
+    instance-id: ${spring.application.name}:${random.value}
+  
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      # Dùng HTTPS cho Render
+      defaultZone: https://${eureka.instance.hostname}/eureka/
+  
+  server:
+    # Production: Enable self-preservation (quan trọng cho Render free tier)
+    enable-self-preservation: true
+    # Tăng thời gian eviction vì services có thể sleep
+    eviction-interval-timer-in-ms: 60000
+    response-cache-update-interval-ms: 30000
+    # Giảm threshold vì Render free tier không stable
+    renewal-percent-threshold: 0.5
+    # Wait time trước khi bắt đầu eviction
+    wait-time-in-ms-when-sync-empty: 5
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging
+logging:
+  level:
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
+    
+# ⚠️ LƯU Ý: Render Free Tier Limitations
+# - Services sleep sau 15 phút không dùng
+# - Không có static IP
+# - URL có thể thay đổi khi redeploy
+# → Khuyến nghị: Dùng Render paid tier ($7/month)
