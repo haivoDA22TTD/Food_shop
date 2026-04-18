@@ -391,8 +391,11 @@
         }
         
         function checkout() {
+            // Check if user is authenticated (either cookie or localStorage)
             const token = localStorage.getItem('token');
-            if (!token) {
+            const cookieToken = getCookie('auth_token');
+            
+            if (!token && !cookieToken) {
                 toast.warning('Vui lòng đăng nhập để thanh toán!');
                 setTimeout(() => window.location.href = '/login', 1500);
                 return;
@@ -405,6 +408,14 @@
             }
             
             window.location.href = '/checkout';
+        }
+        
+        // Helper function to get cookie
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
         }
         
         // Logout function with API call
