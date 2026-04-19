@@ -1,0 +1,79 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  
+  cloud:
+    gateway:
+      # Service Discovery với Eureka
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      
+      # Routes configuration
+      routes:
+        # Identity Service - Authentication & Users
+        - id: identity-service
+          uri: lb://identity-service
+          predicates:
+            - Path=/api/auth/**, /api/users/**
+          filters:
+            - StripPrefix=0
+        
+        # Product Service - Products, Reviews, Chatbot, Upload
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**, /api/reviews/**, /api/chatbot/**, /api/upload/**
+          filters:
+            - StripPrefix=0
+        
+        # Order Service - Orders & Cart
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**, /api/cart/**
+          filters:
+            - StripPrefix=0
+        
+        # Payment Service - Vouchers & Payments
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/vouchers/**, /api/payments/**
+          filters:
+            - StripPrefix=0
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+
+# Logging
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    reactor.netty: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

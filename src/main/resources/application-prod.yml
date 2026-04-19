@@ -1,0 +1,29 @@
+server:
+  port: ${PORT:10000}
+
+spring:
+  application:
+    name: api-gateway
+
+eureka:
+  client:
+    service-url:
+      defaultZone: https://eureka-server-cqt1.onrender.com/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+    registry-fetch-interval-seconds: 30
+  instance:
+    hostname: localhost
+    prefer-ip-address: false
+    non-secure-port-enabled: true
+    non-secure-port: ${server.port}
+    secure-port-enabled: false
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+    instance-id: ${spring.application.name}:${random.value}
+
+# Logging
+logging:
+  level:
+    org.springframework.cloud.gateway: WARN
+    reactor.netty: WARN
