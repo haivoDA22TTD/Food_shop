@@ -8,10 +8,12 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_URL:https://eureka-server-cqff.onrender.com/eureka/}
+      defaultZone: https://eureka-server-cqff.onrender.com/eureka/
     register-with-eureka: true
     fetch-registry: true
     registry-fetch-interval-seconds: 30
+    eureka-server-connect-timeout-seconds: 10
+    eureka-server-read-timeout-seconds: 10
   instance:
     hostname: localhost
     prefer-ip-address: false
