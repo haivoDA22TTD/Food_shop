@@ -263,19 +263,7 @@ GEMINI_API_KEY=...
 
 **GRAND TOTAL: $0/month** 🎉
 
----
 
-## 👥 Tài khoản mặc định
-
-### Admin
-- Username: `admin`
-- Password: `admin123`
-
-### Customer
-- Username: `customer`
-- Password: `customer123`
-
----
 
 ## 📝 API Endpoints
 
