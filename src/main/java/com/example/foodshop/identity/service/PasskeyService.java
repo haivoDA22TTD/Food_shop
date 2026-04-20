@@ -97,7 +97,7 @@ public class PasskeyService {
     // Simple credential repository implementation
     private class CredentialRepositoryImpl implements CredentialRepository {
         @Override
-        public java.util.Set<ByteArray> getCredentialIdsForUsername(String username) {
+        public java.util.Set<com.yubico.webauthn.data.PublicKeyCredentialDescriptor> getCredentialIdsForUsername(String username) {
             return java.util.Collections.emptySet();
         }
 
