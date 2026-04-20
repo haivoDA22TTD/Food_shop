@@ -10,20 +10,14 @@ spring:
     username: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    
-    # ⚠️ QUAN TRỌNG: Connection Pool cho Aiven MySQL Free Tier
-    # Aiven Free Tier: Max 25 connections total
-    # Identity Service: Max 3 connections
     hikari:
-      maximum-pool-size: 3          # KHÔNG TĂNG - Aiven limit!
-      minimum-idle: 1               # Min 1 connection
-      connection-timeout: 30000     # 30s
-      idle-timeout: 600000          # 10 min
-      max-lifetime: 1800000         # 30 min
-      leak-detection-threshold: 60000  # 60s - detect connection leaks
+      maximum-pool-size: 3
+      minimum-idle: 1
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
       pool-name: IdentityHikariPool
-      
-      # Connection test
       connection-test-query: SELECT 1
       validation-timeout: 5000
   
@@ -39,11 +33,7 @@ spring:
           batch_size: 20
         order_inserts: true
         order_updates: true
-        # Connection release mode
-        connection:
-          provider_disables_autocommit: false
   
-  # Redis (Aiven Valkey)
   data:
     redis:
       host: ${REDIS_HOST}
@@ -55,12 +45,11 @@ spring:
       timeout: 60000
       jedis:
         pool:
-          max-active: 2    # Max 2 connections
+          max-active: 2
           max-idle: 1
           min-idle: 0
           max-wait: 3000
 
-  # OAuth2 Google
   security:
     oauth2:
       client:
@@ -71,14 +60,12 @@ spring:
             scope:
               - email
               - profile
-            redirect-uri: "${APP_URL}/login/oauth2/code/google"
+            redirect-uri: ${APP_URL}/login/oauth2/code/google
 
-# JWT
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:86400000}
 
-# Eureka Client
 eureka:
   client:
     service-url:
@@ -98,7 +85,6 @@ eureka:
     lease-expiration-duration-in-seconds: 90
     instance-id: ${spring.application.name}:${random.value}
 
-# Logging
 logging:
   level:
     com.example.foodshop: WARN
