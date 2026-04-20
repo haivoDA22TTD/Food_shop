@@ -1,0 +1,107 @@
+server:
+  port: ${PORT:10000}
+
+spring:
+  application:
+    name: identity-service
+  
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?sslMode=REQUIRED
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    # ⚠️ QUAN TRỌNG: Connection Pool cho Aiven MySQL Free Tier
+    # Aiven Free Tier: Max 25 connections total
+    # Identity Service: Max 3 connections
+    hikari:
+      maximum-pool-size: 3          # KHÔNG TĂNG - Aiven limit!
+      minimum-idle: 1               # Min 1 connection
+      connection-timeout: 30000     # 30s
+      idle-timeout: 600000          # 10 min
+      max-lifetime: 1800000         # 30 min
+      leak-detection-threshold: 60000  # 60s - detect connection leaks
+      pool-name: IdentityHikariPool
+      
+      # Connection test
+      connection-test-query: SELECT 1
+      validation-timeout: 5000
+  
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        # Connection release mode
+        connection:
+          provider_disables_autocommit: false
+  
+  # Redis (Aiven Valkey)
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      username: ${REDIS_USERNAME:default}
+      ssl:
+        enabled: ${REDIS_SSL:true}
+      timeout: 60000
+      jedis:
+        pool:
+          max-active: 2    # Max 2 connections
+          max-idle: 1
+          min-idle: 0
+          max-wait: 3000
+
+# JWT
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+# OAuth2 Google
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
+            redirect-uri: "${APP_URL}/login/oauth2/code/google"
+
+# Eureka Client
+eureka:
+  client:
+    service-url:
+      defaultZone: https://eureka-server-cqff.onrender.com/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+    registry-fetch-interval-seconds: 30
+    eureka-server-connect-timeout-seconds: 10
+    eureka-server-read-timeout-seconds: 10
+  instance:
+    hostname: localhost
+    prefer-ip-address: false
+    non-secure-port-enabled: true
+    non-secure-port: ${server.port}
+    secure-port-enabled: false
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+    instance-id: ${spring.application.name}:${random.value}
+
+# Logging
+logging:
+  level:
+    com.example.foodshop: WARN
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN

@@ -1,0 +1,99 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: identity-service
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/identity_db?createDatabaseIfNotExist=true&useSSL=false
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    # HikariCP - Connection Pool tối ưu cho Aiven Free Tier
+    hikari:
+      maximum-pool-size: 3          # Max 3 connections (Aiven limit: 25 total)
+      minimum-idle: 1               # Min 1 connection idle
+      connection-timeout: 30000     # 30 seconds
+      idle-timeout: 600000          # 10 minutes
+      max-lifetime: 1800000         # 30 minutes
+      leak-detection-threshold: 60000  # 60 seconds
+      pool-name: IdentityHikariPool
+  
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  
+  # Redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      timeout: 60000
+      jedis:
+        pool:
+          max-active: 2    # Max 2 connections
+          max-idle: 1
+          min-idle: 0
+          max-wait: 3000
+
+# JWT
+jwt:
+  secret: 5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
+  expiration: 86400000  # 24 hours
+
+# OAuth2 Google
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: your-google-client-id
+            client-secret: your-google-client-secret
+            scope:
+              - email
+              - profile
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+
+# Eureka Client
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    com.example.foodshop: INFO
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
