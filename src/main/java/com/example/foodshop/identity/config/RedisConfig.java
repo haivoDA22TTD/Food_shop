@@ -43,8 +43,6 @@ public class RedisConfig {
 
         if (sslEnabled) {
             builder.useSsl();
-            SSLParameters sslParameters = new SSLParameters();
-            builder.sslParameters(sslParameters);
         }
 
         JedisClientConfiguration jedisConfig = builder.build();

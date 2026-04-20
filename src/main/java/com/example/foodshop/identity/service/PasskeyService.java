@@ -97,6 +97,11 @@ public class PasskeyService {
     // Simple credential repository implementation
     private class CredentialRepositoryImpl implements CredentialRepository {
         @Override
+        public java.util.Set<ByteArray> getCredentialIdsForUsername(String username) {
+            return java.util.Collections.emptySet();
+        }
+
+        @Override
         public Optional<ByteArray> getUserHandleForUsername(String username) {
             return Optional.empty();
         }
