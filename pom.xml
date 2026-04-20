@@ -16,7 +16,7 @@
     <artifactId>identity-service</artifactId>
     <version>1.0.0</version>
     <name>Identity Service</name>
-    <description>Identity Service - Authentication & User Management</description>
+    <description>Identity Service - Authentication and User Management</description>
 
     <properties>
         <java.version>17</java.version>
