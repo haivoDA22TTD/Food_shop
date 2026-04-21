@@ -8,6 +8,7 @@ export default function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [info, setInfo] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const setAuth = useAuthStore((state) => state.setAuth)
@@ -15,6 +16,7 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setInfo('')
     setLoading(true)
 
     try {
@@ -36,16 +38,58 @@ export default function Login() {
 
   const handlePasskeyLogin = async () => {
     try {
-      // WebAuthn API - Browser support check
+      setError('')
+      setInfo('')
+      setLoading(true)
+      
+      // Check browser support
       if (!window.PublicKeyCredential) {
-        setError('Passkey not supported on this browser')
+        setError('Trình duyệt không hỗ trợ Passkey')
+        setLoading(false)
         return
       }
 
-      setError('Passkey login coming soon!')
-      // TODO: Implement WebAuthn login flow
+      // Step 1: Start authentication - get challenge
+      const startResponse = await axios.post('/api/passkey/authenticate/start', {
+        username: username || 'anonymous' // Can be empty for resident keys
+      })
+      
+      const { challenge } = startResponse.data
+      
+      // Step 2: Get credential from authenticator
+      const credential = await navigator.credentials.get({
+        publicKey: {
+          challenge: Uint8Array.from(atob(challenge), c => c.charCodeAt(0)),
+          timeout: 60000,
+          userVerification: 'preferred'
+        }
+      }) as PublicKeyCredential
+      
+      if (!credential) {
+        setError('Không tìm thấy Passkey')
+        setLoading(false)
+        return
+      }
+      
+      const response = credential.response as AuthenticatorAssertionResponse
+      
+      // Step 3: Send credential to server for verification
+      const finishResponse = await axios.post('/api/passkey/authenticate/finish', {
+        credentialId: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))),
+        signature: btoa(String.fromCharCode(...new Uint8Array(response.signature))),
+        authenticatorData: btoa(String.fromCharCode(...new Uint8Array(response.authenticatorData))),
+        clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(response.clientDataJSON)))
+      })
+      
+      const { token, userId, username: user, email, role } = finishResponse.data
+      setAuth({ id: userId, username: user, email, role }, token)
+      navigate('/')
+      
     } catch (err: any) {
-      setError('Passkey login failed')
+      console.error('Passkey login error:', err)
+      setError(err.response?.data?.message || 'Đăng nhập Passkey thất bại')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -65,6 +109,11 @@ export default function Login() {
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
               {error}
+            </div>
+          )}
+          {info && (
+            <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
+              {info}
             </div>
           )}
           <div className="rounded-md shadow-sm space-y-4">
