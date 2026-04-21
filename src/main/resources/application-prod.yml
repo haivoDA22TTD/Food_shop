@@ -1,6 +1,9 @@
 server:
   port: ${PORT:10000}
-  max-http-header-size: 16KB
+  max-http-header-size: 64KB
+  netty:
+    max-initial-line-length: 16384
+    max-header-size: 65536
 
 spring:
   application:
@@ -8,7 +11,17 @@ spring:
   cloud:
     gateway:
       httpclient:
-        max-header-size: 16384
+        max-header-size: 65536
+        response-timeout: 30s
+      httpserver:
+        max-initial-line-length: 16384
+        max-header-size: 65536
+      default-filters:
+        - RemoveRequestHeader=Forwarded
+        - RemoveRequestHeader=X-Forwarded-For
+        - RemoveRequestHeader=X-Forwarded-Proto
+        - RemoveRequestHeader=X-Forwarded-Host
+        - RemoveRequestHeader=X-Forwarded-Port
 
 eureka:
   client:
