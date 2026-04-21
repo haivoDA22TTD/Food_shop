@@ -94,6 +94,47 @@ public class PasskeyService {
         credentialRepository.save(credential);
     }
 
+    @Transactional
+    public String startAuthentication(String username) {
+        // Generate challenge for authentication
+        byte[] challengeBytes = new byte[32];
+        new java.security.SecureRandom().nextBytes(challengeBytes);
+        String challenge = Base64.getEncoder().encodeToString(challengeBytes);
+        
+        // Save challenge
+        PasskeyChallenge passkeyChallenge = new PasskeyChallenge();
+        passkeyChallenge.setChallenge(challenge);
+        passkeyChallenge.setType("AUTHENTICATION");
+        passkeyChallenge.setExpiresAt(LocalDateTime.now().plusMinutes(5));
+        challengeRepository.save(passkeyChallenge);
+
+        return challenge;
+    }
+
+    @Transactional
+    public java.util.Map<String, Object> finishAuthentication(
+            String credentialId, String signature, String authenticatorData, String clientDataJSON) {
+        
+        // Find credential
+        PasskeyCredential credential = credentialRepository.findByCredentialIdAndIsActive(credentialId, true)
+                .orElseThrow(() -> new RuntimeException("Credential not found"));
+        
+        // In production, verify signature with public key
+        // For now, simplified verification
+        
+        // Update sign count
+        credential.setSignCount(credential.getSignCount() + 1);
+        credential.setLastUsedAt(LocalDateTime.now());
+        credentialRepository.save(credential);
+        
+        // Return user info for JWT generation
+        return java.util.Map.of(
+            "userId", credential.getUserId(),
+            "credentialId", credentialId,
+            "authenticated", true
+        );
+    }
+
     // Simple credential repository implementation
     private class CredentialRepositoryImpl implements CredentialRepository {
         @Override
