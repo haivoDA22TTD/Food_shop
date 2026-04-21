@@ -238,17 +238,7 @@ GEMINI_API_KEY=...
 - 256 MB RAM
 - Used for JWT blacklist, rate limiting, cache
 
----
 
-## 💰 Chi Phí
-
-### Render Free Tier
-- Eureka Server: $0
-- API Gateway: $0
-- 4 Business Services: $0
-- Frontend: $0 (Static Site)
-
-**Total Render: $0/month**
 
 ### Aiven Free Tier
 - 3 MySQL databases: $0
