@@ -6,12 +6,15 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -21,6 +24,9 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Value("${frontend.url:${FRONTEND_URL:https://frontend-qpuj.onrender.com}}")
+    private String frontendUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -36,8 +42,16 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         
         String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole());
         
-        // Redirect to frontend with token
-        String redirectUrl = String.format("/oauth2/redirect?token=%s", token);
+        // Always redirect to frontend domain to avoid gateway oauth redirect loops.
+        String redirectUrl = String.format(
+                "%s/oauth2/redirect?token=%s&userId=%d&username=%s&email=%s&role=%s",
+                frontendUrl,
+                URLEncoder.encode(token, StandardCharsets.UTF_8),
+                user.getId(),
+                URLEncoder.encode(user.getUsername(), StandardCharsets.UTF_8),
+                URLEncoder.encode(user.getEmail(), StandardCharsets.UTF_8),
+                URLEncoder.encode(user.getRole(), StandardCharsets.UTF_8)
+        );
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }
