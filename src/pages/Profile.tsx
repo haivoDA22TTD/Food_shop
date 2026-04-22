@@ -1,12 +1,130 @@
 import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { Navigate } from 'react-router-dom'
+import axios from '../api/axios'
+
+interface PasskeyItem {
+  id: number
+  nickname: string
+  createdAt?: string
+  lastUsedAt?: string
+}
+
+const toBase64 = (buffer: ArrayBuffer): string => {
+  const bytes = new Uint8Array(buffer)
+  let binary = ''
+  for (let i = 0; i < bytes.length; i += 1) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary)
+}
 
 export default function Profile() {
   const user = useAuthStore((state) => state.user)
+  const [passkeys, setPasskeys] = useState<PasskeyItem[]>([])
+  const [loadingPasskeys, setLoadingPasskeys] = useState(false)
+  const [registeringPasskey, setRegisteringPasskey] = useState(false)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
 
   if (!user) {
     return <Navigate to="/login" />
+  }
+
+  const loadPasskeys = async () => {
+    setLoadingPasskeys(true)
+    try {
+      const response = await axios.get('/api/passkey/list', {
+        params: { userId: user.id },
+      })
+      setPasskeys(Array.isArray(response.data) ? response.data : [])
+    } catch (err: any) {
+      setError(err?.response?.data || 'Khong the tai danh sach Passkey.')
+    } finally {
+      setLoadingPasskeys(false)
+    }
+  }
+
+  useEffect(() => {
+    loadPasskeys()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.id])
+
+  const handleSetupPasskey = async () => {
+    setError('')
+    setMessage('')
+    setRegisteringPasskey(true)
+
+    try {
+      if (!window.PublicKeyCredential) {
+        setError('Trinh duyet hien tai khong ho tro Passkey.')
+        return
+      }
+
+      const startResponse = await axios.post('/api/passkey/register/start', {
+        userId: user.id,
+      })
+
+      const challenge = startResponse.data?.challenge
+      if (!challenge) {
+        throw new Error('Khong lay duoc challenge cho Passkey.')
+      }
+
+      const credential = (await navigator.credentials.create({
+        publicKey: {
+          challenge: Uint8Array.from(atob(challenge), (c) => c.charCodeAt(0)),
+          rp: {
+            name: 'Food Shop',
+          },
+          user: {
+            id: Uint8Array.from(String(user.id), (c) => c.charCodeAt(0)),
+            name: user.username,
+            displayName: user.username,
+          },
+          pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+          timeout: 60000,
+          attestation: 'none',
+          authenticatorSelection: {
+            userVerification: 'preferred',
+          },
+        },
+      })) as PublicKeyCredential | null
+
+      if (!credential) {
+        throw new Error('Khong tao duoc Passkey.')
+      }
+
+      const response = credential.response as AuthenticatorAttestationResponse
+
+      await axios.post('/api/passkey/register/finish', {
+        userId: user.id,
+        credentialId: toBase64(credential.rawId),
+        publicKey: toBase64(response.attestationObject),
+        nickname: `Passkey ${new Date().toLocaleString('vi-VN')}`,
+      })
+
+      setMessage('Thiet lap Passkey thanh cong.')
+      await loadPasskeys()
+    } catch (err: any) {
+      setError(err?.response?.data || err?.message || 'Thiet lap Passkey that bai.')
+    } finally {
+      setRegisteringPasskey(false)
+    }
+  }
+
+  const handleDeletePasskey = async (passkeyId: number) => {
+    setError('')
+    setMessage('')
+    try {
+      await axios.delete(`/api/passkey/${passkeyId}`, {
+        params: { userId: user.id },
+      })
+      setMessage('Da xoa Passkey.')
+      await loadPasskeys()
+    } catch (err: any) {
+      setError(err?.response?.data || 'Khong the xoa Passkey.')
+    }
   }
 
   return (
@@ -31,6 +149,61 @@ export default function Profile() {
             <label className="text-gray-600">Role</label>
             <p className="text-xl font-semibold">{user.role}</p>
           </div>
+        </div>
+
+        <div className="card p-6 mt-6 space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-2xl font-bold">Passkey</h2>
+            <button
+              type="button"
+              onClick={handleSetupPasskey}
+              disabled={registeringPasskey}
+              className="btn-primary disabled:opacity-50"
+            >
+              {registeringPasskey ? 'Dang thiet lap...' : 'Thiet lap Passkey'}
+            </button>
+          </div>
+
+          {error && (
+            <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded">
+              {error}
+            </div>
+          )}
+
+          {message && (
+            <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-2 rounded">
+              {message}
+            </div>
+          )}
+
+          {loadingPasskeys ? (
+            <p className="text-gray-600">Dang tai danh sach Passkey...</p>
+          ) : passkeys.length === 0 ? (
+            <p className="text-gray-600">Ban chua co Passkey nao.</p>
+          ) : (
+            <div className="space-y-2">
+              {passkeys.map((passkey) => (
+                <div
+                  key={passkey.id}
+                  className="border rounded-lg p-3 flex items-center justify-between"
+                >
+                  <div>
+                    <p className="font-semibold">{passkey.nickname || `Passkey #${passkey.id}`}</p>
+                    <p className="text-sm text-gray-600">
+                      Tao luc: {passkey.createdAt ? new Date(passkey.createdAt).toLocaleString('vi-VN') : 'N/A'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDeletePasskey(passkey.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    Xoa
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </motion.div>
     </div>
