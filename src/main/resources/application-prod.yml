@@ -25,6 +25,8 @@ spring:
         - RemoveRequestHeader=X-Forwarded-Proto
         - RemoveRequestHeader=X-Forwarded-Host
         - RemoveRequestHeader=X-Forwarded-Port
+        # Prevent duplicate CORS headers when downstream service also sets them.
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials RETAIN_FIRST
       discovery:
         locator:
           enabled: false
