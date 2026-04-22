@@ -27,8 +27,13 @@ spring:
         - RemoveRequestHeader=X-Forwarded-Port
       discovery:
         locator:
-          enabled: true
+          enabled: false
           lower-case-service-id: true
+
+app:
+  gateway:
+    # Route directly to identity service in production to reduce discovery-related timeouts.
+    identity-uri: ${IDENTITY_SERVICE_URL:https://identity-service-olir.onrender.com}
 
 eureka:
   client:
@@ -69,3 +74,19 @@ management:
   endpoint:
     health:
       show-details: always
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      authServiceCircuitBreaker:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 20
+        minimumNumberOfCalls: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 15s
+        permittedNumberOfCallsInHalfOpenState: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+  timelimiter:
+    instances:
+      authServiceCircuitBreaker:
+        timeoutDuration: 20s
