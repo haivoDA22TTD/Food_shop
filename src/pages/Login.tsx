@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from '../api/axios'
 import { useAuthStore } from '../store/authStore'
+import { extractErrorMessage, normalizeAuthPayload } from '../utils/auth'
 
 export default function Login() {
   const [username, setUsername] = useState('')
@@ -21,19 +22,42 @@ export default function Login() {
 
     try {
       const response = await axios.post('/api/auth/login', { username, password })
-      const { token, userId, username: user, email, role } = response.data
-      
-      setAuth({ id: userId, username: user, email, role }, token)
+      const payload = normalizeAuthPayload(response.data, username)
+      if (!payload) throw new Error('Dang nhap thanh cong nhung phan hoi khong hop le.')
+
+      setAuth(
+        {
+          id: payload.userId,
+          username: payload.username,
+          email: payload.email,
+          role: payload.role,
+        },
+        payload.token
+      )
       navigate('/')
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed')
+      const timeoutMessage =
+        err.code === 'ECONNABORTED'
+          ? 'Yeu cau dang nhap bi timeout, vui long thu lai.'
+          : null
+      const networkMessage =
+        !err.response && err.message
+          ? `Khong the ket noi toi server: ${err.message}`
+          : null
+
+      setError(
+        timeoutMessage ||
+          networkMessage ||
+          extractErrorMessage(err, 'Khong the dang nhap. Vui long thu lai.')
+      )
     } finally {
       setLoading(false)
     }
   }
 
   const handleGoogleLogin = () => {
-    window.location.href = 'https://identity-service-olir.onrender.com/oauth2/authorization/google'
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://api-gateway-4tdc.onrender.com'
+    window.location.href = `${apiUrl}/oauth2/authorization/google`
   }
 
   const handlePasskeyLogin = async () => {
@@ -81,13 +105,25 @@ export default function Login() {
         clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(response.clientDataJSON)))
       })
       
-      const { token, userId, username: user, email, role } = finishResponse.data
-      setAuth({ id: userId, username: user, email, role }, token)
+      const payload = normalizeAuthPayload(finishResponse.data, username)
+      if (!payload) {
+        throw new Error('Dang nhap Passkey thanh cong nhung phan hoi khong hop le.')
+      }
+
+      setAuth(
+        {
+          id: payload.userId,
+          username: payload.username,
+          email: payload.email,
+          role: payload.role,
+        },
+        payload.token
+      )
       navigate('/')
       
     } catch (err: any) {
       console.error('Passkey login error:', err)
-      setError(err.response?.data?.message || 'Đăng nhập Passkey thất bại')
+      setError(extractErrorMessage(err, 'Dang nhap Passkey that bai'))
     } finally {
       setLoading(false)
     }

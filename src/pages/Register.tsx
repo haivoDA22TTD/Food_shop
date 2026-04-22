@@ -2,6 +2,8 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from '../api/axios'
+import { extractErrorMessage, normalizeAuthPayload } from '../utils/auth'
+import { useAuthStore } from '../store/authStore'
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -13,6 +15,7 @@ export default function Register() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const setAuth = useAuthStore((state) => state.setAuth)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,14 +28,31 @@ export default function Register() {
 
     setLoading(true)
     try {
-      await axios.post('/api/auth/register', {
+      const response = await axios.post('/api/auth/register', {
         username: formData.username,
         email: formData.email,
         password: formData.password
       })
+
+      // Keep UX smooth like monolith: register xong dang nhap luon.
+      const payload = normalizeAuthPayload(response.data, formData.username)
+      if (payload) {
+        setAuth(
+          {
+            id: payload.userId,
+            username: payload.username,
+            email: payload.email,
+            role: payload.role,
+          },
+          payload.token
+        )
+        navigate('/')
+        return
+      }
+
       navigate('/login')
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed')
+      setError(extractErrorMessage(err, 'Dang ky that bai'))
     } finally {
       setLoading(false)
     }
