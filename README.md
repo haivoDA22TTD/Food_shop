@@ -238,7 +238,17 @@ GEMINI_API_KEY=...
 - 256 MB RAM
 - Used for JWT blacklist, rate limiting, cache
 
+---
 
+## 💰 Chi Phí
+
+### Render Free Tier
+- Eureka Server: $0
+- API Gateway: $0
+- 4 Business Services: $0
+- Frontend: $0 (Static Site)
+
+**Total Render: $0/month**
 
 ### Aiven Free Tier
 - 3 MySQL databases: $0
@@ -253,7 +263,19 @@ GEMINI_API_KEY=...
 
 **GRAND TOTAL: $0/month** 🎉
 
+---
 
+## 👥 Tài khoản mặc định
+
+### Admin
+- Username: `admin`
+- Password: `admin123`
+
+### Customer
+- Username: `customer`
+- Password: `customer123`
+
+---
 
 ## 📝 API Endpoints
 
@@ -292,6 +314,22 @@ GEMINI_API_KEY=...
 ---
 
 ## 🔧 Các tính năng đã cập nhật gần đây
+
+### ✅ Hotfix Production (April 2026 - Latest)
+1. **Frontend Auth Normalization (React + Vite)**  
+   - Chuẩn hóa parse payload đăng nhập (`userId`/`id`, fallback `role`, `email`) để tránh lỗi UI khi backend trả thiếu field không quan trọng.
+2. **Register UX mượt như Monolith**  
+   - Đăng ký thành công có thể set auth session ngay, giảm bước chuyển trang thủ công.
+3. **Google OAuth qua API Gateway**  
+   - Đồng bộ flow OAuth theo gateway domain, tránh lệch callback giữa frontend/gateway/identity-service.
+4. **Gateway Route Update**  
+   - Bổ sung route `/oauth2/**` và `/login/oauth2/**` qua `identity-service`.
+5. **Gateway CORS Duplicate Header Fix**  
+   - Thêm `DedupeResponseHeader` để xử lý lỗi browser chặn do trùng `Access-Control-Allow-Origin`.
+6. **Identity Service Eureka Runtime Fix**  
+   - Bổ sung explicit dependencies `httpclient5` + `httpcore5` trong `identity-service/pom.xml` để sửa lỗi `ClassNotFoundException: BasicHeaderElement`.
+7. **Deploy-Only Workflow Documentation**  
+   - Thêm checklist `DEPLOY_CHECKLIST.md` cho quy trình deploy trực tiếp lên host (không chạy local).
 
 ### ✅ Microservices Architecture (April 2026)
 1. **Eureka Server** - Service Discovery & Registry
@@ -344,12 +382,15 @@ GEMINI_API_KEY=...
 - Check routing configuration
 - Verify Eureka connection
 - Test health endpoint: `/actuator/health`
+- Nếu browser báo CORS và response có nhiều giá trị `Access-Control-Allow-Origin`, kiểm tra cấu hình dedupe header ở gateway.
 
 ### Services
 - Check database connections
 - Verify Redis connection
 - Check environment variables
 - Monitor logs for errors
+- Nếu `identity-service` log lỗi `ClassNotFoundException: org.apache.hc.core5.http.message.BasicHeaderElement`, kiểm tra lại build mới đã chứa `httpclient5/httpcore5`.
+- Với Google OAuth, đảm bảo `APP_URL` của `identity-service` trỏ về domain gateway và redirect URI là `https://api-gateway-4tdc.onrender.com/login/oauth2/code/google`.
 
 ---
 
@@ -368,7 +409,7 @@ GEMINI_API_KEY=...
 MIT License
 
 **Version:** Microservices Architecture  
-**Last Updated:** 19/04/2026  
+**Last Updated:** 22/04/2026  
 **Status:** ✅ In Development
 
 ---
