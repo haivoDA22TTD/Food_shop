@@ -5,6 +5,7 @@ import com.example.foodshop.identity.dto.AuthResponse;
 import com.example.foodshop.identity.dto.RegisterRequest;
 import com.example.foodshop.identity.entity.User;
 import com.example.foodshop.identity.security.JwtUtil;
+import com.example.foodshop.identity.service.AuthRateLimitService;
 import com.example.foodshop.identity.service.TokenBlacklistService;
 import com.example.foodshop.identity.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,6 +18,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -34,8 +37,17 @@ public class AuthController {
     @Autowired
     private TokenBlacklistService tokenBlacklistService;
 
+    @Autowired
+    private AuthRateLimitService authRateLimitService;
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
+        String key = "register:username:" + request.getUsername().toLowerCase();
+        if (!authRateLimitService.allow(key, 3, Duration.ofHours(1))) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body("Too many register attempts. Please try again later.");
+        }
+
         try {
             User user = userService.registerUser(request);
             String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole());
@@ -49,7 +61,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody AuthRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody AuthRequest request, HttpServletRequest httpRequest) {
+        String sourceIp = httpRequest.getRemoteAddr() != null ? httpRequest.getRemoteAddr() : "unknown";
+        String key = "login:ip:" + sourceIp;
+        if (!authRateLimitService.allow(key, 5, Duration.ofMinutes(1))) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body("Too many login attempts. Please wait 1 minute and try again.");
+        }
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
