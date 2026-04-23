@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { Navigate } from 'react-router-dom'
 import axios from '../api/axios'
@@ -25,6 +25,10 @@ export default function Profile() {
   const [passkeys, setPasskeys] = useState<PasskeyItem[]>([])
   const [loadingPasskeys, setLoadingPasskeys] = useState(false)
   const [registeringPasskey, setRegisteringPasskey] = useState(false)
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const userId = user?.id
@@ -137,6 +141,44 @@ export default function Profile() {
     }
   }
 
+  const handleChangePassword = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setError('')
+    setMessage('')
+
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+      setError('Vui long nhap day du thong tin doi mat khau.')
+      return
+    }
+
+    if (newPassword.length < 6) {
+      setError('Mat khau moi phai co it nhat 6 ky tu.')
+      return
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setError('Mat khau moi va xac nhan mat khau khong khop.')
+      return
+    }
+
+    setChangingPassword(true)
+    try {
+      await axios.post('/api/users/change-password', {
+        currentPassword,
+        newPassword,
+      })
+
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmNewPassword('')
+      setMessage('Doi mat khau thanh cong.')
+    } catch (err: any) {
+      setError(err?.response?.data || 'Khong the doi mat khau.')
+    } finally {
+      setChangingPassword(false)
+    }
+  }
+
   if (!user || !userId) {
     return <Navigate to="/login" />
   }
@@ -163,6 +205,43 @@ export default function Profile() {
             <label className="text-gray-600">Role</label>
             <p className="text-xl font-semibold">{user.role}</p>
           </div>
+        </div>
+
+        <div className="card p-6 mt-6 space-y-4">
+          <h2 className="text-2xl font-bold">Doi mat khau</h2>
+          <form onSubmit={handleChangePassword} className="space-y-3">
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(event) => setCurrentPassword(event.target.value)}
+              className="input-field"
+              placeholder="Mat khau hien tai"
+              autoComplete="current-password"
+            />
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              className="input-field"
+              placeholder="Mat khau moi"
+              autoComplete="new-password"
+            />
+            <input
+              type="password"
+              value={confirmNewPassword}
+              onChange={(event) => setConfirmNewPassword(event.target.value)}
+              className="input-field"
+              placeholder="Nhap lai mat khau moi"
+              autoComplete="new-password"
+            />
+            <button
+              type="submit"
+              disabled={changingPassword}
+              className="btn-primary disabled:opacity-50"
+            >
+              {changingPassword ? 'Dang doi mat khau...' : 'Doi mat khau'}
+            </button>
+          </form>
         </div>
 
         <div className="card p-6 mt-6 space-y-4">
