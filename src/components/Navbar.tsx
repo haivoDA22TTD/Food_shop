@@ -43,7 +43,7 @@ export default function Navbar() {
                   Tài khoản
                 </Link>
                 <button
-                  onClick={logout}
+                  onClick={() => void logout()}
                   className="text-gray-700 hover:text-primary-600 transition-colors"
                 >
                   Đăng xuất
@@ -102,7 +102,7 @@ export default function Navbar() {
                   Tài khoản
                 </Link>
                 <button
-                  onClick={logout}
+                  onClick={() => void logout()}
                   className="block w-full text-left px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
                 >
                   Đăng xuất
