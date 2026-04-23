@@ -238,44 +238,7 @@ GEMINI_API_KEY=...
 - 256 MB RAM
 - Used for JWT blacklist, rate limiting, cache
 
----
 
-## 💰 Chi Phí
-
-### Render Free Tier
-- Eureka Server: $0
-- API Gateway: $0
-- 4 Business Services: $0
-- Frontend: $0 (Static Site)
-
-**Total Render: $0/month**
-
-### Aiven Free Tier
-- 3 MySQL databases: $0
-- 2 PostgreSQL databases: $0
-- 1 Redis/Valkey: $0
-
-**Total Aiven: $0/month**
-
-### External APIs
-- Cloudinary: $0 (Free tier)
-- Google Gemini: $0 (Free tier)
-
-**GRAND TOTAL: $0/month** 🎉
-
----
-
-## 👥 Tài khoản mặc định
-
-### Admin
-- Username: `admin`
-- Password: `admin123`
-
-### Customer
-- Username: `customer`
-- Password: `customer123`
-
----
 
 ## 📝 API Endpoints
 
