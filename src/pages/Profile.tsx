@@ -27,16 +27,13 @@ export default function Profile() {
   const [registeringPasskey, setRegisteringPasskey] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const userId = user?.id
 
-  if (!user) {
-    return <Navigate to="/login" />
-  }
-
-  const loadPasskeys = async () => {
+  const loadPasskeys = async (targetUserId: number) => {
     setLoadingPasskeys(true)
     try {
       const response = await axios.get('/api/passkey/list', {
-        params: { userId: user.id },
+        params: { userId: targetUserId },
       })
       setPasskeys(Array.isArray(response.data) ? response.data : [])
     } catch (err: any) {
@@ -47,9 +44,13 @@ export default function Profile() {
   }
 
   useEffect(() => {
-    loadPasskeys()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user.id])
+    if (!userId) {
+      setPasskeys([])
+      return
+    }
+
+    void loadPasskeys(userId)
+  }, [userId])
 
   const handleSetupPasskey = async () => {
     setError('')
@@ -63,7 +64,7 @@ export default function Profile() {
       }
 
       const startResponse = await axios.post('/api/passkey/register/start', {
-        userId: user.id,
+        userId: userId,
       })
 
       const challenge = startResponse.data?.challenge
@@ -78,7 +79,7 @@ export default function Profile() {
             name: 'Food Shop',
           },
           user: {
-            id: Uint8Array.from(String(user.id), (c) => c.charCodeAt(0)),
+            id: Uint8Array.from(String(userId), (c) => c.charCodeAt(0)),
             name: user.username,
             displayName: user.username,
           },
@@ -98,14 +99,16 @@ export default function Profile() {
       const response = credential.response as AuthenticatorAttestationResponse
 
       await axios.post('/api/passkey/register/finish', {
-        userId: user.id,
+        userId: userId,
         credentialId: toBase64(credential.rawId),
         publicKey: toBase64(response.attestationObject),
         nickname: `Passkey ${new Date().toLocaleString('vi-VN')}`,
       })
 
       setMessage('Thiet lap Passkey thanh cong.')
-      await loadPasskeys()
+      if (userId) {
+        await loadPasskeys(userId)
+      }
     } catch (err: any) {
       setError(err?.response?.data || err?.message || 'Thiet lap Passkey that bai.')
     } finally {
@@ -118,13 +121,19 @@ export default function Profile() {
     setMessage('')
     try {
       await axios.delete(`/api/passkey/${passkeyId}`, {
-        params: { userId: user.id },
+        params: { userId: userId },
       })
       setMessage('Da xoa Passkey.')
-      await loadPasskeys()
+      if (userId) {
+        await loadPasskeys(userId)
+      }
     } catch (err: any) {
       setError(err?.response?.data || 'Khong the xoa Passkey.')
     }
+  }
+
+  if (!user || !userId) {
+    return <Navigate to="/login" />
   }
 
   return (
