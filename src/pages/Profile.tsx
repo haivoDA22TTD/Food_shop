@@ -58,6 +58,11 @@ export default function Profile() {
     setRegisteringPasskey(true)
 
     try {
+      if (!user || !userId) {
+        setError('Khong tim thay thong tin nguoi dung.')
+        return
+      }
+
       if (!window.PublicKeyCredential) {
         setError('Trinh duyet hien tai khong ho tro Passkey.')
         return
