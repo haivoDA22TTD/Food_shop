@@ -89,7 +89,7 @@ public class UserService {
 
     @Transactional
     public void ensureDefaultAdmin() {
-        if (userRepository.count() > 0) {
+        if (userRepository.countByRole("ADMIN") > 0) {
             return;
         }
 
