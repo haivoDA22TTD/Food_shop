@@ -296,6 +296,7 @@ GEMINI_API_KEY=...
 8. **Logout + JWT Blacklist Reliability Fix**  
    - Frontend gọi `POST /api/auth/logout` trước khi clear local session để đảm bảo token cũ bị blacklist đúng cách.
    - Backend `TokenBlacklistService` chuyển sang TTL theo thời gian hết hạn thực tế của JWT (thay vì cố định 24h) và thêm xử lý lỗi Redis an toàn hơn.
+9. **Updated Order Service**
 
 ### ✅ Microservices Architecture (April 2026)
 1. **Eureka Server** - Service Discovery & Registry
