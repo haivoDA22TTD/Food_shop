@@ -20,14 +20,6 @@ React + TypeScript + Vite + TailwindCSS + Framer Motion
 npm install
 npm run dev
 ```
-
-## 🐳 Docker Build
-
-```bash
-docker build -t food-shop-frontend .
-docker run -p 80:80 food-shop-frontend
-```
-
 ## 🌐 Deploy to Render
 
 1. Push code to GitHub
