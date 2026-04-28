@@ -8,6 +8,7 @@ import ProductDetail from './pages/ProductDetail'
 import Cart from './pages/Cart'
 import Profile from './pages/Profile'
 import OAuth2Redirect from './pages/OAuth2Redirect'
+import AdminProducts from './pages/AdminProducts'
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="oauth2/redirect" element={<OAuth2Redirect />} />
           <Route path="products" element={<Products />} />
           <Route path="products/:id" element={<ProductDetail />} />
+          <Route path="admin/products" element={<AdminProducts />} />
           <Route path="cart" element={<Cart />} />
           <Route path="profile" element={<Profile />} />
         </Route>

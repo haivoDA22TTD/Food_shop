@@ -39,6 +39,11 @@ export default function Navbar() {
             
             {user ? (
               <>
+                {user.role?.toUpperCase() === 'ADMIN' && (
+                  <Link to="/admin/products" className="text-gray-700 hover:text-primary-600 transition-colors">
+                    Admin
+                  </Link>
+                )}
                 <Link to="/profile" className="text-gray-700 hover:text-primary-600 transition-colors">
                   Tài khoản
                 </Link>
@@ -98,6 +103,11 @@ export default function Navbar() {
             </Link>
             {user ? (
               <>
+                {user.role?.toUpperCase() === 'ADMIN' && (
+                  <Link to="/admin/products" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                    Admin
+                  </Link>
+                )}
                 <Link to="/profile" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">
                   Tài khoản
                 </Link>
