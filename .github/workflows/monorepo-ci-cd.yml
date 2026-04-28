@@ -1,6 +1,7 @@
 name: Monorepo CI/CD
 
 on:
+  workflow_dispatch:
   push:
     branches-ignore:
       - desktop
