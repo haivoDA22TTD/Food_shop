@@ -166,8 +166,14 @@ jobs:
     if: github.event_name == 'push' && needs.changes.outputs.api_gateway == 'true' && (github.ref_name == 'API-Gateway' || github.ref_name == 'main')
     steps:
       - name: Trigger Render deploy hook
-        if: ${{ secrets.RENDER_DEPLOY_HOOK_API_GATEWAY != '' }}
-        run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK_API_GATEWAY }}"
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_API_GATEWAY }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "RENDER_DEPLOY_HOOK_API_GATEWAY is not set. Skipping deploy."
+            exit 0
+          fi
+          curl -fsSL -X POST "$DEPLOY_HOOK"
 
   deploy-eureka-server:
     name: Deploy Eureka Server
@@ -176,8 +182,14 @@ jobs:
     if: github.event_name == 'push' && needs.changes.outputs.eureka_server == 'true' && (github.ref_name == 'Service-Discovery' || github.ref_name == 'main')
     steps:
       - name: Trigger Render deploy hook
-        if: ${{ secrets.RENDER_DEPLOY_HOOK_EUREKA_SERVER != '' }}
-        run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK_EUREKA_SERVER }}"
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_EUREKA_SERVER }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "RENDER_DEPLOY_HOOK_EUREKA_SERVER is not set. Skipping deploy."
+            exit 0
+          fi
+          curl -fsSL -X POST "$DEPLOY_HOOK"
 
   deploy-identity-service:
     name: Deploy Identity Service
@@ -186,8 +198,14 @@ jobs:
     if: github.event_name == 'push' && needs.changes.outputs.identity_service == 'true' && (github.ref_name == 'Identity-Service' || github.ref_name == 'main')
     steps:
       - name: Trigger Render deploy hook
-        if: ${{ secrets.RENDER_DEPLOY_HOOK_IDENTITY_SERVICE != '' }}
-        run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK_IDENTITY_SERVICE }}"
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_IDENTITY_SERVICE }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "RENDER_DEPLOY_HOOK_IDENTITY_SERVICE is not set. Skipping deploy."
+            exit 0
+          fi
+          curl -fsSL -X POST "$DEPLOY_HOOK"
 
   deploy-order-service:
     name: Deploy Order Service
@@ -196,8 +214,14 @@ jobs:
     if: github.event_name == 'push' && needs.changes.outputs.order_service == 'true' && (github.ref_name == 'Order-service' || github.ref_name == 'main')
     steps:
       - name: Trigger Render deploy hook
-        if: ${{ secrets.RENDER_DEPLOY_HOOK_ORDER_SERVICE != '' }}
-        run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK_ORDER_SERVICE }}"
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_ORDER_SERVICE }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "RENDER_DEPLOY_HOOK_ORDER_SERVICE is not set. Skipping deploy."
+            exit 0
+          fi
+          curl -fsSL -X POST "$DEPLOY_HOOK"
 
   deploy-product-service:
     name: Deploy Product Service
@@ -206,8 +230,14 @@ jobs:
     if: github.event_name == 'push' && needs.changes.outputs.product_service == 'true' && (github.ref_name == 'Product-Service' || github.ref_name == 'main')
     steps:
       - name: Trigger Render deploy hook
-        if: ${{ secrets.RENDER_DEPLOY_HOOK_PRODUCT_SERVICE != '' }}
-        run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK_PRODUCT_SERVICE }}"
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_PRODUCT_SERVICE }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "RENDER_DEPLOY_HOOK_PRODUCT_SERVICE is not set. Skipping deploy."
+            exit 0
+          fi
+          curl -fsSL -X POST "$DEPLOY_HOOK"
 
   deploy-frontend:
     name: Deploy Frontend
@@ -216,5 +246,11 @@ jobs:
     if: github.event_name == 'push' && needs.changes.outputs.frontend == 'true' && (github.ref_name == 'Frontend' || github.ref_name == 'main')
     steps:
       - name: Trigger Render deploy hook
-        if: ${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND != '' }}
-        run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND }}"
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "RENDER_DEPLOY_HOOK_FRONTEND is not set. Skipping deploy."
+            exit 0
+          fi
+          curl -fsSL -X POST "$DEPLOY_HOOK"
