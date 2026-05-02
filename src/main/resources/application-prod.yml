@@ -36,6 +36,8 @@ app:
   gateway:
     # Route directly to identity service in production to reduce discovery-related timeouts.
     identity-uri: ${IDENTITY_SERVICE_URL:https://identity-service-olir.onrender.com}
+    order-uri: ${ORDER_SERVICE_URL:https://order-service.onrender.com}
+    product-uri: ${PRODUCT_SERVICE_URL:https://product-service.onrender.com}
 
 eureka:
   client:
@@ -88,7 +90,27 @@ resilience4j:
         waitDurationInOpenState: 15s
         permittedNumberOfCallsInHalfOpenState: 5
         automaticTransitionFromOpenToHalfOpenEnabled: true
+      orderServiceCircuitBreaker:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 20
+        minimumNumberOfCalls: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 15s
+        permittedNumberOfCallsInHalfOpenState: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+      productServiceCircuitBreaker:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 20
+        minimumNumberOfCalls: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 15s
+        permittedNumberOfCallsInHalfOpenState: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
   timelimiter:
     instances:
       authServiceCircuitBreaker:
+        timeoutDuration: 20s
+      orderServiceCircuitBreaker:
+        timeoutDuration: 20s
+      productServiceCircuitBreaker:
         timeoutDuration: 20s
