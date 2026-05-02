@@ -3,6 +3,7 @@ package com.example.foodshop.product.service;
 import com.example.foodshop.product.entity.Product;
 import com.example.foodshop.product.repository.ProductRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,5 +28,15 @@ public class ProductService {
             return productRepository.findAll();
         }
         return productRepository.searchProducts(keyword.trim());
+    }
+
+    @Transactional
+    public Product saveProduct(Product product) {
+        return productRepository.save(product);
+    }
+
+    @Transactional
+    public void deleteProduct(Long id) {
+        productRepository.deleteById(id);
     }
 }
