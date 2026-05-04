@@ -19,10 +19,11 @@ public class CorsConfig {
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.setAllowedOrigins(List.of(
-                frontendUrl,
-                "http://localhost:5173",
-                "http://127.0.0.1:5173"
+        // Allow multiple frontend origins
+        corsConfig.setAllowedOriginPatterns(List.of(
+                "https://*.onrender.com",
+                "http://localhost:*",
+                "http://127.0.0.1:*"
         ));
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         corsConfig.setAllowedHeaders(Arrays.asList("*"));
