@@ -281,10 +281,6 @@ PRODUCT_SERVICE_URL=<product-service-url>
 - Verify services đã register thành công
 - Check `RENDER_EXTERNAL_HOSTNAME` trong env
 
-### Database Connection
-- Verify MySQL credentials trong env
-- Check connection pool settings
-- Monitor logs cho connection errors
 
 ### JWT Token Issues
 - Đảm bảo `JWT_SECRET` giống nhau ở tất cả services
