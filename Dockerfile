@@ -1,9 +1,9 @@
 FROM maven:3.9.6-eclipse-temurin-17 AS builder
 WORKDIR /app
 COPY pom.xml .
-RUN mvn -q -DskipTests dependency:go-offline
+RUN mvn -B dependency:resolve dependency:resolve-plugins
 COPY src ./src
-RUN mvn -q -DskipTests clean package
+RUN mvn -B clean package -DskipTests
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
