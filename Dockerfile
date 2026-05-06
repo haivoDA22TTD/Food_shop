@@ -1,9 +1,15 @@
 FROM maven:3.9.6-eclipse-temurin-17 AS builder
 WORKDIR /app
+
+# Copy pom.xml and download dependencies
 COPY pom.xml .
-RUN mvn -B dependency:resolve dependency:resolve-plugins
+RUN mvn dependency:go-offline -B
+
+# Copy source code
 COPY src ./src
-RUN mvn -B clean package -DskipTests
+
+# Build application with Lombok annotation processing
+RUN mvn clean package -DskipTests -B
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
