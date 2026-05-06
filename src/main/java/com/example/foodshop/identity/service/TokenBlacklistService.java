@@ -30,13 +30,16 @@ public class TokenBlacklistService {
 
             if (ttlMillis <= 0) {
                 // Token is already expired, nothing needs to be persisted.
+                log.info("Token already expired, skipping blacklist");
                 return;
             }
 
             redisTemplate.opsForValue().set(key, "blacklisted", ttlMillis, TimeUnit.MILLISECONDS);
+            log.info("Token blacklisted successfully with TTL: {} ms", ttlMillis);
         } catch (Exception e) {
-            log.error("Failed to blacklist token", e);
-            throw new IllegalStateException("Unable to persist logout token state", e);
+            log.error("Failed to blacklist token: {}", e.getMessage(), e);
+            // Re-throw to let controller handle it
+            throw new IllegalStateException("Unable to persist logout token state: " + e.getMessage(), e);
         }
     }
 
@@ -52,7 +55,19 @@ public class TokenBlacklistService {
     }
 
     private long resolveTokenTtlMillis(String token) {
-        Date expiry = jwtUtil.extractExpiration(token);
-        return Duration.between(new Date().toInstant(), expiry.toInstant()).toMillis();
+        try {
+            Date expiry = jwtUtil.extractExpiration(token);
+            if (expiry == null) {
+                log.warn("Token has no expiration date, using default TTL");
+                return TimeUnit.HOURS.toMillis(24); // Default 24 hours
+            }
+            long ttl = Duration.between(new Date().toInstant(), expiry.toInstant()).toMillis();
+            log.debug("Token TTL calculated: {} ms", ttl);
+            return ttl;
+        } catch (Exception e) {
+            log.error("Failed to extract token expiration: {}", e.getMessage());
+            // Return default TTL if extraction fails
+            return TimeUnit.HOURS.toMillis(24);
+        }
     }
 }

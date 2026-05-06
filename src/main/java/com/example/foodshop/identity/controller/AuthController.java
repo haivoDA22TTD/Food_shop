@@ -89,16 +89,42 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "No token provided"));
+        }
+        
         try {
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                tokenBlacklistService.blacklistToken(token);
-            }
-            return ResponseEntity.ok("Logged out successfully");
+            String token = authHeader.substring(7);
+            tokenBlacklistService.blacklistToken(token);
+            return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
         } catch (IllegalStateException e) {
+            // Redis connection failed
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body("Logout service temporarily unavailable");
+                    .body(Map.of(
+                        "error", "Logout service temporarily unavailable",
+                        "detail", e.getMessage()
+                    ));
+        } catch (Exception e) {
+            // Other errors
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                        "error", "Logout failed",
+                        "detail", e.getMessage()
+                    ));
+        }
+    }
+    
+    @GetMapping("/redis-health")
+    public ResponseEntity<?> checkRedisHealth() {
+        try {
+            tokenBlacklistService.isBlacklisted("test-token");
+            return ResponseEntity.ok(Map.of("redis", "connected"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("redis", "disconnected", "error", e.getMessage()));
         }
     }
 
