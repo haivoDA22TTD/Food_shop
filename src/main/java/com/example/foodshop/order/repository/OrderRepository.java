@@ -34,9 +34,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // Find orders by order number containing (for admin search)
     Page<Order> findByOrderNumberContainingIgnoreCaseOrderByCreatedAtDesc(String orderNumber, Pageable pageable);
     
-    // Find orders by user ID (for admin)
-    Page<Order> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
-    
     // Count orders by status
     long countByStatus(OrderStatus status);
     
