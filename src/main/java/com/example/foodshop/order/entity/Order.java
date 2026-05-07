@@ -2,9 +2,6 @@ package com.example.foodshop.order.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -19,9 +16,6 @@ import java.util.concurrent.ThreadLocalRandom;
         @Index(name = "idx_status", columnList = "status"),
         @Index(name = "idx_created_at", columnList = "created_at")
 })
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Order {
     
     @Id
@@ -59,6 +53,115 @@ public class Order {
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    
+    // Constructors
+    public Order() {
+    }
+    
+    public Order(Long id, Long userId, String orderNumber, OrderStatus status, BigDecimal totalAmount,
+                 String shippingAddress, String phoneNumber, String notes, List<OrderItem> orderItems,
+                 LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.userId = userId;
+        this.orderNumber = orderNumber;
+        this.status = status;
+        this.totalAmount = totalAmount;
+        this.shippingAddress = shippingAddress;
+        this.phoneNumber = phoneNumber;
+        this.notes = notes;
+        this.orderItems = orderItems;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+    
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public Long getUserId() {
+        return userId;
+    }
+    
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+    
+    public String getOrderNumber() {
+        return orderNumber;
+    }
+    
+    public void setOrderNumber(String orderNumber) {
+        this.orderNumber = orderNumber;
+    }
+    
+    public OrderStatus getStatus() {
+        return status;
+    }
+    
+    public void setStatus(OrderStatus status) {
+        this.status = status;
+    }
+    
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+    
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+    
+    public String getShippingAddress() {
+        return shippingAddress;
+    }
+    
+    public void setShippingAddress(String shippingAddress) {
+        this.shippingAddress = shippingAddress;
+    }
+    
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+    
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+    
+    public String getNotes() {
+        return notes;
+    }
+    
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+    
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+    
+    public void setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
+    }
+    
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+    
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+    
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+    
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
     
     @PrePersist
     protected void onCreate() {

@@ -2,9 +2,6 @@ package com.example.foodshop.order.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,9 +12,6 @@ import java.util.List;
 @Table(name = "carts", indexes = {
         @Index(name = "idx_user_id", columnList = "user_id", unique = true)
 })
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Cart {
     
     @Id
@@ -36,6 +30,58 @@ public class Cart {
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    
+    public Cart() {
+    }
+    
+    public Cart(Long id, Long userId, List<CartItem> cartItems, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.userId = userId;
+        this.cartItems = cartItems;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+    
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public Long getUserId() {
+        return userId;
+    }
+    
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+    
+    public List<CartItem> getCartItems() {
+        return cartItems;
+    }
+    
+    public void setCartItems(List<CartItem> cartItems) {
+        this.cartItems = cartItems;
+    }
+    
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+    
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+    
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+    
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
     
     @PrePersist
     protected void onCreate() {

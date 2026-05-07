@@ -2,9 +2,6 @@ package com.example.foodshop.order.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,9 +13,6 @@ import java.time.LocalDateTime;
            @Index(name = "idx_cart_id", columnList = "cart_id"),
            @Index(name = "idx_product_id", columnList = "product_id")
        })
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class CartItem {
     
     @Id
@@ -52,6 +46,96 @@ public class CartItem {
     @Transient
     private Integer availableStock;
     
+    public CartItem() {
+    }
+    
+    public CartItem(Long productId, Integer quantity) {
+        this.productId = productId;
+        this.quantity = quantity;
+        this.addedAt = LocalDateTime.now();
+    }
+    
+    public CartItem(Long id, Cart cart, Long productId, Integer quantity, LocalDateTime addedAt) {
+        this.id = id;
+        this.cart = cart;
+        this.productId = productId;
+        this.quantity = quantity;
+        this.addedAt = addedAt;
+    }
+    
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public Cart getCart() {
+        return cart;
+    }
+    
+    public void setCart(Cart cart) {
+        this.cart = cart;
+    }
+    
+    public Long getProductId() {
+        return productId;
+    }
+    
+    public void setProductId(Long productId) {
+        this.productId = productId;
+    }
+    
+    public Integer getQuantity() {
+        return quantity;
+    }
+    
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+    
+    public LocalDateTime getAddedAt() {
+        return addedAt;
+    }
+    
+    public void setAddedAt(LocalDateTime addedAt) {
+        this.addedAt = addedAt;
+    }
+    
+    public String getProductName() {
+        return productName;
+    }
+    
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+    
+    public BigDecimal getProductPrice() {
+        return productPrice;
+    }
+    
+    public void setProductPrice(BigDecimal productPrice) {
+        this.productPrice = productPrice;
+    }
+    
+    public String getProductImage() {
+        return productImage;
+    }
+    
+    public void setProductImage(String productImage) {
+        this.productImage = productImage;
+    }
+    
+    public Integer getAvailableStock() {
+        return availableStock;
+    }
+    
+    public void setAvailableStock(Integer availableStock) {
+        this.availableStock = availableStock;
+    }
+    
     @PrePersist
     protected void onCreate() {
         addedAt = LocalDateTime.now();
@@ -62,12 +146,6 @@ public class CartItem {
             return productPrice.multiply(BigDecimal.valueOf(quantity));
         }
         return BigDecimal.ZERO;
-    }
-    
-    public CartItem(Long productId, Integer quantity) {
-        this.productId = productId;
-        this.quantity = quantity;
-        this.addedAt = LocalDateTime.now();
     }
     
     public void updateQuantity(Integer newQuantity) {
