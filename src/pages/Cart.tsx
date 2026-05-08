@@ -8,7 +8,6 @@ export default function Cart() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const { items, totalItems, totalAmount, loading, error, fetchCart, updateQuantity, removeFromCart } = useCartStore()
-  const [checkoutLoading, setCheckoutLoading] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -158,10 +157,10 @@ export default function Cart() {
               </div>
               <button
                 onClick={handleCheckout}
-                disabled={checkoutLoading || items.some(item => !item.inStock)}
+                disabled={items.some(item => !item.inStock)}
                 className="w-full btn-primary disabled:opacity-50"
               >
-                {checkoutLoading ? 'Đang xử lý...' : 'Thanh toán'}
+                Thanh toán
               </button>
               <Link
                 to="/products"
