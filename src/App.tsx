@@ -6,9 +6,13 @@ import Register from './pages/Register'
 import Products from './pages/Products'
 import ProductDetail from './pages/ProductDetail'
 import Cart from './pages/Cart'
+import Checkout from './pages/Checkout'
+import Orders from './pages/Orders'
 import Profile from './pages/Profile'
 import OAuth2Redirect from './pages/OAuth2Redirect'
 import AdminProducts from './pages/AdminProducts'
+import AdminOrders from './pages/AdminOrders'
+import Chatbot from './components/Chatbot'
 
 function App() {
   return (
@@ -21,11 +25,15 @@ function App() {
           <Route path="oauth2/redirect" element={<OAuth2Redirect />} />
           <Route path="products" element={<Products />} />
           <Route path="products/:id" element={<ProductDetail />} />
-          <Route path="admin/products" element={<AdminProducts />} />
           <Route path="cart" element={<Cart />} />
+          <Route path="checkout" element={<Checkout />} />
+          <Route path="orders" element={<Orders />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="admin/products" element={<AdminProducts />} />
+          <Route path="admin/orders" element={<AdminOrders />} />
         </Route>
       </Routes>
+      <Chatbot />
     </BrowserRouter>
   )
 }

@@ -2,6 +2,8 @@ import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import axios from '../api/axios'
+import { useCartStore } from '../store/cartStore'
+import { useAuthStore } from '../store/authStore'
 
 interface Product {
   id: number
@@ -16,9 +18,13 @@ interface Product {
 export default function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuthStore()
+  const { addToCart } = useCartStore()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [quantity, setQuantity] = useState(1)
+  const [addingToCart, setAddingToCart] = useState(false)
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -45,6 +51,25 @@ export default function ProductDetail() {
 
     void loadProduct()
   }, [id])
+
+  const handleAddToCart = async () => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+
+    if (!product) return
+
+    setAddingToCart(true)
+    try {
+      await addToCart(product.id, quantity)
+      alert('Đã thêm vào giỏ hàng!')
+    } catch (error) {
+      alert('Không thể thêm vào giỏ hàng. Vui lòng thử lại.')
+    } finally {
+      setAddingToCart(false)
+    }
+  }
 
   if (!id) {
     return <Navigate to="/products" />
@@ -78,7 +103,33 @@ export default function ProductDetail() {
             <p className="text-gray-600 mb-3">{product.description || 'Chua co mo ta chi tiet.'}</p>
             <p className="text-gray-700 mb-1">Ton kho: {product.stock}</p>
             <p className="text-gray-700 mb-6">Danh muc: {product.category || 'N/A'}</p>
-            <button className="btn-primary">Thêm vào giỏ</button>
+            
+            <div className="flex items-center gap-4 mb-6">
+              <label className="font-semibold">Số lượng:</label>
+              <div className="flex items-center border rounded-lg">
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="px-4 py-2 hover:bg-gray-100"
+                >
+                  -
+                </button>
+                <span className="px-6 py-2 border-x">{quantity}</span>
+                <button
+                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                  className="px-4 py-2 hover:bg-gray-100"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <button
+              onClick={handleAddToCart}
+              disabled={addingToCart || product.stock === 0}
+              className="btn-primary disabled:opacity-50"
+            >
+              {addingToCart ? 'Đang thêm...' : product.stock === 0 ? 'Hết hàng' : 'Thêm vào giỏ'}
+            </button>
           </div>
         </motion.div>
       ) : null}

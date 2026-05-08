@@ -1,11 +1,19 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuthStore } from '../store/authStore'
+import { useCartStore } from '../store/cartStore'
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const { user, logout } = useAuthStore()
+  const { totalItems, fetchCart } = useCartStore()
+
+  useEffect(() => {
+    if (user) {
+      fetchCart()
+    }
+  }, [user, fetchCart])
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -31,18 +39,28 @@ export default function Navbar() {
               Sản phẩm
             </Link>
             <Link to="/cart" className="text-gray-700 hover:text-primary-600 transition-colors relative">
-              Giỏ hàng
-              <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                0
-              </span>
+              🛒 Giỏ hàng
+              {totalItems > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                  {totalItems}
+                </span>
+              )}
             </Link>
             
             {user ? (
               <>
+                <Link to="/orders" className="text-gray-700 hover:text-primary-600 transition-colors">
+                  Đơn hàng
+                </Link>
                 {user.role?.toUpperCase() === 'ADMIN' && (
-                  <Link to="/admin/products" className="text-gray-700 hover:text-primary-600 transition-colors">
-                    Admin
-                  </Link>
+                  <>
+                    <Link to="/admin/products" className="text-gray-700 hover:text-primary-600 transition-colors">
+                      Quản lý SP
+                    </Link>
+                    <Link to="/admin/orders" className="text-gray-700 hover:text-primary-600 transition-colors">
+                      Quản lý ĐH
+                    </Link>
+                  </>
                 )}
                 <Link to="/profile" className="text-gray-700 hover:text-primary-600 transition-colors">
                   Tài khoản
@@ -99,14 +117,22 @@ export default function Navbar() {
               Sản phẩm
             </Link>
             <Link to="/cart" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">
-              Giỏ hàng
+              🛒 Giỏ hàng {totalItems > 0 && `(${totalItems})`}
             </Link>
             {user ? (
               <>
+                <Link to="/orders" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                  Đơn hàng
+                </Link>
                 {user.role?.toUpperCase() === 'ADMIN' && (
-                  <Link to="/admin/products" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">
-                    Admin
-                  </Link>
+                  <>
+                    <Link to="/admin/products" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                      Quản lý sản phẩm
+                    </Link>
+                    <Link to="/admin/orders" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                      Quản lý đơn hàng
+                    </Link>
+                  </>
                 )}
                 <Link to="/profile" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">
                   Tài khoản
