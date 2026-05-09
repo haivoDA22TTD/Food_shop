@@ -13,6 +13,7 @@ export default function Cart() {
     if (user) {
       fetchCart()
     }
+    // If not logged in, cart will use local storage
   }, [user, fetchCart])
 
   const handleUpdateQuantity = async (productId: number, newQuantity: number) => {
@@ -34,21 +35,29 @@ export default function Cart() {
   }
 
   const handleCheckout = () => {
+    if (!user) {
+      const shouldLogin = confirm('Bạn cần đăng nhập để thanh toán. Đăng nhập ngay?')
+      if (shouldLogin) {
+        navigate('/login?redirect=/checkout')
+      }
+      return
+    }
     navigate('/checkout')
   }
 
   if (!user) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Vui lòng đăng nhập</h2>
-          <p className="text-gray-600 mb-6">Bạn cần đăng nhập để xem giỏ hàng</p>
-          <Link to="/login" className="btn-primary">
-            Đăng nhập
-          </Link>
-        </div>
-      </div>
-    )
+    // Allow viewing cart without login
+    // return (
+    //   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    //     <div className="text-center">
+    //       <h2 className="text-2xl font-bold mb-4">Vui lòng đăng nhập</h2>
+    //       <p className="text-gray-600 mb-6">Bạn cần đăng nhập để xem giỏ hàng</p>
+    //       <Link to="/login" className="btn-primary">
+    //         Đăng nhập
+    //       </Link>
+    //     </div>
+    //   </div>
+    // )
   }
 
   return (

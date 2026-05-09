@@ -53,17 +53,25 @@ export default function ProductDetail() {
   }, [id])
 
   const handleAddToCart = async () => {
-    if (!user) {
-      navigate('/login')
-      return
-    }
-
     if (!product) return
 
     setAddingToCart(true)
     try {
-      await addToCart(product.id, quantity)
+      await addToCart(product.id, quantity, {
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        stock: product.stock,
+      })
       alert('Đã thêm vào giỏ hàng!')
+      
+      // If user is not logged in, suggest login
+      if (!user) {
+        const shouldLogin = confirm('Bạn muốn đăng nhập để lưu giỏ hàng?')
+        if (shouldLogin) {
+          navigate('/login')
+        }
+      }
     } catch (error) {
       alert('Không thể thêm vào giỏ hàng. Vui lòng thử lại.')
     } finally {

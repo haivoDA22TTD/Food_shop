@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import axios from '../api/axios'
 import { useAuthStore } from '../store/authStore'
+import { useCartStore } from '../store/cartStore'
 import { extractErrorMessage, normalizeAuthPayload } from '../utils/auth'
 
 export default function Login() {
@@ -12,7 +13,9 @@ export default function Login() {
   const [info, setInfo] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const setAuth = useAuthStore((state) => state.setAuth)
+  const syncCartWithServer = useCartStore((state) => state.syncCartWithServer)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,7 +37,13 @@ export default function Login() {
         },
         payload.token
       )
-      navigate('/')
+      
+      // Sync local cart with server
+      await syncCartWithServer()
+      
+      // Redirect to previous page or home
+      const redirect = searchParams.get('redirect') || '/'
+      navigate(redirect)
     } catch (err: any) {
       const timeoutMessage =
         err.code === 'ECONNABORTED'
