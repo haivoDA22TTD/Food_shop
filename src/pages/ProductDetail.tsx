@@ -63,6 +63,10 @@ export default function ProductDetail() {
         image: product.image,
         stock: product.stock,
       })
+      
+      // Reset loading state BEFORE showing alerts
+      setAddingToCart(false)
+      
       alert('Đã thêm vào giỏ hàng!')
       
       // If user is not logged in, suggest login
@@ -74,14 +78,16 @@ export default function ProductDetail() {
       }
     } catch (error: any) {
       console.error('Add to cart error:', error)
+      
+      // Reset loading state BEFORE showing alerts
+      setAddingToCart(false)
+      
       // Don't show error for guest users - cart is saved locally
       if (!user) {
         alert('Đã thêm vào giỏ hàng!')
       } else {
         alert('Không thể thêm vào giỏ hàng. Vui lòng thử lại.')
       }
-    } finally {
-      setAddingToCart(false)
     }
   }
 
