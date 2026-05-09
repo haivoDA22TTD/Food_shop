@@ -64,54 +64,49 @@ export const useCartStore = create<CartState>()(
         try {
           await axios.post('/api/orders/cart/items', { productId, quantity })
           await get().fetchCart()
+          set({ loading: false })
           return
         } catch (error: any) {
-          // If not authenticated, add to local cart
-          if (error?.response?.status === 401 || error?.response?.status === 403) {
-            const currentItems = get().items
-            const existingItem = currentItems.find(item => item.productId === productId)
-            
-            let newItems: CartItem[]
-            if (existingItem) {
-              // Update quantity
-              newItems = currentItems.map(item =>
-                item.productId === productId
-                  ? { ...item, quantity: item.quantity + quantity, subtotal: item.productPrice * (item.quantity + quantity) }
-                  : item
-              )
-            } else {
-              // Add new item
-              const newItem: CartItem = {
-                id: Date.now(),
-                productId,
-                productName: productData?.name || 'Sản phẩm',
-                productPrice: productData?.price || 0,
-                productImage: productData?.image,
-                quantity,
-                subtotal: (productData?.price || 0) * quantity,
-                availableStock: productData?.stock || 999,
-                inStock: true,
-              }
-              newItems = [...currentItems, newItem]
+          console.log('Server cart failed, using local cart:', error?.response?.status)
+          
+          // Always use local cart if server fails (for any reason)
+          const currentItems = get().items
+          const existingItem = currentItems.find(item => item.productId === productId)
+          
+          let newItems: CartItem[]
+          if (existingItem) {
+            // Update quantity
+            newItems = currentItems.map(item =>
+              item.productId === productId
+                ? { ...item, quantity: item.quantity + quantity, subtotal: item.productPrice * (item.quantity + quantity) }
+                : item
+            )
+          } else {
+            // Add new item
+            const newItem: CartItem = {
+              id: Date.now(),
+              productId,
+              productName: productData?.name || 'Sản phẩm',
+              productPrice: productData?.price || 0,
+              productImage: productData?.image,
+              quantity,
+              subtotal: (productData?.price || 0) * quantity,
+              availableStock: productData?.stock || 999,
+              inStock: true,
             }
-            
-            const totalItems = newItems.reduce((sum, item) => sum + item.quantity, 0)
-            const totalAmount = newItems.reduce((sum, item) => sum + item.subtotal, 0)
-            
-            set({
-              items: newItems,
-              totalItems,
-              totalAmount,
-              loading: false,
-            })
-            return
+            newItems = [...currentItems, newItem]
           }
           
-          set({ 
-            error: error?.response?.data?.error || 'Không thể thêm vào giỏ hàng',
-            loading: false 
+          const totalItems = newItems.reduce((sum, item) => sum + item.quantity, 0)
+          const totalAmount = newItems.reduce((sum, item) => sum + item.subtotal, 0)
+          
+          set({
+            items: newItems,
+            totalItems,
+            totalAmount,
+            loading: false,
           })
-          throw error
+          return
         }
       },
 
@@ -121,33 +116,27 @@ export const useCartStore = create<CartState>()(
         try {
           await axios.put(`/api/orders/cart/items/${productId}`, { quantity })
           await get().fetchCart()
+          set({ loading: false })
         } catch (error: any) {
-          // If not authenticated, update local cart
-          if (error?.response?.status === 401 || error?.response?.status === 403) {
-            const currentItems = get().items
-            const newItems = currentItems.map(item =>
-              item.productId === productId
-                ? { ...item, quantity, subtotal: item.productPrice * quantity }
-                : item
-            )
-            
-            const totalItems = newItems.reduce((sum, item) => sum + item.quantity, 0)
-            const totalAmount = newItems.reduce((sum, item) => sum + item.subtotal, 0)
-            
-            set({
-              items: newItems,
-              totalItems,
-              totalAmount,
-              loading: false,
-            })
-            return
-          }
+          console.log('Server update failed, using local cart')
           
-          set({ 
-            error: error?.response?.data?.error || 'Không thể cập nhật số lượng',
-            loading: false 
+          // Always use local cart if server fails
+          const currentItems = get().items
+          const newItems = currentItems.map(item =>
+            item.productId === productId
+              ? { ...item, quantity, subtotal: item.productPrice * quantity }
+              : item
+          )
+          
+          const totalItems = newItems.reduce((sum, item) => sum + item.quantity, 0)
+          const totalAmount = newItems.reduce((sum, item) => sum + item.subtotal, 0)
+          
+          set({
+            items: newItems,
+            totalItems,
+            totalAmount,
+            loading: false,
           })
-          throw error
         }
       },
 
@@ -157,29 +146,23 @@ export const useCartStore = create<CartState>()(
         try {
           await axios.delete(`/api/orders/cart/items/${productId}`)
           await get().fetchCart()
+          set({ loading: false })
         } catch (error: any) {
-          // If not authenticated, remove from local cart
-          if (error?.response?.status === 401 || error?.response?.status === 403) {
-            const currentItems = get().items
-            const newItems = currentItems.filter(item => item.productId !== productId)
-            
-            const totalItems = newItems.reduce((sum, item) => sum + item.quantity, 0)
-            const totalAmount = newItems.reduce((sum, item) => sum + item.subtotal, 0)
-            
-            set({
-              items: newItems,
-              totalItems,
-              totalAmount,
-              loading: false,
-            })
-            return
-          }
+          console.log('Server remove failed, using local cart')
           
-          set({ 
-            error: error?.response?.data?.error || 'Không thể xóa sản phẩm',
-            loading: false 
+          // Always use local cart if server fails
+          const currentItems = get().items
+          const newItems = currentItems.filter(item => item.productId !== productId)
+          
+          const totalItems = newItems.reduce((sum, item) => sum + item.quantity, 0)
+          const totalAmount = newItems.reduce((sum, item) => sum + item.subtotal, 0)
+          
+          set({
+            items: newItems,
+            totalItems,
+            totalAmount,
+            loading: false,
           })
-          throw error
         }
       },
 

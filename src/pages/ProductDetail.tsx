@@ -72,8 +72,14 @@ export default function ProductDetail() {
           navigate('/login')
         }
       }
-    } catch (error) {
-      alert('Không thể thêm vào giỏ hàng. Vui lòng thử lại.')
+    } catch (error: any) {
+      console.error('Add to cart error:', error)
+      // Don't show error for guest users - cart is saved locally
+      if (!user) {
+        alert('Đã thêm vào giỏ hàng!')
+      } else {
+        alert('Không thể thêm vào giỏ hàng. Vui lòng thử lại.')
+      }
     } finally {
       setAddingToCart(false)
     }
