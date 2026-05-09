@@ -15,6 +15,6 @@ public class OrderServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(OrderServiceApplication.class, args);
         System.out.println("🛒 Order Service is running on http://localhost:8083");
-        System.out.println("📋 Endpoints: /api/orders, /api/cart, /api/admin/orders");
+        System.out.println("📋 Endpoints: /api/orders, /api/orders/cart, /api/admin/orders");
     }
 }
