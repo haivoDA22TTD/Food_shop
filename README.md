@@ -279,14 +279,13 @@ PRODUCT_SERVICE_URL=<product-service-url>
 ### Service Discovery Issues
 - Kiểm tra Eureka Dashboard
 - Verify services đã register thành công
-- Check `RENDER_EXTERNAL_HOSTNAME` trong env
+
 
 
 ### JWT Token Issues
 - Đảm bảo `JWT_SECRET` giống nhau ở tất cả services
 - Check token expiration time
 - Verify Redis connection cho blacklist
-
 ---
 
 ## 🤝 Contributing
