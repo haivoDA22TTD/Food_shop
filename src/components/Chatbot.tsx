@@ -38,14 +38,27 @@ export default function Chatbot() {
         message: input,
       })
 
+      // Backend returns 'message' field, not 'response'
+      let botContent = response.data.message || 'Xin lỗi, tôi không hiểu câu hỏi của bạn.'
+      
+      // If there are products in the response, format them nicely
+      if (response.data.data?.products && response.data.data.products.length > 0) {
+        const products = response.data.data.products
+        botContent += '\n\n'
+        products.forEach((product: any, index: number) => {
+          botContent += `${index + 1}. ${product.name} - ${product.price?.toLocaleString('vi-VN')}đ\n`
+        })
+      }
+
       const botMessage: Message = {
         role: 'bot',
-        content: response.data.response || 'Xin lỗi, tôi không hiểu câu hỏi của bạn.',
+        content: botContent,
         timestamp: new Date(),
       }
 
       setMessages((prev) => [...prev, botMessage])
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Chatbot error:', error)
       const errorMessage: Message = {
         role: 'bot',
         content: 'Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.',
