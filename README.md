@@ -146,14 +146,6 @@ Food Shop là hệ thống đặt đồ ăn trực tuyến với kiến trúc Mi
 
 ### Environment Variables
 
-#### API Gateway
-```env
-SPRING_PROFILES_ACTIVE=prod
-FRONTEND_URL=<frontend-url>
-IDENTITY_SERVICE_URL=<identity-service-url>
-PRODUCT_SERVICE_URL=<product-service-url>
-ORDER_SERVICE_URL=<order-service-url>
-```
 
 #### Identity Service
 ```env
