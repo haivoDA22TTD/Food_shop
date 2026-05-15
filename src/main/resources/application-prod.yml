@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: payment-service
+  config:
+    activate:
+      on-profile: prod
     
   datasource:
     url: ${DATABASE_URL}
