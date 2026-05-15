@@ -55,7 +55,7 @@ Food Shop là hệ thống đặt đồ ăn trực tuyến với kiến trúc Mi
 | **Identity Service** | 8081 | MySQL #1 | ✅ Deployed |
 | **Product Service** | 8082 | MySQL #2 | ✅ Deployed |
 | **Order Service** | 8083 | MySQL #3 | ✅ Deployed |
-| **Payment Service** | 8084 | PostgreSQL #1 | ⏳ In Progress |
+| **Payment Service** | 8084 | PostgreSQL #1 |✅  Deployed |
 
 ---
 
