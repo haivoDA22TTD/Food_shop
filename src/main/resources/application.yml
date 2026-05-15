@@ -6,10 +6,10 @@ spring:
     name: payment-service
   
   datasource:
-    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/food_shop_db}
-    username: ${MYSQL_USER:root}
-    password: ${MYSQL_PASSWORD:}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/food_shop_db}
+    username: ${DATABASE_USER:postgres}
+    password: ${DATABASE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 3
       connection-timeout: 20000
@@ -17,7 +17,7 @@ spring:
       max-lifetime: 1200000
       
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
     show-sql: false
