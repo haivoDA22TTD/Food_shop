@@ -247,7 +247,7 @@ PRODUCT_SERVICE_URL=<product-service-url>
 2. **CORS Fix**
    - Sửa lỗi CORS với `allowedOriginPatterns`
    - Cho phép tất cả subdomain `*.onrender.com`
-   - Deduplicate CORS headers
+   - Deduplicate CORS 
 
 3. **Admin Product Management**
    - Thêm route `/api/admin/products/**` vào Gateway
