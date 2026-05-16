@@ -44,6 +44,18 @@ public class FallbackController {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(Map.of("message", "Product service is temporarily unavailable. Please try again."));
     }
+    
+    @GetMapping("/fallback/payment")
+    public ResponseEntity<Map<String, String>> paymentFallbackGet() {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(Map.of("message", "Payment service is temporarily unavailable. Please try again."));
+    }
+
+    @PostMapping("/fallback/payment")
+    public ResponseEntity<Map<String, String>> paymentFallbackPost() {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(Map.of("message", "Payment service is temporarily unavailable. Please try again."));
+    }
 
     private ResponseEntity<Map<String, String>> fallbackResponse() {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)

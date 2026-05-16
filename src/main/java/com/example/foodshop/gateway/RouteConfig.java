@@ -17,6 +17,9 @@ public class RouteConfig {
     
     @Value("${app.gateway.product-uri:lb://PRODUCT-SERVICE}")
     private String productServiceUri;
+    
+    @Value("${app.gateway.payment-uri:lb://PAYMENT-SERVICE}")
+    private String paymentServiceUri;
 
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
@@ -63,6 +66,20 @@ public class RouteConfig {
                                         .setName("productServiceCircuitBreaker")
                                         .setFallbackUri("forward:/fallback/product")))
                         .uri(productServiceUri))
+                // Payment Service routes
+                .route("payment-service", r -> r
+                        .path("/api/payments/**", "/api/vouchers/**", "/api/admin/payments/**", "/api/admin/vouchers/**")
+                        .filters(f -> f
+                                .retry(config -> config
+                                        .setRetries(2)
+                                        .setMethods(org.springframework.http.HttpMethod.GET, org.springframework.http.HttpMethod.POST)
+                                        .setStatuses(org.springframework.http.HttpStatus.BAD_GATEWAY,
+                                                org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
+                                                org.springframework.http.HttpStatus.GATEWAY_TIMEOUT))
+                                .circuitBreaker(config -> config
+                                        .setName("paymentServiceCircuitBreaker")
+                                        .setFallbackUri("forward:/fallback/payment")))
+                        .uri(paymentServiceUri))
                 .build();
     }
 }
