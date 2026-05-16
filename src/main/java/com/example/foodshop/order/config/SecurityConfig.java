@@ -30,11 +30,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(Customizer.withDefaults())
+            // Disable CORS at service level - API Gateway handles CORS
+            .cors(cors -> cors.disable())
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Allow OPTIONS requests for CORS
+                // Allow OPTIONS requests for CORS preflight (handled by API Gateway)
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 
                 // Health check endpoint
@@ -54,26 +55,5 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        
-        // Allow multiple frontend origins
-        configuration.setAllowedOriginPatterns(List.of(
-                "https://*.onrender.com",
-                "http://localhost:*",
-                "http://127.0.0.1:*"
-        ));
-        
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);
-        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        
-        return source;
-    }
+    // CORS configuration removed - API Gateway handles all CORS
 }
