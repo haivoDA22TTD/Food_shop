@@ -1,13 +1,16 @@
 import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from '../api/axios'
 import { useCartStore } from '../store/cartStore'
+import { useAuthStore } from '../store/authStore'
 
 export default function Checkout() {
   const navigate = useNavigate()
-  const { items, totalAmount, clearCart } = useCartStore()
+  const { user } = useAuthStore()
+  const { items, totalAmount, clearCart, syncCartWithServer } = useCartStore()
   const [loading, setLoading] = useState(false)
+  const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState('')
   
   const [formData, setFormData] = useState({
@@ -15,12 +18,42 @@ export default function Checkout() {
     phoneNumber: '',
     notes: '',
   })
+  
+  // Sync cart with server when component mounts
+  useEffect(() => {
+    const syncCart = async () => {
+      if (user && items.length > 0) {
+        setSyncing(true)
+        try {
+          await syncCartWithServer()
+        } catch (error) {
+          console.error('Failed to sync cart:', error)
+        } finally {
+          setSyncing(false)
+        }
+      }
+    }
+    syncCart()
+  }, [user, syncCartWithServer])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!formData.shippingAddress || !formData.phoneNumber) {
       setError('Vui lòng điền đầy đủ thông tin')
+      return
+    }
+    
+    // Validate address length (min 10 chars)
+    if (formData.shippingAddress.length < 10) {
+      setError('Địa chỉ phải có ít nhất 10 ký tự')
+      return
+    }
+    
+    // Validate phone number format
+    const phoneRegex = /^[0-9+\-\s()]{10,15}$/
+    if (!phoneRegex.test(formData.phoneNumber)) {
+      setError('Số điện thoại không hợp lệ (10-15 số)')
       return
     }
 
@@ -33,7 +66,14 @@ export default function Checkout() {
       alert(`Đặt hàng thành công! Mã đơn hàng: ${response.data.orderNumber}`)
       navigate('/orders')
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Không thể đặt hàng. Vui lòng thử lại.')
+      console.error('Order creation error:', err)
+      const errorMessage = err?.response?.data?.error || err?.response?.data?.message || 'Không thể đặt hàng. Vui lòng thử lại.'
+      setError(errorMessage)
+      
+      // If cart is empty on server, show specific message
+      if (errorMessage.includes('cart') || errorMessage.includes('empty')) {
+        setError('Giỏ hàng trống trên server. Vui lòng thêm sản phẩm vào giỏ hàng và thử lại.')
+      }
     } finally {
       setLoading(false)
     }
@@ -56,6 +96,12 @@ export default function Checkout() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h1 className="text-4xl font-bold mb-8">Thanh toán</h1>
+      
+      {syncing && (
+        <div className="bg-blue-100 border border-blue-300 text-blue-700 px-4 py-3 rounded mb-6">
+          Đang đồng bộ giỏ hàng với server...
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded mb-6">
@@ -114,10 +160,10 @@ export default function Checkout() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || syncing}
               className="w-full btn-primary disabled:opacity-50"
             >
-              {loading ? 'Đang xử lý...' : 'Đặt hàng'}
+              {loading ? 'Đang xử lý...' : syncing ? 'Đang đồng bộ...' : 'Đặt hàng'}
             </button>
           </form>
         </motion.div>
