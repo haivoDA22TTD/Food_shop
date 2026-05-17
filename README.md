@@ -125,9 +125,58 @@ Food Shop là hệ thống đặt đồ ăn trực tuyến với kiến trúc Mi
 
 ### Infrastructure
 - **Hosting**: Render.com
-- **Database**: Aiven (MySQL + Redis)
+- **Database**: Aiven (MySQL + Redis + PostgreSQL)
 - **CDN**: Cloudinary
-- **CI/CD**: GitHub Actions
+- **CI/CD**: GitHub Actions (Fixed & Optimized)
+
+---
+
+## ⚙️ CI/CD Pipeline
+
+### 🚀 GitHub Actions Workflow
+
+Hệ thống sử dụng GitHub Actions để tự động build và deploy các microservices:
+
+#### 📋 Workflow Features
+- ✅ **Smart Detection**: Tự động phát hiện service nào thay đổi
+- ✅ **Parallel Building**: Build nhiều service cùng lúc
+- ✅ **Auto Deploy**: Deploy tự động lên Render.com
+- ✅ **Fast Pipeline**: Hoàn thành trong ~44 giây
+
+#### 🔄 Pipeline Flow
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│  Code Changes   │───▶│  Detect Changes  │───▶│  Build Services │
+│   (Git Push)    │    │   (Path Filter)  │    │   (Maven/npm)   │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                                         │
+┌─────────────────┐    ┌──────────────────┐             │
+│   Production    │◀───│  Deploy to       │◀────────────┘
+│   Services      │    │   Render.com     │
+└─────────────────┘    └──────────────────┘
+```
+
+#### 🎯 Trigger Conditions
+- **Push** to any branch (except `desktop`, `deploy`)
+- **Pull Request** to main branches
+- **Manual trigger** via GitHub UI
+
+#### 📦 Services Auto-Detection
+| Service | Trigger Path | Build Tool |
+|---------|-------------|------------|
+| API Gateway | `api-gateway/**` or root `**` | Maven |
+| Eureka Server | `eureka-server/**` | Maven |
+| Identity Service | `identity-service/**` | Maven |
+| Product Service | `product-service/**` | Maven |
+| Order Service | `order-service/**` | Maven |
+| Payment Service | `payment_service/**` | Maven |
+| Frontend | `frontend/**` | npm |
+
+#### 🔧 Environment Setup
+- **Java**: OpenJDK 17 (Temurin)
+- **Node.js**: Version 22
+- **Build Cache**: Maven & npm dependencies
+- **Deploy**: Render.com webhooks
 
 ---
 
@@ -143,9 +192,18 @@ Food Shop là hệ thống đặt đồ ăn trực tuyến với kiến trúc Mi
 | **Identity Service** | ✅ Running |
 | **Product Service** | ✅ Running |
 | **Order Service** | ✅ Running |
+| **Payment Service** | ✅ Running |
 
 ### Environment Variables
 
+#### API Gateway
+```env
+SPRING_PROFILES_ACTIVE=prod
+FRONTEND_URL=<frontend-url>
+IDENTITY_SERVICE_URL=<identity-service-url>
+PRODUCT_SERVICE_URL=<product-service-url>
+ORDER_SERVICE_URL=<order-service-url>
+```
 
 #### Identity Service
 ```env
@@ -238,26 +296,34 @@ PRODUCT_SERVICE_URL=<product-service-url>
 
 ### ✅ Latest (May 2026)
 
-1. **Order Service Integration**
+1. **CI/CD Pipeline Fixed** ⚡
+   - ✅ Sửa lỗi GitHub Actions workflow cho monorepo
+   - ✅ Fix path detection cho từng service repository
+   - ✅ Auto-detect thay đổi và build chỉ service cần thiết
+   - ✅ Deploy tự động lên Render với deploy hooks
+   - ✅ Pipeline chạy thành công trong 44s
+
+2. **Order Service Integration**
    - Tích hợp Order Service vào hệ thống
    - API tạo đơn hàng, xem lịch sử, hủy đơn
    - Tracking trạng thái đơn hàng
    - Validation voucher và stock
 
-2. **CORS Fix**
+3. **CORS Fix**
    - Sửa lỗi CORS với `allowedOriginPatterns`
    - Cho phép tất cả subdomain `*.onrender.com`
-   - Deduplicate CORS 
+   - Deduplicate CORS headers
 
-3. **Admin Product Management**
+4. **Admin Product Management**
    - Thêm route `/api/admin/products/**` vào Gateway
    - Upload ảnh sản phẩm với Cloudinary
    - CRUD sản phẩm đầy đủ
 
-4. **CI/CD Workflow**
-   - GitHub Actions cho monorepo
-   - Auto-detect changed services
-   - Deploy hooks cho Render
+5. **Payment Service** ✅
+   - ✅ Hoàn thành Payment Service
+   - ✅ Tích hợp PostgreSQL database
+   - ✅ API thanh toán và quản lý voucher
+   - ✅ Deploy thành công lên production
 
 ---
 
@@ -271,13 +337,18 @@ PRODUCT_SERVICE_URL=<product-service-url>
 ### Service Discovery Issues
 - Kiểm tra Eureka Dashboard
 - Verify services đã register thành công
+- Check `RENDER_EXTERNAL_HOSTNAME` trong env
 
-
+### Database Connection
+- Verify MySQL credentials trong env
+- Check connection pool settings
+- Monitor logs cho connection errors
 
 ### JWT Token Issues
 - Đảm bảo `JWT_SECRET` giống nhau ở tất cả services
 - Check token expiration time
 - Verify Redis connection cho blacklist
+
 ---
 
 ## 🤝 Contributing
@@ -320,7 +391,7 @@ MIT License
 
 Made with ❤️ by [haivoDA22TTD](https://github.com/haivoDA22TTD)
 
-**Version:** 1.0.0 | **Last Updated:** 03/05/2026 | **Status:** ✅ In Production
+**Version:** 1.1.0 | **Last Updated:** 17/05/2026 | **Status:** ✅ In Production
 
 </div>
 
