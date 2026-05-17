@@ -40,7 +40,10 @@ jobs:
           base: ${{ github.event.before }}
           filters: |
             api_gateway:
-              - 'api-gateway/**'
+              - '**'
+              - 'src/**'
+              - 'pom.xml'
+              - 'Dockerfile'
             eureka_server:
               - 'eureka-server/**'
             identity_service:
@@ -62,14 +65,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       
-      - name: Verify pom.xml exists
+      - name: Debug repository structure
         run: |
+          echo "Current directory:"
+          pwd
+          echo "Repository contents:"
           ls -la
-          ls -la api-gateway/
-          cat api-gateway/pom.xml | head -10
+          echo "Looking for pom.xml:"
+          find . -name "pom.xml" -maxdepth 2
       
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -79,7 +83,15 @@ jobs:
           cache: maven
       
       - name: Build with Maven
-        run: mvn -B clean package -DskipTests -f api-gateway/pom.xml
+        run: |
+          if [ -f "pom.xml" ]; then
+            mvn -B clean package -DskipTests
+          elif [ -f "api-gateway/pom.xml" ]; then
+            mvn -B clean package -DskipTests -f api-gateway/pom.xml
+          else
+            echo "pom.xml not found!"
+            exit 1
+          fi
 
   build-eureka-server:
     name: Build Eureka Server
@@ -89,8 +101,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -100,7 +110,13 @@ jobs:
           cache: maven
       
       - name: Build with Maven
-        run: mvn -B clean package -DskipTests -f eureka-server/pom.xml
+        run: |
+          if [ -f "eureka-server/pom.xml" ]; then
+            mvn -B clean package -DskipTests -f eureka-server/pom.xml
+          else
+            echo "eureka-server/pom.xml not found!"
+            exit 1
+          fi
 
   build-identity-service:
     name: Build Identity Service
@@ -110,8 +126,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -121,7 +135,13 @@ jobs:
           cache: maven
       
       - name: Build with Maven
-        run: mvn -B clean package -DskipTests -f identity-service/pom.xml
+        run: |
+          if [ -f "identity-service/pom.xml" ]; then
+            mvn -B clean package -DskipTests -f identity-service/pom.xml
+          else
+            echo "identity-service/pom.xml not found!"
+            exit 1
+          fi
 
   build-order-service:
     name: Build Order Service
@@ -131,8 +151,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -142,7 +160,13 @@ jobs:
           cache: maven
       
       - name: Build with Maven
-        run: mvn -B clean package -DskipTests -f order-service/pom.xml
+        run: |
+          if [ -f "order-service/pom.xml" ]; then
+            mvn -B clean package -DskipTests -f order-service/pom.xml
+          else
+            echo "order-service/pom.xml not found!"
+            exit 1
+          fi
 
   build-product-service:
     name: Build Product Service
