@@ -7,6 +7,9 @@ import com.example.foodshop.order.entity.OrderItem;
 import com.example.foodshop.order.entity.OrderStatus;
 import com.example.foodshop.order.repository.CartRepository;
 import com.example.foodshop.order.repository.OrderRepository;
+import com.example.foodshop.order.client.PaymentServiceClient;
+import com.example.foodshop.order.client.CreatePaymentRequest;
+import com.example.foodshop.order.client.PaymentResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +43,10 @@ public class OrderService {
     @Autowired
     private ProductValidationService productValidationService;
     
-    public OrderResponse createOrderFromCart(Long userId, CreateOrderRequest request) {
+    @Autowired
+    private PaymentServiceClient paymentServiceClient;
+    
+    public OrderResponse createOrderFromCart(Long userId, CreateOrderRequest request, String authToken) {
         try {
             // Get user's cart
             Optional<Cart> cartOpt = cartRepository.findByUserIdWithItems(userId);
@@ -83,6 +89,29 @@ public class OrderService {
             
             // Save order
             order = orderRepository.save(order);
+            
+            // Create payment record
+            try {
+                CreatePaymentRequest paymentRequest = new CreatePaymentRequest(
+                    order.getId(),
+                    userId,
+                    totalAmount,
+                    request.getPaymentMethod()
+                );
+                
+                PaymentResponse paymentResponse = paymentServiceClient.createPayment(
+                    paymentRequest, 
+                    authToken
+                ).getBody();
+                
+                log.info("Created payment {} for order {}", 
+                        paymentResponse != null ? paymentResponse.getPaymentNumber() : "unknown", 
+                        order.getOrderNumber());
+                        
+            } catch (Exception e) {
+                log.warn("Failed to create payment for order {}: {}", order.getOrderNumber(), e.getMessage());
+                // Continue with order creation even if payment creation fails
+            }
             
             // Clear cart after successful order creation
             cartService.clearCart(userId);

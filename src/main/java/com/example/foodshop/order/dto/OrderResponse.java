@@ -17,6 +17,7 @@ public class OrderResponse {
     private String phoneNumber;
     private String notes;
     private String paymentMethod;
+    private String paymentNumber;
     private List<OrderItemResponse> orderItems;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -113,6 +114,14 @@ public class OrderResponse {
     
     public void setPaymentMethod(String paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+    
+    public String getPaymentNumber() {
+        return paymentNumber;
+    }
+    
+    public void setPaymentNumber(String paymentNumber) {
+        this.paymentNumber = paymentNumber;
     }
     
     public List<OrderItemResponse> getOrderItems() {

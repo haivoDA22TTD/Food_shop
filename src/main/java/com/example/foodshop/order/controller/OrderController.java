@@ -64,10 +64,12 @@ public class OrderController {
     }
     
     @PostMapping
-    public ResponseEntity<?> createOrder(@Valid @RequestBody CreateOrderRequest request, Authentication auth) {
+    public ResponseEntity<?> createOrder(@Valid @RequestBody CreateOrderRequest request, 
+                                       Authentication auth,
+                                       @RequestHeader("Authorization") String authToken) {
         try {
             OrderUserDetails userDetails = (OrderUserDetails) auth.getPrincipal();
-            OrderResponse order = orderService.createOrderFromCart(userDetails.getUserId(), request);
+            OrderResponse order = orderService.createOrderFromCart(userDetails.getUserId(), request, authToken);
             return ResponseEntity.status(HttpStatus.CREATED).body(order);
         } catch (IllegalArgumentException e) {
             log.warn("Invalid create order request: {}", e.getMessage());
