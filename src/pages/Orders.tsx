@@ -9,6 +9,8 @@ interface Order {
   orderNumber: string
   status: string
   totalAmount: number
+  paymentMethod: string
+  paymentNumber?: string
   createdAt: string
   orderItems: Array<{
     productName: string
@@ -133,6 +135,25 @@ export default function Orders() {
                     </span>
                   </div>
                 ))}
+              </div>
+
+              {/* Payment Method */}
+              <div className="bg-gray-50 p-3 rounded-lg mb-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Hình thức thanh toán:</span>
+                  <span className="font-medium">
+                    {order.paymentMethod === 'COD' && '💵 Thanh toán khi nhận hàng'}
+                    {order.paymentMethod === 'BANK_TRANSFER' && '🏧 Chuyển khoản QR'}
+                    {order.paymentMethod === 'VNPAY' && '🏦 VNPay'}
+                    {order.paymentMethod === 'MOMO' && '📱 MoMo'}
+                  </span>
+                </div>
+                {order.paymentNumber && (
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="text-sm text-gray-600">Mã thanh toán:</span>
+                    <span className="text-sm font-mono">{order.paymentNumber}</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-between items-center border-t pt-4">
