@@ -17,14 +17,17 @@ public class CreateOrderRequest {
     @Size(max = 1000, message = "Notes cannot exceed 1000 characters")
     private String notes;
     
+    private String paymentMethod = "COD"; // Default to COD
+    
     // Constructors
     public CreateOrderRequest() {
     }
     
-    public CreateOrderRequest(String shippingAddress, String phoneNumber, String notes) {
+    public CreateOrderRequest(String shippingAddress, String phoneNumber, String notes, String paymentMethod) {
         this.shippingAddress = shippingAddress;
         this.phoneNumber = phoneNumber;
         this.notes = notes;
+        this.paymentMethod = paymentMethod;
     }
     
     // Getters and Setters
@@ -50,5 +53,13 @@ public class CreateOrderRequest {
     
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+    
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+    
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
     }
 }

@@ -16,6 +16,7 @@ public class OrderResponse {
     private String shippingAddress;
     private String phoneNumber;
     private String notes;
+    private String paymentMethod;
     private List<OrderItemResponse> orderItems;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -26,7 +27,7 @@ public class OrderResponse {
     
     public OrderResponse(Long id, String orderNumber, OrderStatus status, String statusDisplayName,
                         BigDecimal totalAmount, String shippingAddress, String phoneNumber, String notes,
-                        List<OrderItemResponse> orderItems, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                        String paymentMethod, List<OrderItemResponse> orderItems, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.orderNumber = orderNumber;
         this.status = status;
@@ -35,6 +36,7 @@ public class OrderResponse {
         this.shippingAddress = shippingAddress;
         this.phoneNumber = phoneNumber;
         this.notes = notes;
+        this.paymentMethod = paymentMethod;
         this.orderItems = orderItems;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -103,6 +105,14 @@ public class OrderResponse {
     
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+    
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+    
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
     }
     
     public List<OrderItemResponse> getOrderItems() {

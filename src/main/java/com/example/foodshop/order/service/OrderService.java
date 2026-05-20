@@ -59,6 +59,7 @@ public class OrderService {
             order.setShippingAddress(request.getShippingAddress());
             order.setPhoneNumber(request.getPhoneNumber());
             order.setNotes(request.getNotes());
+            order.setPaymentMethod(request.getPaymentMethod());
             order.setStatus(OrderStatus.PENDING);
             
             // Create order items from cart items
@@ -331,6 +332,7 @@ public class OrderService {
         response.setShippingAddress(order.getShippingAddress());
         response.setPhoneNumber(order.getPhoneNumber());
         response.setNotes(order.getNotes());
+        response.setPaymentMethod(order.getPaymentMethod());
         response.setOrderItems(orderItemResponses);
         response.setCreatedAt(order.getCreatedAt());
         response.setUpdatedAt(order.getUpdatedAt());

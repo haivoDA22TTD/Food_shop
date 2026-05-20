@@ -44,6 +44,9 @@ public class Order {
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
     
+    @Column(name = "payment_method", length = 20)
+    private String paymentMethod = "COD";
+    
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonManagedReference
     private List<OrderItem> orderItems = new ArrayList<>();
@@ -137,6 +140,14 @@ public class Order {
     
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+    
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+    
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
     }
     
     public List<OrderItem> getOrderItems() {
