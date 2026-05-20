@@ -43,7 +43,7 @@ spring:
         - id: payment-service
           uri: lb://payment-service
           predicates:
-            - Path=/api/vouchers/**, /api/payments/**
+            - Path=/api/vouchers/**, /api/payments/**, /api/admin/payments/**, /api/admin/vouchers/**
           filters:
             - StripPrefix=0
 
