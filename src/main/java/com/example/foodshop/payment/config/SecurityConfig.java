@@ -41,6 +41,9 @@ public class SecurityConfig {
                 // Health check endpoint
                 .requestMatchers("/actuator/health").permitAll()
                 
+                // Swagger UI endpoints
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                
                 // Payment callback endpoints (VNPay, MoMo)
                 .requestMatchers("/api/payments/callback/**", "/api/payments/vnpay-callback", "/api/payments/momo-callback").permitAll()
                 
