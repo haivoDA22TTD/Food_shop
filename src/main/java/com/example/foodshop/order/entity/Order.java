@@ -25,6 +25,15 @@ public class Order {
     @Column(name = "user_id", nullable = false)
     private Long userId;
     
+    @Column(name = "user_name", length = 100)
+    private String userName;
+    
+    @Column(name = "user_email", length = 100)
+    private String userEmail;
+    
+    @Column(name = "user_full_name", length = 200)
+    private String userFullName;
+    
     @Column(name = "order_number", unique = true, nullable = false, length = 50)
     private String orderNumber;
     
@@ -92,6 +101,30 @@ public class Order {
     
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+    
+    public String getUserName() {
+        return userName;
+    }
+    
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+    
+    public String getUserEmail() {
+        return userEmail;
+    }
+    
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
+    }
+    
+    public String getUserFullName() {
+        return userFullName;
+    }
+    
+    public void setUserFullName(String userFullName) {
+        this.userFullName = userFullName;
     }
     
     public String getOrderNumber() {

@@ -46,6 +46,9 @@ public class OrderService {
     @Autowired
     private PaymentServiceClient paymentServiceClient;
     
+    @Autowired
+    private com.example.foodshop.order.client.IdentityServiceClient identityServiceClient;
+    
     public OrderResponse createOrderFromCart(Long userId, CreateOrderRequest request, String authToken) {
         try {
             // Get user's cart
@@ -59,9 +62,25 @@ public class OrderService {
             // Validate all cart items
             validateCartItems(cart);
             
+            // Fetch user info from Identity Service
+            UserDTO user = null;
+            try {
+                user = identityServiceClient.getUserById(userId);
+            } catch (Exception e) {
+                log.warn("Failed to fetch user info for userId {}: {}", userId, e.getMessage());
+            }
+            
             // Create order
             Order order = new Order();
             order.setUserId(userId);
+            
+            // Save user info snapshot
+            if (user != null) {
+                order.setUserName(user.getUsername());
+                order.setUserEmail(user.getEmail());
+                order.setUserFullName(user.getFullName());
+            }
+            
             order.setShippingAddress(request.getShippingAddress());
             order.setPhoneNumber(request.getPhoneNumber());
             order.setNotes(request.getNotes());
@@ -355,6 +374,25 @@ public class OrderService {
         OrderResponse response = new OrderResponse();
         response.setId(order.getId());
         response.setOrderNumber(order.getOrderNumber());
+        response.setUserId(order.getUserId());
+        response.setUserName(order.getUserName());
+        response.setUserEmail(order.getUserEmail());
+        response.setUserFullName(order.getUserFullName());
+        
+        // Fallback: Fetch user info if not stored in order
+        if (response.getUserFullName() == null || response.getUserFullName().isEmpty()) {
+            try {
+                UserDTO user = identityServiceClient.getUserById(order.getUserId());
+                response.setUserName(user.getUsername());
+                response.setUserEmail(user.getEmail());
+                response.setUserFullName(user.getFullName());
+            } catch (Exception e) {
+                log.warn("Failed to fetch user info for userId {}: {}", order.getUserId(), e.getMessage());
+                response.setUserName("User #" + order.getUserId());
+                response.setUserFullName("User #" + order.getUserId());
+            }
+        }
+        
         response.setStatus(order.getStatus());
         response.setStatusDisplayName(order.getStatus().getDisplayName());
         response.setTotalAmount(order.getTotalAmount());

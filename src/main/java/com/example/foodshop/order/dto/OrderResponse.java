@@ -10,6 +10,10 @@ public class OrderResponse {
     
     private Long id;
     private String orderNumber;
+    private Long userId;
+    private String userName;
+    private String userEmail;
+    private String userFullName;
     private OrderStatus status;
     private String statusDisplayName;
     private BigDecimal totalAmount;
@@ -58,6 +62,38 @@ public class OrderResponse {
     
     public void setOrderNumber(String orderNumber) {
         this.orderNumber = orderNumber;
+    }
+    
+    public Long getUserId() {
+        return userId;
+    }
+    
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+    
+    public String getUserName() {
+        return userName;
+    }
+    
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+    
+    public String getUserEmail() {
+        return userEmail;
+    }
+    
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
+    }
+    
+    public String getUserFullName() {
+        return userFullName;
+    }
+    
+    public void setUserFullName(String userFullName) {
+        this.userFullName = userFullName;
     }
     
     public OrderStatus getStatus() {
