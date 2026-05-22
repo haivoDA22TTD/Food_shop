@@ -10,10 +10,6 @@ public class OrderResponse {
     
     private Long id;
     private String orderNumber;
-    private Long userId;
-    private String userName;
-    private String userEmail;
-    private String userFullName;
     private OrderStatus status;
     private String statusDisplayName;
     private BigDecimal totalAmount;
@@ -26,13 +22,19 @@ public class OrderResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
+    // User information
+    private Long userId;
+    private String username;
+    private String userEmail;
+    
     // Constructors
     public OrderResponse() {
     }
     
     public OrderResponse(Long id, String orderNumber, OrderStatus status, String statusDisplayName,
                         BigDecimal totalAmount, String shippingAddress, String phoneNumber, String notes,
-                        String paymentMethod, List<OrderItemResponse> orderItems, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                        String paymentMethod, List<OrderItemResponse> orderItems, LocalDateTime createdAt, 
+                        LocalDateTime updatedAt, Long userId, String username, String userEmail) {
         this.id = id;
         this.orderNumber = orderNumber;
         this.status = status;
@@ -45,6 +47,9 @@ public class OrderResponse {
         this.orderItems = orderItems;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.userId = userId;
+        this.username = username;
+        this.userEmail = userEmail;
     }
     
     // Getters and Setters
@@ -62,38 +67,6 @@ public class OrderResponse {
     
     public void setOrderNumber(String orderNumber) {
         this.orderNumber = orderNumber;
-    }
-    
-    public Long getUserId() {
-        return userId;
-    }
-    
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-    
-    public String getUserName() {
-        return userName;
-    }
-    
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-    
-    public String getUserEmail() {
-        return userEmail;
-    }
-    
-    public void setUserEmail(String userEmail) {
-        this.userEmail = userEmail;
-    }
-    
-    public String getUserFullName() {
-        return userFullName;
-    }
-    
-    public void setUserFullName(String userFullName) {
-        this.userFullName = userFullName;
     }
     
     public OrderStatus getStatus() {
@@ -182,5 +155,29 @@ public class OrderResponse {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public Long getUserId() {
+        return userId;
+    }
+    
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+    
+    public String getUsername() {
+        return username;
+    }
+    
+    public void setUsername(String username) {
+        this.username = username;
+    }
+    
+    public String getUserEmail() {
+        return userEmail;
+    }
+    
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
     }
 }

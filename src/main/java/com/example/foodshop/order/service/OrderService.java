@@ -62,25 +62,9 @@ public class OrderService {
             // Validate all cart items
             validateCartItems(cart);
             
-            // Fetch user info from Identity Service
-            UserDTO user = null;
-            try {
-                user = identityServiceClient.getUserById(userId);
-            } catch (Exception e) {
-                log.warn("Failed to fetch user info for userId {}: {}", userId, e.getMessage());
-            }
-            
             // Create order
             Order order = new Order();
             order.setUserId(userId);
-            
-            // Save user info snapshot
-            if (user != null) {
-                order.setUserName(user.getUsername());
-                order.setUserEmail(user.getEmail());
-                order.setUserFullName(user.getFullName());
-            }
-            
             order.setShippingAddress(request.getShippingAddress());
             order.setPhoneNumber(request.getPhoneNumber());
             order.setNotes(request.getNotes());
@@ -374,25 +358,6 @@ public class OrderService {
         OrderResponse response = new OrderResponse();
         response.setId(order.getId());
         response.setOrderNumber(order.getOrderNumber());
-        response.setUserId(order.getUserId());
-        response.setUserName(order.getUserName());
-        response.setUserEmail(order.getUserEmail());
-        response.setUserFullName(order.getUserFullName());
-        
-        // Fallback: Fetch user info if not stored in order
-        if (response.getUserFullName() == null || response.getUserFullName().isEmpty()) {
-            try {
-                UserDTO user = identityServiceClient.getUserById(order.getUserId());
-                response.setUserName(user.getUsername());
-                response.setUserEmail(user.getEmail());
-                response.setUserFullName(user.getFullName());
-            } catch (Exception e) {
-                log.warn("Failed to fetch user info for userId {}: {}", order.getUserId(), e.getMessage());
-                response.setUserName("User #" + order.getUserId());
-                response.setUserFullName("User #" + order.getUserId());
-            }
-        }
-        
         response.setStatus(order.getStatus());
         response.setStatusDisplayName(order.getStatus().getDisplayName());
         response.setTotalAmount(order.getTotalAmount());
@@ -403,6 +368,19 @@ public class OrderService {
         response.setOrderItems(orderItemResponses);
         response.setCreatedAt(order.getCreatedAt());
         response.setUpdatedAt(order.getUpdatedAt());
+        
+        // Fetch user information from Identity Service
+        response.setUserId(order.getUserId());
+        try {
+            com.example.foodshop.order.client.UserDTO user = identityServiceClient.getUserById(order.getUserId());
+            response.setUsername(user.getUsername());
+            response.setUserEmail(user.getEmail());
+        } catch (Exception e) {
+            log.warn("Failed to fetch user info for userId {}: {}", order.getUserId(), e.getMessage());
+            // Fallback to showing User ID if Identity Service is unavailable
+            response.setUsername("User #" + order.getUserId());
+            response.setUserEmail(null);
+        }
         
         return response;
     }
