@@ -17,6 +17,7 @@ export default function Checkout() {
     shippingAddress: '',
     phoneNumber: '',
     notes: '',
+    paymentMethod: 'COD', // Default to COD
   })
   
   // Sync cart with server when component mounts
@@ -158,12 +159,72 @@ export default function Checkout() {
               />
             </div>
 
+            {/* Payment Method Selection */}
+            <div>
+              <label className="block text-sm font-medium mb-3">
+                Hình thức thanh toán <span className="text-red-500">*</span>
+              </label>
+              <div className="space-y-3">
+                <div className="flex items-center">
+                  <input
+                    id="cod"
+                    name="paymentMethod"
+                    type="radio"
+                    value="COD"
+                    checked={formData.paymentMethod === 'COD'}
+                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                  />
+                  <label htmlFor="cod" className="ml-3 block text-sm font-medium text-gray-700">
+                    💵 Thanh toán khi nhận hàng (COD)
+                  </label>
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    id="bank_transfer"
+                    name="paymentMethod"
+                    type="radio"
+                    value="BANK_TRANSFER"
+                    checked={formData.paymentMethod === 'BANK_TRANSFER'}
+                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                  />
+                  <label htmlFor="bank_transfer" className="ml-3 block text-sm font-medium text-gray-700">
+                    🏧 Chuyển khoản ngân hàng (QR Code VCB)
+                  </label>
+                </div>
+              </div>
+              
+              {/* Payment Method Description */}
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
+                {formData.paymentMethod === 'COD' && (
+                  <div>
+                    <p className="font-medium text-green-700 mb-1">💡 Thanh toán khi nhận hàng</p>
+                    <p>• Thanh toán bằng tiền mặt khi shipper giao hàng</p>
+                    <p>• Phí ship sẽ được tính thêm</p>
+                    <p>• Không cần thẻ ngân hàng</p>
+                  </div>
+                )}
+                {formData.paymentMethod === 'BANK_TRANSFER' && (
+                  <div>
+                    <p className="font-medium text-blue-700 mb-1">💡 Chuyển khoản QR Code</p>
+                    <p>• Quét mã QR VietComBank để chuyển khoản</p>
+                    <p>• Chỉ cần tài khoản ngân hàng nội địa</p>
+                    <p>• Đơn hàng được xử lý sau khi nhận tiền (1-5 phút)</p>
+                    <p>• Không cần thẻ Visa/MasterCard</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <button
               type="submit"
               disabled={loading || syncing}
               className="w-full btn-primary disabled:opacity-50"
             >
-              {loading ? 'Đang xử lý...' : syncing ? 'Đang đồng bộ...' : 'Đặt hàng'}
+              {loading ? 'Đang xử lý...' : syncing ? 'Đang đồng bộ...' : 
+               formData.paymentMethod === 'COD' ? 'Đặt hàng' : 'Thanh toán'}
             </button>
           </form>
         </motion.div>
