@@ -41,9 +41,6 @@ public class SecurityConfig {
                 // Health check endpoint
                 .requestMatchers("/actuator/health").permitAll()
                 
-                // Swagger UI endpoints
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                
                 // Admin endpoints require ADMIN role
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 
