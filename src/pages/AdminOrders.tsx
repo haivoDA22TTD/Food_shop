@@ -8,9 +8,8 @@ interface Order {
   id: number
   orderNumber: string
   userId: number
-  userName?: string
+  username?: string
   userEmail?: string
-  userFullName?: string
   status: string
   totalAmount: number
   shippingAddress: string
@@ -114,8 +113,10 @@ export default function AdminOrders() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Khách hàng</p>
-                  <p className="font-semibold">{order.userFullName || order.userName || `User #${order.userId}`}</p>
-                  {order.userEmail && <p className="text-sm text-gray-500">{order.userEmail}</p>}
+                  <p className="font-semibold">{order.username || `User #${order.userId}`}</p>
+                  {order.userEmail && (
+                    <p className="text-sm text-gray-500">{order.userEmail}</p>
+                  )}
                   <p className="text-sm">{order.phoneNumber}</p>
                 </div>
                 <div>
