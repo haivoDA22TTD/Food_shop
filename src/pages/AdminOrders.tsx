@@ -55,18 +55,29 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [updatingOrder, setUpdatingOrder] = useState<number | null>(null)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalOrders, setTotalOrders] = useState(0)
 
   useEffect(() => {
     if (user?.role === 'ADMIN') {
       loadOrders()
     }
-  }, [user])
+  }, [user, currentPage])
 
   const loadOrders = async () => {
     setLoading(true)
     try {
-      const response = await axios.get('/api/admin/orders')
+      const response = await axios.get('/api/admin/orders', {
+        params: {
+          page: currentPage,
+          size: 20,
+          sort: 'createdAt,desc' // Sort by newest first
+        }
+      })
       setOrders(response.data.content || [])
+      setTotalPages(response.data.totalPages || 0)
+      setTotalOrders(response.data.totalElements || 0)
     } catch (err: any) {
       setError(err?.response?.data?.error || 'Không thể tải danh sách đơn hàng')
     } finally {
@@ -191,6 +202,31 @@ export default function AdminOrders() {
               </div>
             </motion.div>
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!loading && orders.length > 0 && totalPages > 1 && (
+        <div className="mt-8 flex items-center justify-between">
+          <p className="text-sm text-gray-600">
+            Trang {currentPage + 1} / {totalPages} • Tổng {totalOrders} đơn hàng
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+              disabled={currentPage === 0}
+              className="px-4 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              ← Trước
+            </button>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+              disabled={currentPage >= totalPages - 1}
+              className="px-4 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Sau →
+            </button>
+          </div>
         </div>
       )}
     </div>
