@@ -20,8 +20,8 @@ interface Order {
 const statusOptions = [
   { value: 'PENDING', label: 'Chờ xác nhận' },
   { value: 'CONFIRMED', label: 'Đã xác nhận' },
-  { value: 'PROCESSING', label: 'Đang xử lý' },
-  { value: 'SHIPPED', label: 'Đang giao' },
+  { value: 'PREPARING', label: 'Đang chuẩn bị' },
+  { value: 'READY_FOR_PICKUP', label: 'Sẵn sàng lấy hàng' },
   { value: 'DELIVERED', label: 'Đã giao' },
   { value: 'CANCELLED', label: 'Đã hủy' },
 ]
@@ -29,8 +29,8 @@ const statusOptions = [
 const statusColors: Record<string, string> = {
   PENDING: 'bg-yellow-100 text-yellow-800',
   CONFIRMED: 'bg-blue-100 text-blue-800',
-  PROCESSING: 'bg-purple-100 text-purple-800',
-  SHIPPED: 'bg-indigo-100 text-indigo-800',
+  PREPARING: 'bg-purple-100 text-purple-800',
+  READY_FOR_PICKUP: 'bg-indigo-100 text-indigo-800',
   DELIVERED: 'bg-green-100 text-green-800',
   CANCELLED: 'bg-red-100 text-red-800',
 }
