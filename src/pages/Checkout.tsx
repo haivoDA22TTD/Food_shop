@@ -14,11 +14,101 @@ export default function Checkout() {
   const [error, setError] = useState('')
   
   const [formData, setFormData] = useState({
-    shippingAddress: '',
+    city: '',
+    district: '',
+    ward: '',
+    street: '',
     phoneNumber: '',
     notes: '',
-    paymentMethod: 'COD', // Default to COD
+    paymentMethod: 'COD',
   })
+
+  // Danh sách địa điểm (có thể mở rộng)
+  const cities = [
+    { value: 'hanoi', label: 'Hà Nội' },
+    { value: 'hcm', label: 'TP. Hồ Chí Minh' },
+    { value: 'danang', label: 'Đà Nẵng' },
+    { value: 'haiphong', label: 'Hải Phòng' },
+    { value: 'cantho', label: 'Cần Thơ' },
+  ]
+
+  const districts: Record<string, Array<{ value: string; label: string }>> = {
+    hanoi: [
+      { value: 'ba-dinh', label: 'Ba Đình' },
+      { value: 'hoan-kiem', label: 'Hoàn Kiếm' },
+      { value: 'dong-da', label: 'Đống Đa' },
+      { value: 'hai-ba-trung', label: 'Hai Bà Trưng' },
+      { value: 'cau-giay', label: 'Cầu Giấy' },
+      { value: 'thanh-xuan', label: 'Thanh Xuân' },
+      { value: 'long-bien', label: 'Long Biên' },
+      { value: 'ha-dong', label: 'Hà Đông' },
+    ],
+    hcm: [
+      { value: 'quan-1', label: 'Quận 1' },
+      { value: 'quan-2', label: 'Quận 2' },
+      { value: 'quan-3', label: 'Quận 3' },
+      { value: 'quan-4', label: 'Quận 4' },
+      { value: 'quan-5', label: 'Quận 5' },
+      { value: 'quan-6', label: 'Quận 6' },
+      { value: 'quan-7', label: 'Quận 7' },
+      { value: 'quan-8', label: 'Quận 8' },
+      { value: 'quan-9', label: 'Quận 9' },
+      { value: 'quan-10', label: 'Quận 10' },
+      { value: 'quan-11', label: 'Quận 11' },
+      { value: 'quan-12', label: 'Quận 12' },
+      { value: 'binh-thanh', label: 'Bình Thạnh' },
+      { value: 'tan-binh', label: 'Tân Bình' },
+      { value: 'phu-nhuan', label: 'Phú Nhuận' },
+      { value: 'go-vap', label: 'Gò Vấp' },
+      { value: 'thu-duc', label: 'Thủ Đức' },
+    ],
+    danang: [
+      { value: 'hai-chau', label: 'Hải Châu' },
+      { value: 'thanh-khe', label: 'Thanh Khê' },
+      { value: 'son-tra', label: 'Sơn Trà' },
+      { value: 'ngu-hanh-son', label: 'Ngũ Hành Sơn' },
+      { value: 'lien-chieu', label: 'Liên Chiểu' },
+      { value: 'cam-le', label: 'Cẩm Lệ' },
+    ],
+    haiphong: [
+      { value: 'hong-bang', label: 'Hồng Bàng' },
+      { value: 'ngo-quyen', label: 'Ngô Quyền' },
+      { value: 'le-chan', label: 'Lê Chân' },
+      { value: 'hai-an', label: 'Hải An' },
+      { value: 'kien-an', label: 'Kiến An' },
+    ],
+    cantho: [
+      { value: 'ninh-kieu', label: 'Ninh Kiều' },
+      { value: 'binh-thuy', label: 'Bình Thủy' },
+      { value: 'cai-rang', label: 'Cái Răng' },
+      { value: 'o-mon', label: 'Ô Môn' },
+    ],
+  }
+
+  const wards: Record<string, Array<{ value: string; label: string }>> = {
+    'ba-dinh': [
+      { value: 'dien-bien', label: 'Điện Biên' },
+      { value: 'doi-can', label: 'Đội Cấn' },
+      { value: 'lieu-giai', label: 'Liễu Giai' },
+      { value: 'ngoc-ha', label: 'Ngọc Hà' },
+      { value: 'kim-ma', label: 'Kim Mã' },
+    ],
+    'hoan-kiem': [
+      { value: 'hang-bac', label: 'Hàng Bạc' },
+      { value: 'hang-bo', label: 'Hàng Bồ' },
+      { value: 'hang-dao', label: 'Hàng Đào' },
+      { value: 'hang-gai', label: 'Hàng Gai' },
+      { value: 'trang-tien', label: 'Tràng Tiền' },
+    ],
+    'quan-1': [
+      { value: 'ben-nghe', label: 'Bến Nghé' },
+      { value: 'ben-thanh', label: 'Bến Thành' },
+      { value: 'nguyen-thai-binh', label: 'Nguyễn Thái Bình' },
+      { value: 'pham-ngu-lao', label: 'Phạm Ngũ Lão' },
+      { value: 'nguyen-cu-trinh', label: 'Nguyễn Cư Trinh' },
+    ],
+    // Thêm wards cho các quận/huyện khác nếu cần
+  }
   
   // Sync cart with server when component mounts
   useEffect(() => {
@@ -41,14 +131,15 @@ export default function Checkout() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.shippingAddress || !formData.phoneNumber) {
-      setError('Vui lòng điền đầy đủ thông tin')
+    // Validate required fields
+    if (!formData.city || !formData.district || !formData.ward || !formData.street || !formData.phoneNumber) {
+      setError('Vui lòng điền đầy đủ thông tin địa chỉ')
       return
     }
     
-    // Validate address length (min 10 chars)
-    if (formData.shippingAddress.length < 10) {
-      setError('Địa chỉ phải có ít nhất 10 ký tự')
+    // Validate street length
+    if (formData.street.length < 5) {
+      setError('Số nhà/Đường phải có ít nhất 5 ký tự')
       return
     }
     
@@ -63,7 +154,19 @@ export default function Checkout() {
     setError('')
 
     try {
-      const response = await axios.post('/api/orders', formData)
+      // Build full address
+      const cityLabel = cities.find(c => c.value === formData.city)?.label || formData.city
+      const districtLabel = districts[formData.city]?.find(d => d.value === formData.district)?.label || formData.district
+      const wardLabel = wards[formData.district]?.find(w => w.value === formData.ward)?.label || formData.ward
+      
+      const fullAddress = `${formData.street}, ${wardLabel}, ${districtLabel}, ${cityLabel}`
+      
+      const response = await axios.post('/api/orders', {
+        shippingAddress: fullAddress,
+        phoneNumber: formData.phoneNumber,
+        notes: formData.notes,
+        paymentMethod: formData.paymentMethod,
+      })
       clearCart()
       alert(`Đặt hàng thành công! Mã đơn hàng: ${response.data.orderNumber}`)
       navigate('/orders')
@@ -72,7 +175,6 @@ export default function Checkout() {
       const errorMessage = err?.response?.data?.error || err?.response?.data?.message || 'Không thể đặt hàng. Vui lòng thử lại.'
       setError(errorMessage)
       
-      // If cart is empty on server, show specific message
       if (errorMessage.includes('cart') || errorMessage.includes('empty')) {
         setError('Giỏ hàng trống trên server. Vui lòng thêm sản phẩm vào giỏ hàng và thử lại.')
       }
@@ -119,16 +221,73 @@ export default function Checkout() {
           className="lg:col-span-2"
         >
           <form onSubmit={handleSubmit} className="card p-6 space-y-6">
+            {/* City Selection */}
             <div>
               <label className="block text-sm font-medium mb-2">
-                Địa chỉ giao hàng <span className="text-red-500">*</span>
+                Tỉnh/Thành phố <span className="text-red-500">*</span>
               </label>
-              <textarea
-                value={formData.shippingAddress}
-                onChange={(e) => setFormData({ ...formData, shippingAddress: e.target.value })}
-                rows={3}
+              <select
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value, district: '', ward: '' })}
                 className="input-field"
-                placeholder="Nhập địa chỉ đầy đủ..."
+                required
+              >
+                <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                {cities.map(city => (
+                  <option key={city.value} value={city.value}>{city.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* District Selection */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Quận/Huyện <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.district}
+                onChange={(e) => setFormData({ ...formData, district: e.target.value, ward: '' })}
+                className="input-field"
+                disabled={!formData.city}
+                required
+              >
+                <option value="">-- Chọn Quận/Huyện --</option>
+                {formData.city && districts[formData.city]?.map(district => (
+                  <option key={district.value} value={district.value}>{district.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Ward Selection */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Phường/Xã <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.ward}
+                onChange={(e) => setFormData({ ...formData, ward: e.target.value })}
+                className="input-field"
+                disabled={!formData.district}
+                required
+              >
+                <option value="">-- Chọn Phường/Xã --</option>
+                {formData.district && wards[formData.district]?.map(ward => (
+                  <option key={ward.value} value={ward.value}>{ward.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Street Address */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Số nhà, Tên đường <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.street}
+                onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+                className="input-field"
+                placeholder="Ví dụ: 123 Nguyễn Trãi"
                 required
               />
             </div>
