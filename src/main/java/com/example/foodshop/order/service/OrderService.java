@@ -69,7 +69,7 @@ public class OrderService {
             order.setPhoneNumber(request.getPhoneNumber());
             order.setNotes(request.getNotes());
             order.setPaymentMethod(request.getPaymentMethod());
-            order.setStatus(OrderStatus.PENDING);
+            order.setStatus(OrderStatus.CONFIRMED); // Auto-approve orders
             
             // Create order items from cart items
             BigDecimal totalAmount = BigDecimal.ZERO;
@@ -214,11 +214,11 @@ public class OrderService {
             // Create status history (simplified - in real app, you'd store status changes)
             List<OrderTrackingResponse.OrderStatusHistory> history = new ArrayList<>();
             history.add(new OrderTrackingResponse.OrderStatusHistory(
-                OrderStatus.PENDING, OrderStatus.PENDING.getDisplayName(), 
-                order.getCreatedAt(), "Order placed successfully"
+                OrderStatus.CONFIRMED, OrderStatus.CONFIRMED.getDisplayName(), 
+                order.getCreatedAt(), "Order placed and confirmed automatically"
             ));
             
-            if (order.getStatus() != OrderStatus.PENDING) {
+            if (order.getStatus() != OrderStatus.CONFIRMED) {
                 history.add(new OrderTrackingResponse.OrderStatusHistory(
                     order.getStatus(), order.getStatus().getDisplayName(),
                     order.getUpdatedAt(), "Status updated"
