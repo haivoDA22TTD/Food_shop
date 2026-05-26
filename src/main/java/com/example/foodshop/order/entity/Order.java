@@ -210,7 +210,9 @@ public class Order {
     }
     
     public boolean canBeCancelled() {
-        return status == OrderStatus.PENDING || status == OrderStatus.CONFIRMED;
+        return status == OrderStatus.PENDING || 
+               status == OrderStatus.CONFIRMED || 
+               status == OrderStatus.PREPARING;
     }
     
     public boolean canBeUpdated() {
