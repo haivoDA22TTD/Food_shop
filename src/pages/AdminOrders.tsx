@@ -40,7 +40,6 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [updatingOrder, setUpdatingOrder] = useState<number | null>(null)
 
   useEffect(() => {
     if (user?.role === 'ADMIN') {
@@ -57,19 +56,6 @@ export default function AdminOrders() {
       setError(err?.response?.data?.error || 'Không thể tải danh sách đơn hàng')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const updateOrderStatus = async (orderId: number, newStatus: string) => {
-    setUpdatingOrder(orderId)
-    try {
-      await axios.put(`/api/admin/orders/${orderId}/status`, { status: newStatus })
-      await loadOrders()
-      alert('Cập nhật trạng thái thành công!')
-    } catch (err: any) {
-      alert(err?.response?.data?.error || 'Không thể cập nhật trạng thái')
-    } finally {
-      setUpdatingOrder(null)
     }
   }
 
@@ -138,22 +124,11 @@ export default function AdminOrders() {
                 <p className="text-sm">{order.shippingAddress}</p>
               </div>
 
-              <div className="mt-4 pt-4 border-t flex items-center justify-between">
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-sm text-gray-600 mb-2">Trạng thái</p>
                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColors[order.status]}`}>
                   {statusOptions.find(s => s.value === order.status)?.label || order.status}
                 </span>
-                <select
-                  value={order.status}
-                  onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                  disabled={updatingOrder === order.id}
-                  className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                >
-                  {statusOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
               </div>
             </motion.div>
           ))}
