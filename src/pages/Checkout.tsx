@@ -35,7 +35,8 @@ export default function Checkout() {
       }
     }
     syncCart()
-  }, [user, syncCartWithServer])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]) // Only run when user changes, not syncCartWithServer
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

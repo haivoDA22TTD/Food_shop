@@ -175,7 +175,14 @@ export const useCartStore = create<CartState>()(
         if (localItems.length === 0) return
         
         try {
-          // Sync each item to server
+          // Clear server cart first to avoid duplicates
+          try {
+            await axios.delete('/api/orders/cart')
+          } catch (error) {
+            console.log('Server cart already empty or error clearing')
+          }
+          
+          // Sync each local item to server
           for (const item of localItems) {
             await axios.post('/api/orders/cart/items', {
               productId: item.productId,
@@ -183,7 +190,7 @@ export const useCartStore = create<CartState>()(
             })
           }
           
-          // Clear local cart and fetch from server
+          // Fetch updated cart from server
           await get().fetchCart()
         } catch (error) {
           console.error('Failed to sync cart:', error)
