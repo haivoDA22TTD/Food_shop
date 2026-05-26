@@ -20,7 +20,6 @@ interface Order {
 }
 
 const statusColors: Record<string, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
   CONFIRMED: 'bg-blue-100 text-blue-800',
   PREPARING: 'bg-purple-100 text-purple-800',
   READY_FOR_PICKUP: 'bg-indigo-100 text-indigo-800',
@@ -29,7 +28,6 @@ const statusColors: Record<string, string> = {
 }
 
 const statusLabels: Record<string, string> = {
-  PENDING: 'Chờ xác nhận',
   CONFIRMED: 'Đã xác nhận',
   PREPARING: 'Đang chuẩn bị',
   READY_FOR_PICKUP: 'Sẵn sàng lấy hàng',

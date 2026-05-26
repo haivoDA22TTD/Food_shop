@@ -18,7 +18,6 @@ interface Order {
 }
 
 const statusOptions = [
-  { value: 'PENDING', label: 'Chờ xác nhận' },
   { value: 'CONFIRMED', label: 'Đã xác nhận' },
   { value: 'PREPARING', label: 'Đang chuẩn bị' },
   { value: 'READY_FOR_PICKUP', label: 'Sẵn sàng lấy hàng' },
@@ -27,7 +26,6 @@ const statusOptions = [
 ]
 
 const statusColors: Record<string, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
   CONFIRMED: 'bg-blue-100 text-blue-800',
   PREPARING: 'bg-purple-100 text-purple-800',
   READY_FOR_PICKUP: 'bg-indigo-100 text-indigo-800',
@@ -35,11 +33,28 @@ const statusColors: Record<string, string> = {
   CANCELLED: 'bg-red-100 text-red-800',
 }
 
+// Helper function to get available status transitions
+const getAvailableTransitions = (currentStatus: string): typeof statusOptions => {
+  const transitions: Record<string, string[]> = {
+    CONFIRMED: ['PREPARING', 'CANCELLED'],
+    PREPARING: ['READY_FOR_PICKUP', 'CANCELLED'],
+    READY_FOR_PICKUP: ['DELIVERED'],
+    DELIVERED: [],
+    CANCELLED: [],
+  }
+
+  const availableStatuses = transitions[currentStatus] || []
+  return statusOptions.filter(opt => 
+    opt.value === currentStatus || availableStatuses.includes(opt.value)
+  )
+}
+
 export default function AdminOrders() {
   const { user } = useAuthStore()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [updatingOrder, setUpdatingOrder] = useState<number | null>(null)
 
   useEffect(() => {
     if (user?.role === 'ADMIN') {
@@ -56,6 +71,24 @@ export default function AdminOrders() {
       setError(err?.response?.data?.error || 'Không thể tải danh sách đơn hàng')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const updateOrderStatus = async (orderId: number, orderNumber: string, currentStatus: string, newStatus: string) => {
+    // Don't update if same status
+    if (currentStatus === newStatus) return
+
+    setUpdatingOrder(orderId)
+    try {
+      await axios.put(`/api/admin/orders/${orderId}/status`, { 
+        status: newStatus,
+        reason: `Admin cập nhật trạng thái từ ${currentStatus} sang ${newStatus}`
+      })
+      await loadOrders()
+    } catch (err: any) {
+      alert(err?.response?.data?.error || 'Không thể cập nhật trạng thái')
+    } finally {
+      setUpdatingOrder(null)
     }
   }
 
@@ -125,10 +158,36 @@ export default function AdminOrders() {
               </div>
 
               <div className="mt-4 pt-4 border-t">
-                <p className="text-sm text-gray-600 mb-2">Trạng thái</p>
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColors[order.status]}`}>
-                  {statusOptions.find(s => s.value === order.status)?.label || order.status}
-                </span>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-2">Trạng thái</p>
+                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColors[order.status]}`}>
+                      {statusOptions.find(s => s.value === order.status)?.label || order.status}
+                    </span>
+                  </div>
+                  
+                  {/* Only show dropdown if order can be updated */}
+                  {order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && (
+                    <div className="flex flex-col items-end">
+                      <label className="text-sm text-gray-600 mb-2">Cập nhật trạng thái</label>
+                      <select
+                        value={order.status}
+                        onChange={(e) => updateOrderStatus(order.id, order.orderNumber, order.status, e.target.value)}
+                        disabled={updatingOrder === order.id}
+                        className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {getAvailableTransitions(order.status).map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {updatingOrder === order.id && (
+                        <p className="text-xs text-gray-500 mt-1">Đang cập nhật...</p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           ))}
