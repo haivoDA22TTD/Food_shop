@@ -24,9 +24,9 @@ export default function Checkout() {
   })
 
   // Location data from API
-  const [provinces, setProvinces] = useState<Array<{ code: string; name: string }>>([])
-  const [districts, setDistricts] = useState<Array<{ code: string; name: string }>>([])
-  const [wards, setWards] = useState<Array<{ code: string; name: string }>>([])
+  const [provinces, setProvinces] = useState<Array<{ code: number; name: string }>>([])
+  const [districts, setDistricts] = useState<Array<{ code: number; name: string }>>([])
+  const [wards, setWards] = useState<Array<{ code: number; name: string }>>([])
   const [loadingLocations, setLoadingLocations] = useState(false)
 
   // Load provinces on mount
