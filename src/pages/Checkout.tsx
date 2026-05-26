@@ -23,92 +23,69 @@ export default function Checkout() {
     paymentMethod: 'COD',
   })
 
-  // Danh sách địa điểm (có thể mở rộng)
-  const cities = [
-    { value: 'hanoi', label: 'Hà Nội' },
-    { value: 'hcm', label: 'TP. Hồ Chí Minh' },
-    { value: 'danang', label: 'Đà Nẵng' },
-    { value: 'haiphong', label: 'Hải Phòng' },
-    { value: 'cantho', label: 'Cần Thơ' },
-  ]
+  // Location data from API
+  const [provinces, setProvinces] = useState<Array<{ code: string; name: string }>>([])
+  const [districts, setDistricts] = useState<Array<{ code: string; name: string }>>([])
+  const [wards, setWards] = useState<Array<{ code: string; name: string }>>([])
+  const [loadingLocations, setLoadingLocations] = useState(false)
 
-  const districts: Record<string, Array<{ value: string; label: string }>> = {
-    hanoi: [
-      { value: 'ba-dinh', label: 'Ba Đình' },
-      { value: 'hoan-kiem', label: 'Hoàn Kiếm' },
-      { value: 'dong-da', label: 'Đống Đa' },
-      { value: 'hai-ba-trung', label: 'Hai Bà Trưng' },
-      { value: 'cau-giay', label: 'Cầu Giấy' },
-      { value: 'thanh-xuan', label: 'Thanh Xuân' },
-      { value: 'long-bien', label: 'Long Biên' },
-      { value: 'ha-dong', label: 'Hà Đông' },
-    ],
-    hcm: [
-      { value: 'quan-1', label: 'Quận 1' },
-      { value: 'quan-2', label: 'Quận 2' },
-      { value: 'quan-3', label: 'Quận 3' },
-      { value: 'quan-4', label: 'Quận 4' },
-      { value: 'quan-5', label: 'Quận 5' },
-      { value: 'quan-6', label: 'Quận 6' },
-      { value: 'quan-7', label: 'Quận 7' },
-      { value: 'quan-8', label: 'Quận 8' },
-      { value: 'quan-9', label: 'Quận 9' },
-      { value: 'quan-10', label: 'Quận 10' },
-      { value: 'quan-11', label: 'Quận 11' },
-      { value: 'quan-12', label: 'Quận 12' },
-      { value: 'binh-thanh', label: 'Bình Thạnh' },
-      { value: 'tan-binh', label: 'Tân Bình' },
-      { value: 'phu-nhuan', label: 'Phú Nhuận' },
-      { value: 'go-vap', label: 'Gò Vấp' },
-      { value: 'thu-duc', label: 'Thủ Đức' },
-    ],
-    danang: [
-      { value: 'hai-chau', label: 'Hải Châu' },
-      { value: 'thanh-khe', label: 'Thanh Khê' },
-      { value: 'son-tra', label: 'Sơn Trà' },
-      { value: 'ngu-hanh-son', label: 'Ngũ Hành Sơn' },
-      { value: 'lien-chieu', label: 'Liên Chiểu' },
-      { value: 'cam-le', label: 'Cẩm Lệ' },
-    ],
-    haiphong: [
-      { value: 'hong-bang', label: 'Hồng Bàng' },
-      { value: 'ngo-quyen', label: 'Ngô Quyền' },
-      { value: 'le-chan', label: 'Lê Chân' },
-      { value: 'hai-an', label: 'Hải An' },
-      { value: 'kien-an', label: 'Kiến An' },
-    ],
-    cantho: [
-      { value: 'ninh-kieu', label: 'Ninh Kiều' },
-      { value: 'binh-thuy', label: 'Bình Thủy' },
-      { value: 'cai-rang', label: 'Cái Răng' },
-      { value: 'o-mon', label: 'Ô Môn' },
-    ],
-  }
+  // Load provinces on mount
+  useEffect(() => {
+    const loadProvinces = async () => {
+      try {
+        const response = await fetch('https://provinces.open-api.vn/api/p/')
+        const data = await response.json()
+        setProvinces(data)
+      } catch (error) {
+        console.error('Failed to load provinces:', error)
+      }
+    }
+    loadProvinces()
+  }, [])
 
-  const wards: Record<string, Array<{ value: string; label: string }>> = {
-    'ba-dinh': [
-      { value: 'dien-bien', label: 'Điện Biên' },
-      { value: 'doi-can', label: 'Đội Cấn' },
-      { value: 'lieu-giai', label: 'Liễu Giai' },
-      { value: 'ngoc-ha', label: 'Ngọc Hà' },
-      { value: 'kim-ma', label: 'Kim Mã' },
-    ],
-    'hoan-kiem': [
-      { value: 'hang-bac', label: 'Hàng Bạc' },
-      { value: 'hang-bo', label: 'Hàng Bồ' },
-      { value: 'hang-dao', label: 'Hàng Đào' },
-      { value: 'hang-gai', label: 'Hàng Gai' },
-      { value: 'trang-tien', label: 'Tràng Tiền' },
-    ],
-    'quan-1': [
-      { value: 'ben-nghe', label: 'Bến Nghé' },
-      { value: 'ben-thanh', label: 'Bến Thành' },
-      { value: 'nguyen-thai-binh', label: 'Nguyễn Thái Bình' },
-      { value: 'pham-ngu-lao', label: 'Phạm Ngũ Lão' },
-      { value: 'nguyen-cu-trinh', label: 'Nguyễn Cư Trinh' },
-    ],
-    // Thêm wards cho các quận/huyện khác nếu cần
-  }
+  // Load districts when province changes
+  useEffect(() => {
+    if (formData.city) {
+      const loadDistricts = async () => {
+        setLoadingLocations(true)
+        try {
+          const response = await fetch(`https://provinces.open-api.vn/api/p/${formData.city}?depth=2`)
+          const data = await response.json()
+          setDistricts(data.districts || [])
+          setWards([])
+        } catch (error) {
+          console.error('Failed to load districts:', error)
+        } finally {
+          setLoadingLocations(false)
+        }
+      }
+      loadDistricts()
+    } else {
+      setDistricts([])
+      setWards([])
+    }
+  }, [formData.city])
+
+  // Load wards when district changes
+  useEffect(() => {
+    if (formData.district) {
+      const loadWards = async () => {
+        setLoadingLocations(true)
+        try {
+          const response = await fetch(`https://provinces.open-api.vn/api/d/${formData.district}?depth=2`)
+          const data = await response.json()
+          setWards(data.wards || [])
+        } catch (error) {
+          console.error('Failed to load wards:', error)
+        } finally {
+          setLoadingLocations(false)
+        }
+      }
+      loadWards()
+    } else {
+      setWards([])
+    }
+  }, [formData.district])
   
   // Sync cart with server when component mounts
   useEffect(() => {
@@ -154,12 +131,12 @@ export default function Checkout() {
     setError('')
 
     try {
-      // Build full address
-      const cityLabel = cities.find(c => c.value === formData.city)?.label || formData.city
-      const districtLabel = districts[formData.city]?.find(d => d.value === formData.district)?.label || formData.district
-      const wardLabel = wards[formData.district]?.find(w => w.value === formData.ward)?.label || formData.ward
+      // Build full address from selected locations
+      const provinceName = provinces.find(p => p.code === parseInt(formData.city))?.name || ''
+      const districtName = districts.find(d => d.code === parseInt(formData.district))?.name || ''
+      const wardName = wards.find(w => w.code === parseInt(formData.ward))?.name || ''
       
-      const fullAddress = `${formData.street}, ${wardLabel}, ${districtLabel}, ${cityLabel}`
+      const fullAddress = `${formData.street}, ${wardName}, ${districtName}, ${provinceName}`
       
       const response = await axios.post('/api/orders', {
         shippingAddress: fullAddress,
@@ -221,7 +198,7 @@ export default function Checkout() {
           className="lg:col-span-2"
         >
           <form onSubmit={handleSubmit} className="card p-6 space-y-6">
-            {/* City Selection */}
+            {/* Province Selection */}
             <div>
               <label className="block text-sm font-medium mb-2">
                 Tỉnh/Thành phố <span className="text-red-500">*</span>
@@ -233,8 +210,8 @@ export default function Checkout() {
                 required
               >
                 <option value="">-- Chọn Tỉnh/Thành phố --</option>
-                {cities.map(city => (
-                  <option key={city.value} value={city.value}>{city.label}</option>
+                {provinces.map(province => (
+                  <option key={province.code} value={province.code}>{province.name}</option>
                 ))}
               </select>
             </div>
@@ -248,12 +225,14 @@ export default function Checkout() {
                 value={formData.district}
                 onChange={(e) => setFormData({ ...formData, district: e.target.value, ward: '' })}
                 className="input-field"
-                disabled={!formData.city}
+                disabled={!formData.city || loadingLocations}
                 required
               >
-                <option value="">-- Chọn Quận/Huyện --</option>
-                {formData.city && districts[formData.city]?.map(district => (
-                  <option key={district.value} value={district.value}>{district.label}</option>
+                <option value="">
+                  {loadingLocations ? 'Đang tải...' : '-- Chọn Quận/Huyện --'}
+                </option>
+                {districts.map(district => (
+                  <option key={district.code} value={district.code}>{district.name}</option>
                 ))}
               </select>
             </div>
@@ -267,12 +246,14 @@ export default function Checkout() {
                 value={formData.ward}
                 onChange={(e) => setFormData({ ...formData, ward: e.target.value })}
                 className="input-field"
-                disabled={!formData.district}
+                disabled={!formData.district || loadingLocations}
                 required
               >
-                <option value="">-- Chọn Phường/Xã --</option>
-                {formData.district && wards[formData.district]?.map(ward => (
-                  <option key={ward.value} value={ward.value}>{ward.label}</option>
+                <option value="">
+                  {loadingLocations ? 'Đang tải...' : '-- Chọn Phường/Xã --'}
+                </option>
+                {wards.map(ward => (
+                  <option key={ward.code} value={ward.code}>{ward.name}</option>
                 ))}
               </select>
             </div>
