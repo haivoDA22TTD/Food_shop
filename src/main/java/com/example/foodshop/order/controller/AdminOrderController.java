@@ -78,3 +78,86 @@ public class AdminOrderController {
         }
     }
 }
+
+    
+    /**
+     * Assign shipper to order
+     */
+    @PutMapping("/{orderId}/assign-shipper")
+    public ResponseEntity<?> assignShipperToOrder(@PathVariable Long orderId,
+                                                  @Valid @RequestBody AssignShipperRequest request) {
+        try {
+            log.info("Admin assigning shipper {} to order {}", request.getShipperId(), orderId);
+            OrderResponse order = orderService.assignShipperToOrder(orderId, request);
+            return ResponseEntity.ok(order);
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid shipper assignment: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error assigning shipper to order {}: {}", orderId, e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Unable to assign shipper to order"));
+        }
+    }
+    
+    /**
+     * Unassign shipper from order
+     */
+    @PutMapping("/{orderId}/unassign-shipper")
+    public ResponseEntity<?> unassignShipperFromOrder(@PathVariable Long orderId) {
+        try {
+            log.info("Admin unassigning shipper from order {}", orderId);
+            OrderResponse order = orderService.unassignShipperFromOrder(orderId);
+            return ResponseEntity.ok(order);
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid shipper unassignment: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error unassigning shipper from order {}: {}", orderId, e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Unable to unassign shipper from order"));
+        }
+    }
+    
+    /**
+     * Get orders ready for shipper assignment
+     */
+    @GetMapping("/ready-for-assignment")
+    public ResponseEntity<?> getOrdersReadyForAssignment(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        try {
+            log.info("Admin getting orders ready for assignment");
+            Pageable pageable = PageRequest.of(page, size);
+            Page<OrderResponse> orders = orderService.getOrdersReadyForAssignment(pageable);
+            return ResponseEntity.ok(orders);
+        } catch (Exception e) {
+            log.error("Error getting orders ready for assignment: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Unable to retrieve orders"));
+        }
+    }
+    
+    /**
+     * Get orders by shipper
+     */
+    @GetMapping("/by-shipper/{shipperId}")
+    public ResponseEntity<?> getOrdersByShipper(
+            @PathVariable Long shipperId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) OrderStatus status) {
+        try {
+            log.info("Admin getting orders for shipper {}", shipperId);
+            Pageable pageable = PageRequest.of(page, size);
+            Page<OrderResponse> orders = orderService.getOrdersByShipper(shipperId, pageable, status);
+            return ResponseEntity.ok(orders);
+        } catch (Exception e) {
+            log.error("Error getting orders for shipper {}: {}", shipperId, e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Unable to retrieve orders"));
+        }
+    }
+}

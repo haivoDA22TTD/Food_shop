@@ -61,3 +61,23 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // Find orders by status and created before a specific time (for auto-cancel)
     List<Order> findByStatusAndCreatedAtBefore(OrderStatus status, LocalDateTime createdAt);
 }
+
+    
+    // Find orders by shipper ID
+    Page<Order> findByShipperIdOrderByCreatedAtDesc(Long shipperId, Pageable pageable);
+    
+    // Find orders by shipper ID and status
+    Page<Order> findByShipperIdAndStatusOrderByCreatedAtDesc(Long shipperId, OrderStatus status, Pageable pageable);
+    
+    // Find orders ready for shipper assignment (CONFIRMED, PREPARING, READY_FOR_PICKUP without shipper)
+    @Query("SELECT o FROM Order o WHERE o.shipperId IS NULL AND " +
+           "(o.status = 'CONFIRMED' OR o.status = 'PREPARING' OR o.status = 'READY_FOR_PICKUP') " +
+           "ORDER BY o.createdAt ASC")
+    Page<Order> findOrdersReadyForAssignment(Pageable pageable);
+    
+    // Count orders by shipper ID
+    long countByShipperId(Long shipperId);
+    
+    // Count orders by shipper ID and status
+    long countByShipperIdAndStatus(Long shipperId, OrderStatus status);
+}

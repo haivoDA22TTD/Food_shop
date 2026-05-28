@@ -29,6 +29,15 @@ public class OrderResponse {
     private String username;
     private String userEmail;
     
+    // Shipper information
+    private Long shipperId;
+    private String shipperName;
+    private String shipperPhone;
+    private LocalDateTime assignedAt;
+    private LocalDateTime pickedUpAt;
+    private LocalDateTime deliveredAt;
+    private String deliveryNotes;
+    
     // Constructors
     public OrderResponse() {
     }
@@ -197,5 +206,61 @@ public class OrderResponse {
     
     public void setUserEmail(String userEmail) {
         this.userEmail = userEmail;
+    }
+    
+    public Long getShipperId() {
+        return shipperId;
+    }
+    
+    public void setShipperId(Long shipperId) {
+        this.shipperId = shipperId;
+    }
+    
+    public String getShipperName() {
+        return shipperName;
+    }
+    
+    public void setShipperName(String shipperName) {
+        this.shipperName = shipperName;
+    }
+    
+    public String getShipperPhone() {
+        return shipperPhone;
+    }
+    
+    public void setShipperPhone(String shipperPhone) {
+        this.shipperPhone = shipperPhone;
+    }
+    
+    public LocalDateTime getAssignedAt() {
+        return assignedAt;
+    }
+    
+    public void setAssignedAt(LocalDateTime assignedAt) {
+        this.assignedAt = assignedAt;
+    }
+    
+    public LocalDateTime getPickedUpAt() {
+        return pickedUpAt;
+    }
+    
+    public void setPickedUpAt(LocalDateTime pickedUpAt) {
+        this.pickedUpAt = pickedUpAt;
+    }
+    
+    public LocalDateTime getDeliveredAt() {
+        return deliveredAt;
+    }
+    
+    public void setDeliveredAt(LocalDateTime deliveredAt) {
+        this.deliveredAt = deliveredAt;
+    }
+    
+    public String getDeliveryNotes() {
+        return deliveryNotes;
+    }
+    
+    public void setDeliveryNotes(String deliveryNotes) {
+        this.deliveryNotes = deliveryNotes;
     }
 }

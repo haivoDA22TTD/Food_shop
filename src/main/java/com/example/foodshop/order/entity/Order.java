@@ -53,6 +53,21 @@ public class Order {
     @Column(name = "auto_confirmed")
     private Boolean autoConfirmed = false;
     
+    @Column(name = "shipper_id")
+    private Long shipperId;
+    
+    @Column(name = "assigned_at")
+    private LocalDateTime assignedAt;
+    
+    @Column(name = "picked_up_at")
+    private LocalDateTime pickedUpAt;
+    
+    @Column(name = "delivered_at")
+    private LocalDateTime deliveredAt;
+    
+    @Column(name = "delivery_notes", columnDefinition = "TEXT")
+    private String deliveryNotes;
+    
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonManagedReference
     private List<OrderItem> orderItems = new ArrayList<>();
@@ -172,6 +187,46 @@ public class Order {
         this.autoConfirmed = autoConfirmed;
     }
     
+    public Long getShipperId() {
+        return shipperId;
+    }
+    
+    public void setShipperId(Long shipperId) {
+        this.shipperId = shipperId;
+    }
+    
+    public LocalDateTime getAssignedAt() {
+        return assignedAt;
+    }
+    
+    public void setAssignedAt(LocalDateTime assignedAt) {
+        this.assignedAt = assignedAt;
+    }
+    
+    public LocalDateTime getPickedUpAt() {
+        return pickedUpAt;
+    }
+    
+    public void setPickedUpAt(LocalDateTime pickedUpAt) {
+        this.pickedUpAt = pickedUpAt;
+    }
+    
+    public LocalDateTime getDeliveredAt() {
+        return deliveredAt;
+    }
+    
+    public void setDeliveredAt(LocalDateTime deliveredAt) {
+        this.deliveredAt = deliveredAt;
+    }
+    
+    public String getDeliveryNotes() {
+        return deliveryNotes;
+    }
+    
+    public void setDeliveryNotes(String deliveryNotes) {
+        this.deliveryNotes = deliveryNotes;
+    }
+    
     public List<OrderItem> getOrderItems() {
         return orderItems;
     }
@@ -239,5 +294,16 @@ public class Order {
     
     public boolean canBeUpdated() {
         return status == OrderStatus.PENDING;
+    }
+    
+    public boolean canBeAssignedToShipper() {
+        return (status == OrderStatus.CONFIRMED || 
+                status == OrderStatus.PREPARING || 
+                status == OrderStatus.READY_FOR_PICKUP) && 
+                shipperId == null;
+    }
+    
+    public boolean isAssignedToShipper() {
+        return shipperId != null;
     }
 }

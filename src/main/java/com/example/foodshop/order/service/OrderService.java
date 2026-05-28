@@ -52,6 +52,9 @@ public class OrderService {
     @Autowired
     private OrderAutomationService orderAutomationService;
     
+    @Autowired
+    private com.example.foodshop.order.repository.ShipperRepository shipperRepository;
+    
     public OrderResponse createOrderFromCart(Long userId, CreateOrderRequest request, String authToken) {
         try {
             // Get user's cart
@@ -432,6 +435,13 @@ public class OrderService {
             response.setUserEmail(null);
         }
         
+        // Add shipper information
+        response.setShipperId(order.getShipperId());
+        response.setAssignedAt(order.getAssignedAt());
+        response.setPickedUpAt(order.getPickedUpAt());
+        response.setDeliveredAt(order.getDeliveredAt());
+        response.setDeliveryNotes(order.getDeliveryNotes());
+        
         return response;
     }
     
@@ -445,5 +455,232 @@ public class OrderService {
                 orderItem.getQuantity(),
                 orderItem.getSubtotal()
         );
+    }
+}
+
+    
+    /**
+     * Assign shipper to order
+     */
+    @Transactional
+    public OrderResponse assignShipperToOrder(Long orderId, AssignShipperRequest request) {
+        log.info("Assigning shipper {} to order {}", request.getShipperId(), orderId);
+        
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        
+        // Check if order can be assigned to shipper
+        if (!order.canBeAssignedToShipper()) {
+            throw new IllegalArgumentException(
+                "Order cannot be assigned to shipper. Current status: " + order.getStatus() + 
+                ", Already assigned: " + order.isAssignedToShipper());
+        }
+        
+        // Assign shipper
+        order.setShipperId(request.getShipperId());
+        order.setAssignedAt(LocalDateTime.now());
+        if (request.getNotes() != null && !request.getNotes().trim().isEmpty()) {
+            order.setDeliveryNotes(request.getNotes());
+        }
+        
+        Order updatedOrder = orderRepository.save(order);
+        log.info("Shipper assigned successfully to order {}", orderId);
+        
+        return convertToOrderResponse(updatedOrder);
+    }
+    
+    /**
+     * Unassign shipper from order
+     */
+    @Transactional
+    public OrderResponse unassignShipperFromOrder(Long orderId) {
+        log.info("Unassigning shipper from order {}", orderId);
+        
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        
+        if (order.getShipperId() == null) {
+            throw new IllegalArgumentException("Order is not assigned to any shipper");
+        }
+        
+        // Only allow unassignment if order is not yet delivered
+        if (order.getStatus() == OrderStatus.DELIVERED) {
+            throw new IllegalArgumentException("Cannot unassign shipper from delivered order");
+        }
+        
+        order.setShipperId(null);
+        order.setAssignedAt(null);
+        order.setPickedUpAt(null);
+        order.setDeliveryNotes(null);
+        
+        Order updatedOrder = orderRepository.save(order);
+        log.info("Shipper unassigned successfully from order {}", orderId);
+        
+        return convertToOrderResponse(updatedOrder);
+    }
+    
+    /**
+     * Mark order as picked up by shipper
+     */
+    @Transactional
+    public OrderResponse markOrderAsPickedUp(Long orderId) {
+        log.info("Marking order {} as picked up", orderId);
+        
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        
+        if (order.getShipperId() == null) {
+            throw new IllegalArgumentException("Order is not assigned to any shipper");
+        }
+        
+        if (order.getStatus() != OrderStatus.READY_FOR_PICKUP) {
+            throw new IllegalArgumentException("Order must be in READY_FOR_PICKUP status");
+        }
+        
+        order.setPickedUpAt(LocalDateTime.now());
+        
+        Order updatedOrder = orderRepository.save(order);
+        log.info("Order {} marked as picked up", orderId);
+        
+        return convertToOrderResponse(updatedOrder);
+    }
+    
+    /**
+     * Get orders assigned to a specific shipper
+     */
+    public Page<OrderResponse> getOrdersByShipper(Long shipperId, Pageable pageable, OrderStatus status) {
+        log.info("Getting orders for shipper {} - status: {}", shipperId, status);
+        
+        Page<Order> orders;
+        if (status != null) {
+            orders = orderRepository.findByShipperIdAndStatusOrderByCreatedAtDesc(shipperId, status, pageable);
+        } else {
+            orders = orderRepository.findByShipperIdOrderByCreatedAtDesc(shipperId, pageable);
+        }
+        
+        return orders.map(this::convertToOrderResponse);
+    }
+    
+    /**
+     * Get orders ready for assignment (CONFIRMED, PREPARING, READY_FOR_PICKUP without shipper)
+     */
+    public Page<OrderResponse> getOrdersReadyForAssignment(Pageable pageable) {
+        log.info("Getting orders ready for shipper assignment");
+        
+        Page<Order> orders = orderRepository.findOrdersReadyForAssignment(pageable);
+        return orders.map(this::convertToOrderResponse);
+    }
+}
+
+    
+    /**
+     * Get order by ID for shipper (verify ownership)
+     */
+    public OrderResponse getOrderByIdForShipper(Long orderId, Long shipperId) {
+        log.info("Getting order {} for shipper {}", orderId, shipperId);
+        
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        
+        if (!shipperId.equals(order.getShipperId())) {
+            throw new IllegalArgumentException("Order is not assigned to this shipper");
+        }
+        
+        return convertToOrderResponse(order);
+    }
+    
+    /**
+     * Mark order as picked up by shipper
+     */
+    @Transactional
+    public OrderResponse markOrderAsPickedUpByShipper(Long orderId, Long shipperId) {
+        log.info("Shipper {} marking order {} as picked up", shipperId, orderId);
+        
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        
+        // Verify shipper
+        if (!shipperId.equals(order.getShipperId())) {
+            throw new IllegalArgumentException("Order is not assigned to this shipper");
+        }
+        
+        // Verify status
+        if (order.getStatus() != OrderStatus.READY_FOR_PICKUP) {
+            throw new IllegalArgumentException("Order must be in READY_FOR_PICKUP status");
+        }
+        
+        order.setPickedUpAt(LocalDateTime.now());
+        Order updatedOrder = orderRepository.save(order);
+        
+        log.info("Order {} marked as picked up", orderId);
+        return convertToOrderResponse(updatedOrder);
+    }
+    
+    /**
+     * Mark order as delivered by shipper
+     */
+    @Transactional
+    public OrderResponse markOrderAsDeliveredByShipper(Long orderId, Long shipperId, String notes) {
+        log.info("Shipper {} marking order {} as delivered", shipperId, orderId);
+        
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        
+        // Verify shipper
+        if (!shipperId.equals(order.getShipperId())) {
+            throw new IllegalArgumentException("Order is not assigned to this shipper");
+        }
+        
+        // Verify status
+        if (order.getStatus() != OrderStatus.READY_FOR_PICKUP) {
+            throw new IllegalArgumentException("Order must be in READY_FOR_PICKUP status");
+        }
+        
+        // Update order
+        order.setStatus(OrderStatus.DELIVERED);
+        order.setDeliveredAt(LocalDateTime.now());
+        if (notes != null && !notes.trim().isEmpty()) {
+            order.setDeliveryNotes(notes);
+        }
+        
+        Order updatedOrder = orderRepository.save(order);
+        
+        // Update shipper statistics
+        try {
+            com.example.foodshop.order.entity.Shipper shipper = 
+                shipperRepository.findById(shipperId).orElse(null);
+            if (shipper != null) {
+                shipper.incrementSuccessfulDeliveries();
+                shipper.setStatus(com.example.foodshop.order.entity.ShipperStatus.AVAILABLE);
+                shipperRepository.save(shipper);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to update shipper statistics: {}", e.getMessage());
+        }
+        
+        log.info("Order {} marked as delivered", orderId);
+        return convertToOrderResponse(updatedOrder);
+    }
+    
+    /**
+     * Add delivery notes by shipper
+     */
+    @Transactional
+    public OrderResponse addDeliveryNotesByShipper(Long orderId, Long shipperId, String notes) {
+        log.info("Shipper {} adding notes to order {}", shipperId, orderId);
+        
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        
+        // Verify shipper
+        if (!shipperId.equals(order.getShipperId())) {
+            throw new IllegalArgumentException("Order is not assigned to this shipper");
+        }
+        
+        order.setDeliveryNotes(notes);
+        Order updatedOrder = orderRepository.save(order);
+        
+        log.info("Delivery notes added to order {}", orderId);
+        return convertToOrderResponse(updatedOrder);
     }
 }
