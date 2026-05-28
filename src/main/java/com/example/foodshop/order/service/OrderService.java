@@ -49,6 +49,9 @@ public class OrderService {
     @Autowired
     private com.example.foodshop.order.client.IdentityServiceClient identityServiceClient;
     
+    @Autowired
+    private OrderAutomationService orderAutomationService;
+    
     public OrderResponse createOrderFromCart(Long userId, CreateOrderRequest request, String authToken) {
         try {
             // Get user's cart
@@ -69,7 +72,7 @@ public class OrderService {
             order.setPhoneNumber(request.getPhoneNumber());
             order.setNotes(request.getNotes());
             order.setPaymentMethod(request.getPaymentMethod());
-            order.setStatus(OrderStatus.CONFIRMED); // Auto-approve orders
+            order.setStatus(OrderStatus.PENDING); // Start with PENDING status
             
             // Create order items from cart items
             BigDecimal totalAmount = BigDecimal.ZERO;
@@ -90,8 +93,15 @@ public class OrderService {
             
             order.setTotalAmount(totalAmount);
             
-            // Save order
+            // Save order first
             order = orderRepository.save(order);
+            
+            // Try to auto-confirm the order
+            orderAutomationService.autoConfirmOrder(order);
+            
+            // Reload order to get updated status
+            order = orderRepository.findById(order.getId())
+                .orElseThrow(() -> new RuntimeException("Order not found after creation"));
             
             // Create payment record
             try {
@@ -365,6 +375,8 @@ public class OrderService {
         response.setPhoneNumber(order.getPhoneNumber());
         response.setNotes(order.getNotes());
         response.setPaymentMethod(order.getPaymentMethod());
+        response.setAutoConfirmed(order.getAutoConfirmed());
+        response.setCancellationReason(order.getCancellationReason());
         response.setOrderItems(orderItemResponses);
         response.setCreatedAt(order.getCreatedAt());
         response.setUpdatedAt(order.getUpdatedAt());

@@ -57,4 +57,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // Find recent orders for user
     @Query("SELECT o FROM Order o WHERE o.userId = :userId ORDER BY o.createdAt DESC")
     List<Order> findRecentOrdersByUserId(@Param("userId") Long userId, Pageable pageable);
+    
+    // Find orders by status and created before a specific time (for auto-cancel)
+    List<Order> findByStatusAndCreatedAtBefore(OrderStatus status, LocalDateTime createdAt);
 }

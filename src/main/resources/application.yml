@@ -65,6 +65,15 @@ app:
   order:
     auto-cancel-minutes: 30 # Auto-cancel unpaid orders
     page-size: 20
+    automation:
+      auto-confirm-enabled: true
+      auto-cancel-enabled: true
+      auto-cancel-minutes: 30
+      min-order-amount: 0
+      max-order-amount: 10000000 # 10 million VND
+      business-hours-start: 6
+      business-hours-end: 22
+      auto-confirm-only-in-business-hours: false
   product-service:
     url: ${PRODUCT_SERVICE_URL:http://localhost:8082}
 

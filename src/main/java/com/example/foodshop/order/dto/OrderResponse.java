@@ -18,6 +18,8 @@ public class OrderResponse {
     private String notes;
     private String paymentMethod;
     private String paymentNumber;
+    private Boolean autoConfirmed;
+    private String cancellationReason;
     private List<OrderItemResponse> orderItems;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -131,6 +133,22 @@ public class OrderResponse {
     
     public void setPaymentNumber(String paymentNumber) {
         this.paymentNumber = paymentNumber;
+    }
+    
+    public Boolean getAutoConfirmed() {
+        return autoConfirmed;
+    }
+    
+    public void setAutoConfirmed(Boolean autoConfirmed) {
+        this.autoConfirmed = autoConfirmed;
+    }
+    
+    public String getCancellationReason() {
+        return cancellationReason;
+    }
+    
+    public void setCancellationReason(String cancellationReason) {
+        this.cancellationReason = cancellationReason;
     }
     
     public List<OrderItemResponse> getOrderItems() {

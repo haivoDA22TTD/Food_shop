@@ -47,6 +47,12 @@ public class Order {
     @Column(name = "payment_method", length = 20)
     private String paymentMethod = "COD";
     
+    @Column(name = "cancellation_reason", columnDefinition = "TEXT")
+    private String cancellationReason;
+    
+    @Column(name = "auto_confirmed")
+    private Boolean autoConfirmed = false;
+    
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonManagedReference
     private List<OrderItem> orderItems = new ArrayList<>();
@@ -148,6 +154,22 @@ public class Order {
     
     public void setPaymentMethod(String paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+    
+    public String getCancellationReason() {
+        return cancellationReason;
+    }
+    
+    public void setCancellationReason(String cancellationReason) {
+        this.cancellationReason = cancellationReason;
+    }
+    
+    public Boolean getAutoConfirmed() {
+        return autoConfirmed;
+    }
+    
+    public void setAutoConfirmed(Boolean autoConfirmed) {
+        this.autoConfirmed = autoConfirmed;
     }
     
     public List<OrderItem> getOrderItems() {
