@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
+
 public class CreateOrderRequest {
     
     @NotBlank(message = "Shipping address is required")
@@ -19,6 +21,12 @@ public class CreateOrderRequest {
     
     private String paymentMethod = "COD"; // Default to COD
     
+    /**
+     * List of product IDs to checkout
+     * If null or empty, all items in cart will be checked out (backward compatible)
+     */
+    private List<Long> selectedProductIds;
+    
     // Constructors
     public CreateOrderRequest() {
     }
@@ -28,6 +36,15 @@ public class CreateOrderRequest {
         this.phoneNumber = phoneNumber;
         this.notes = notes;
         this.paymentMethod = paymentMethod;
+    }
+    
+    public CreateOrderRequest(String shippingAddress, String phoneNumber, String notes, 
+                            String paymentMethod, List<Long> selectedProductIds) {
+        this.shippingAddress = shippingAddress;
+        this.phoneNumber = phoneNumber;
+        this.notes = notes;
+        this.paymentMethod = paymentMethod;
+        this.selectedProductIds = selectedProductIds;
     }
     
     // Getters and Setters
@@ -61,5 +78,13 @@ public class CreateOrderRequest {
     
     public void setPaymentMethod(String paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+    
+    public List<Long> getSelectedProductIds() {
+        return selectedProductIds;
+    }
+    
+    public void setSelectedProductIds(List<Long> selectedProductIds) {
+        this.selectedProductIds = selectedProductIds;
     }
 }

@@ -62,8 +62,28 @@ public class OrderService {
             
             Cart cart = cartOpt.get();
             
-            // Validate all cart items
-            validateCartItems(cart);
+            // Determine which items to checkout
+            List<com.example.foodshop.order.entity.CartItem> itemsToCheckout;
+            if (request.getSelectedProductIds() != null && !request.getSelectedProductIds().isEmpty()) {
+                // Checkout only selected items
+                itemsToCheckout = cart.getCartItems().stream()
+                    .filter(item -> request.getSelectedProductIds().contains(item.getProductId()))
+                    .collect(Collectors.toList());
+                
+                if (itemsToCheckout.isEmpty()) {
+                    throw new IllegalArgumentException("No valid items selected for checkout");
+                }
+                
+                log.info("Checking out {} selected items out of {} total items in cart", 
+                        itemsToCheckout.size(), cart.getCartItems().size());
+            } else {
+                // Checkout all items (backward compatible)
+                itemsToCheckout = new ArrayList<>(cart.getCartItems());
+                log.info("Checking out all {} items in cart", itemsToCheckout.size());
+            }
+            
+            // Validate all items to checkout
+            validateCartItems(itemsToCheckout);
             
             // Create order
             Order order = new Order();
@@ -74,9 +94,9 @@ public class OrderService {
             order.setPaymentMethod(request.getPaymentMethod());
             order.setStatus(OrderStatus.PENDING); // Start with PENDING status
             
-            // Create order items from cart items
+            // Create order items from selected cart items
             BigDecimal totalAmount = BigDecimal.ZERO;
-            for (var cartItem : cart.getCartItems()) {
+            for (var cartItem : itemsToCheckout) {
                 var productDetails = productValidationService.getProductDetails(cartItem.getProductId());
                 
                 OrderItem orderItem = new OrderItem(
@@ -127,7 +147,21 @@ public class OrderService {
             }
             
             // Clear cart after successful order creation
-            cartService.clearCart(userId);
+            if (request.getSelectedProductIds() != null && !request.getSelectedProductIds().isEmpty()) {
+                // Remove only selected items from cart
+                for (Long productId : request.getSelectedProductIds()) {
+                    try {
+                        cartService.removeFromCart(userId, productId);
+                    } catch (Exception e) {
+                        log.warn("Failed to remove item {} from cart: {}", productId, e.getMessage());
+                    }
+                }
+                log.info("Removed {} selected items from cart", request.getSelectedProductIds().size());
+            } else {
+                // Clear entire cart (backward compatible)
+                cartService.clearCart(userId);
+                log.info("Cleared entire cart");
+            }
             
             log.info("Created order {} for user {} with total amount {}", 
                     order.getOrderNumber(), userId, totalAmount);
@@ -350,14 +384,18 @@ public class OrderService {
     
     // Helper methods
     
-    private void validateCartItems(Cart cart) {
-        for (var cartItem : cart.getCartItems()) {
+    private void validateCartItems(List<com.example.foodshop.order.entity.CartItem> cartItems) {
+        for (var cartItem : cartItems) {
             if (!productValidationService.isProductAvailable(cartItem.getProductId(), cartItem.getQuantity())) {
                 var productDetails = productValidationService.getProductDetails(cartItem.getProductId());
                 String productName = productDetails != null ? productDetails.getName() : "Product #" + cartItem.getProductId();
                 throw new IllegalArgumentException("Insufficient stock for product: " + productName);
             }
         }
+    }
+    
+    private void validateCartItems(Cart cart) {
+        validateCartItems(cart.getCartItems());
     }
     
     private OrderResponse convertToOrderResponse(Order order) {
