@@ -14,6 +14,8 @@ interface Order {
   totalAmount: number
   shippingAddress: string
   phoneNumber: string
+  autoConfirmed?: boolean
+  cancellationReason?: string
   createdAt: string
 }
 
@@ -140,6 +142,11 @@ export default function AdminOrders() {
                 <div>
                   <p className="text-sm text-gray-600">Mã đơn hàng</p>
                   <p className="font-bold">{order.orderNumber}</p>
+                  {order.autoConfirmed && (
+                    <p className="text-green-600 text-xs mt-1 flex items-center gap-1">
+                      <span>🤖</span> Tự động xác nhận
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Khách hàng</p>
@@ -167,6 +174,15 @@ export default function AdminOrders() {
                 <p className="text-sm text-gray-600 mb-2">Địa chỉ giao hàng</p>
                 <p className="text-sm">{order.shippingAddress}</p>
               </div>
+
+              {order.cancellationReason && (
+                <div className="mt-4 pt-4 border-t">
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <p className="text-sm text-gray-600 mb-1">Lý do hủy</p>
+                    <p className="text-sm text-red-800">{order.cancellationReason}</p>
+                  </div>
+                </div>
+              )}
 
               <div className="mt-4 pt-4 border-t">
                 <div className="flex items-center justify-between">

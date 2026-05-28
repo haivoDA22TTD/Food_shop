@@ -11,6 +11,8 @@ interface Order {
   totalAmount: number
   paymentMethod: string
   paymentNumber?: string
+  autoConfirmed?: boolean
+  cancellationReason?: string
   createdAt: string
   orderItems: Array<{
     productName: string
@@ -116,11 +118,24 @@ export default function Orders() {
                   <p className="text-gray-600 text-sm">
                     {new Date(order.createdAt).toLocaleString('vi-VN')}
                   </p>
+                  {order.autoConfirmed && (
+                    <p className="text-green-600 text-xs mt-1 flex items-center gap-1">
+                      <span>✓</span> Đã tự động xác nhận
+                    </p>
+                  )}
                 </div>
                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>
                   {statusLabels[order.status] || order.status}
                 </span>
               </div>
+
+              {order.cancellationReason && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                  <p className="text-red-800 text-sm">
+                    <strong>Lý do hủy:</strong> {order.cancellationReason}
+                  </p>
+                </div>
+              )}
 
               <div className="border-t pt-4 mb-4">
                 {order.orderItems.map((item, idx) => (
