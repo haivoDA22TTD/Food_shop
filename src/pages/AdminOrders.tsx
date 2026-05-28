@@ -16,7 +16,24 @@ interface Order {
   phoneNumber: string
   autoConfirmed?: boolean
   cancellationReason?: string
+  shipperId?: number
+  shipperName?: string
+  shipperPhone?: string
+  assignedAt?: string
+  pickedUpAt?: string
+  deliveredAt?: string
+  deliveryNotes?: string
   createdAt: string
+}
+
+interface Shipper {
+  id: number
+  name: string
+  phone: string
+  status: string
+  rating: number
+  totalDeliveries: number
+  successRate: number
 }
 
 const statusOptions = [
@@ -60,6 +77,13 @@ export default function AdminOrders() {
   const [currentPage, setCurrentPage] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [totalOrders, setTotalOrders] = useState(0)
+  
+  // Shipper assignment states
+  const [showAssignModal, setShowAssignModal] = useState(false)
+  const [selectedOrderForAssign, setSelectedOrderForAssign] = useState<Order | null>(null)
+  const [availableShippers, setAvailableShippers] = useState<Shipper[]>([])
+  const [loadingShippers, setLoadingShippers] = useState(false)
+  const [assignNotes, setAssignNotes] = useState('')
 
   useEffect(() => {
     if (user?.role === 'ADMIN') {
@@ -104,6 +128,55 @@ export default function AdminOrders() {
       setUpdatingOrder(null)
     }
   }
+
+  const openAssignModal = async (order: Order) => {
+    setSelectedOrderForAssign(order)
+    setShowAssignModal(true)
+    setLoadingShippers(true)
+    try {
+      const response = await axios.get('/api/admin/shippers/available')
+      setAvailableShippers(response.data)
+    } catch (err: any) {
+      alert('Không thể tải danh sách shipper')
+    } finally {
+      setLoadingShippers(false)
+    }
+  }
+
+  const handleAssignShipper = async (shipperId: number) => {
+    if (!selectedOrderForAssign) return
+    setUpdatingOrder(selectedOrderForAssign.id)
+    try {
+      await axios.put(`/api/admin/orders/${selectedOrderForAssign.id}/assign-shipper`, {
+        shipperId,
+        notes: assignNotes || undefined
+      })
+      alert('Đã phân công shipper thành công!')
+      setShowAssignModal(false)
+      setSelectedOrderForAssign(null)
+      setAssignNotes('')
+      await loadOrders()
+    } catch (err: any) {
+      alert(err?.response?.data?.error || 'Không thể phân công shipper')
+    } finally {
+      setUpdatingOrder(null)
+    }
+  }
+
+  const handleUnassignShipper = async (orderId: number) => {
+    if (!confirm('Bạn có chắc muốn hủy phân công shipper?')) return
+    setUpdatingOrder(orderId)
+    try {
+      await axios.put(`/api/admin/orders/${orderId}/unassign-shipper`)
+      alert('Đã hủy phân công shipper!')
+      await loadOrders()
+    } catch (err: any) {
+      alert(err?.response?.data?.error || 'Không thể hủy phân công')
+    } finally {
+      setUpdatingOrder(null)
+    }
+  }
+
 
   if (!user || user.role !== 'ADMIN') {
     return <Navigate to="/" />
@@ -175,6 +248,64 @@ export default function AdminOrders() {
                 <p className="text-sm">{order.shippingAddress}</p>
               </div>
 
+              {/* Shipper Information */}
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-sm text-gray-600 mb-2">Shipper</p>
+                {order.shipperId ? (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-blue-900">{order.shipperName || 'N/A'}</p>
+                        <p className="text-sm text-blue-700">{order.shipperPhone || 'N/A'}</p>
+                        {order.assignedAt && (
+                          <p className="text-xs text-blue-600 mt-1">
+                            Phân công: {new Date(order.assignedAt).toLocaleString('vi-VN')}
+                          </p>
+                        )}
+                        {order.pickedUpAt && (
+                          <p className="text-xs text-green-600 mt-1">
+                            ✓ Đã lấy hàng: {new Date(order.pickedUpAt).toLocaleString('vi-VN')}
+                          </p>
+                        )}
+                        {order.deliveredAt && (
+                          <p className="text-xs text-green-600 mt-1">
+                            ✓ Đã giao: {new Date(order.deliveredAt).toLocaleString('vi-VN')}
+                          </p>
+                        )}
+                        {order.deliveryNotes && (
+                          <p className="text-xs text-gray-600 mt-1">
+                            Ghi chú: {order.deliveryNotes}
+                          </p>
+                        )}
+                      </div>
+                      {order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && (
+                        <button
+                          onClick={() => handleUnassignShipper(order.id)}
+                          disabled={updatingOrder === order.id}
+                          className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 disabled:opacity-50"
+                        >
+                          Hủy phân công
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    {(order.status === 'CONFIRMED' || order.status === 'PREPARING' || order.status === 'READY_FOR_PICKUP') ? (
+                      <button
+                        onClick={() => openAssignModal(order)}
+                        disabled={updatingOrder === order.id}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        🚚 Phân công shipper
+                      </button>
+                    ) : (
+                      <p className="text-sm text-gray-500">Chưa phân công shipper</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {order.cancellationReason && (
                 <div className="mt-4 pt-4 border-t">
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3">
@@ -223,8 +354,7 @@ export default function AdminOrders() {
 
       {/* Pagination */}
       {!loading && orders.length > 0 && totalPages > 1 && (
-        <div className="mt-8 flex items-center justify-between">
-          <p className="text-sm text-gray-600">
+        <div className="mt-8 flex items-center justify-between">          <p className="text-sm text-gray-600">
             Trang {currentPage + 1} / {totalPages} • Tổng {totalOrders} đơn hàng
           </p>
           <div className="flex gap-2">
@@ -242,6 +372,95 @@ export default function AdminOrders() {
             >
               Sau →
             </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+
+      {/* Assign Shipper Modal */}
+      {showAssignModal && selectedOrderForAssign && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold mb-4">Phân Công Shipper</h2>
+            <p className="text-gray-600 mb-4">
+              Đơn hàng: <span className="font-bold">{selectedOrderForAssign.orderNumber}</span>
+            </p>
+
+            {loadingShippers ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p className="mt-2 text-gray-600">Đang tải danh sách shipper...</p>
+              </div>
+            ) : availableShippers.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-600">Không có shipper nào sẵn sàng</p>
+              </div>
+            ) : (
+              <>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ghi chú (optional)
+                  </label>
+                  <textarea
+                    value={assignNotes}
+                    onChange={(e) => setAssignNotes(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    rows={2}
+                    placeholder="Ví dụ: Giao trước 5pm, gọi trước khi đến..."
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <p className="font-medium text-gray-700">Chọn shipper:</p>
+                  {availableShippers.map((shipper) => (
+                    <div
+                      key={shipper.id}
+                      className="border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-all"
+                      onClick={() => handleAssignShipper(shipper.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-gray-900">{shipper.name}</p>
+                          <p className="text-sm text-gray-600">{shipper.phone}</p>
+                          <div className="flex items-center gap-4 mt-2">
+                            <span className="text-xs text-gray-500">
+                              {shipper.totalDeliveries} đơn
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {shipper.successRate.toFixed(1)}% thành công
+                            </span>
+                            <span className="text-xs text-yellow-600">
+                              ⭐ {shipper.rating.toFixed(1)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
+                            {shipper.status}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => {
+                  setShowAssignModal(false)
+                  setSelectedOrderForAssign(null)
+                  setAssignNotes('')
+                }}
+                className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Hủy
+              </button>
+            </div>
           </div>
         </div>
       )}

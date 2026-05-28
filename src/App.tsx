@@ -12,6 +12,9 @@ import Profile from './pages/Profile'
 import OAuth2Redirect from './pages/OAuth2Redirect'
 import AdminProducts from './pages/AdminProducts'
 import AdminOrders from './pages/AdminOrders'
+import AdminShippers from './pages/AdminShippers'
+import ShipperLogin from './pages/ShipperLogin'
+import ShipperDashboard from './pages/ShipperDashboard'
 import Chatbot from './components/Chatbot'
 
 function App() {
@@ -31,7 +34,11 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="admin/products" element={<AdminProducts />} />
           <Route path="admin/orders" element={<AdminOrders />} />
+          <Route path="admin/shippers" element={<AdminShippers />} />
         </Route>
+        {/* Shipper Routes (No Layout) */}
+        <Route path="shipper/login" element={<ShipperLogin />} />
+        <Route path="shipper/dashboard" element={<ShipperDashboard />} />
       </Routes>
       <Chatbot />
     </BrowserRouter>

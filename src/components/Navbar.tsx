@@ -60,6 +60,9 @@ export default function Navbar() {
                     <Link to="/admin/orders" className="text-gray-700 hover:text-primary-600 transition-colors">
                       Quản lý ĐH
                     </Link>
+                    <Link to="/admin/shippers" className="text-gray-700 hover:text-primary-600 transition-colors">
+                      Quản lý Shipper
+                    </Link>
                   </>
                 )}
                 <Link to="/profile" className="text-gray-700 hover:text-primary-600 transition-colors">
