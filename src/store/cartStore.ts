@@ -21,6 +21,9 @@ interface CartState {
   loading: boolean
   error: string | null
   
+  // Selected items for checkout
+  selectedItems: number[] // Array of productIds
+  
   // Actions
   fetchCart: () => Promise<void>
   addToCart: (productId: number, quantity: number, productData?: any) => Promise<void>
@@ -28,6 +31,13 @@ interface CartState {
   removeFromCart: (productId: number) => Promise<void>
   clearCart: () => void
   syncCartWithServer: () => Promise<void>
+  
+  // Selection actions
+  toggleSelectItem: (productId: number) => void
+  selectAllItems: () => void
+  deselectAllItems: () => void
+  getSelectedTotal: () => number
+  getSelectedCount: () => number
 }
 
 export const useCartStore = create<CartState>()(
@@ -38,17 +48,21 @@ export const useCartStore = create<CartState>()(
       totalAmount: 0,
       loading: false,
       error: null,
+      selectedItems: [], // Initialize empty selection
 
       fetchCart: async () => {
         set({ loading: true, error: null })
         try {
           const response = await axios.get('/api/orders/cart')
           const cart = response.data
+          const items = cart.cartItems || []
           set({
-            items: cart.cartItems || [],
+            items,
             totalItems: cart.totalItems || 0,
             totalAmount: cart.totalAmount || 0,
             loading: false,
+            // Auto-select all items when fetching cart
+            selectedItems: items.map((item: CartItem) => item.productId),
           })
         } catch (error: any) {
           // If not authenticated, use local cart
@@ -105,6 +119,8 @@ export const useCartStore = create<CartState>()(
             totalItems,
             totalAmount,
             loading: false,
+            // Auto-select newly added item
+            selectedItems: [...get().selectedItems, productId],
           })
           return
         }
@@ -162,12 +178,14 @@ export const useCartStore = create<CartState>()(
             totalItems,
             totalAmount,
             loading: false,
+            // Remove from selection
+            selectedItems: get().selectedItems.filter(id => id !== productId),
           })
         }
       },
 
       clearCart: () => {
-        set({ items: [], totalItems: 0, totalAmount: 0 })
+        set({ items: [], totalItems: 0, totalAmount: 0, selectedItems: [] })
       },
 
       syncCartWithServer: async () => {
@@ -195,6 +213,36 @@ export const useCartStore = create<CartState>()(
         } catch (error) {
           console.error('Failed to sync cart:', error)
         }
+      },
+      
+      // Selection actions
+      toggleSelectItem: (productId: number) => {
+        const currentSelected = get().selectedItems
+        if (currentSelected.includes(productId)) {
+          set({ selectedItems: currentSelected.filter(id => id !== productId) })
+        } else {
+          set({ selectedItems: [...currentSelected, productId] })
+        }
+      },
+      
+      selectAllItems: () => {
+        const allProductIds = get().items.map(item => item.productId)
+        set({ selectedItems: allProductIds })
+      },
+      
+      deselectAllItems: () => {
+        set({ selectedItems: [] })
+      },
+      
+      getSelectedTotal: () => {
+        const { items, selectedItems } = get()
+        return items
+          .filter(item => selectedItems.includes(item.productId))
+          .reduce((sum, item) => sum + item.subtotal, 0)
+      },
+      
+      getSelectedCount: () => {
+        return get().selectedItems.length
       },
     }),
     {

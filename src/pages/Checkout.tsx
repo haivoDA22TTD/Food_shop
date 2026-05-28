@@ -8,10 +8,14 @@ import { useAuthStore } from '../store/authStore'
 export default function Checkout() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
-  const { items, totalAmount, clearCart, syncCartWithServer } = useCartStore()
+  const { items, clearCart, syncCartWithServer } = useCartStore()
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState('')
+  
+  // Selected items for checkout
+  const [checkoutItems, setCheckoutItems] = useState<typeof items>([])
+  const [checkoutTotal, setCheckoutTotal] = useState(0)
   
   const [formData, setFormData] = useState({
     city: '',
@@ -42,6 +46,29 @@ export default function Checkout() {
     }
     loadProvinces()
   }, [])
+  
+  // Load selected items from localStorage
+  useEffect(() => {
+    const selectedIds = JSON.parse(localStorage.getItem('selectedItems') || '[]')
+    if (selectedIds.length === 0) {
+      // If no selection, use all items (backward compatible)
+      setCheckoutItems(items)
+    } else {
+      // Filter only selected items
+      const selected = items.filter(item => selectedIds.includes(item.productId))
+      setCheckoutItems(selected)
+    }
+    
+    // Calculate total
+    const total = checkoutItems.reduce((sum, item) => sum + item.subtotal, 0)
+    setCheckoutTotal(total)
+  }, [items])
+  
+  // Recalculate total when checkoutItems change
+  useEffect(() => {
+    const total = checkoutItems.reduce((sum, item) => sum + item.subtotal, 0)
+    setCheckoutTotal(total)
+  }, [checkoutItems])
 
   // Load districts when province changes
   useEffect(() => {
@@ -126,6 +153,12 @@ export default function Checkout() {
       setError('Số điện thoại không hợp lệ (10-15 số)')
       return
     }
+    
+    // Validate checkout items
+    if (checkoutItems.length === 0) {
+      setError('Không có sản phẩm nào để thanh toán')
+      return
+    }
 
     setLoading(true)
     setError('')
@@ -138,13 +171,23 @@ export default function Checkout() {
       
       const fullAddress = `${formData.street}, ${wardName}, ${districtName}, ${provinceName}`
       
+      // Get selected product IDs
+      const selectedProductIds = checkoutItems.map(item => item.productId)
+      
       const response = await axios.post('/api/orders', {
         shippingAddress: fullAddress,
         phoneNumber: formData.phoneNumber,
         notes: formData.notes,
         paymentMethod: formData.paymentMethod,
+        selectedProductIds: selectedProductIds, // Send selected items
       })
-      clearCart()
+      
+      // Clear selected items from localStorage
+      localStorage.removeItem('selectedItems')
+      
+      // Note: Backend will remove only selected items from cart
+      // No need to clear entire cart here
+      
       alert(`Đặt hàng thành công! Mã đơn hàng: ${response.data.orderNumber}`)
       navigate('/orders')
     } catch (err: any) {
@@ -160,7 +203,7 @@ export default function Checkout() {
     }
   }
 
-  if (items.length === 0) {
+  if (checkoutItems.length === 0 && !syncing) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center">
@@ -177,6 +220,16 @@ export default function Checkout() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h1 className="text-4xl font-bold mb-8">Thanh toán</h1>
+      
+      {checkoutItems.length < items.length && (
+        <div className="bg-blue-100 border border-blue-300 text-blue-700 px-4 py-3 rounded mb-6">
+          <p className="font-medium">📦 Thanh toán một phần</p>
+          <p className="text-sm">
+            Bạn đang thanh toán {checkoutItems.length} trong {items.length} sản phẩm. 
+            Các sản phẩm còn lại vẫn được giữ trong giỏ hàng.
+          </p>
+        </div>
+      )}
       
       {syncing && (
         <div className="bg-blue-100 border border-blue-300 text-blue-700 px-4 py-3 rounded mb-6">
@@ -379,7 +432,7 @@ export default function Checkout() {
           <div className="card p-6 sticky top-4">
             <h2 className="text-xl font-bold mb-4">Đơn hàng</h2>
             <div className="space-y-3 mb-4">
-              {items.map((item) => (
+              {checkoutItems.map((item) => (
                 <div key={item.productId} className="flex justify-between text-sm">
                   <span className="text-gray-700">
                     {item.productName} x {item.quantity}
@@ -394,9 +447,12 @@ export default function Checkout() {
               <div className="flex justify-between text-lg font-bold">
                 <span>Tổng cộng:</span>
                 <span className="text-primary-600">
-                  {totalAmount.toLocaleString('vi-VN')} đ
+                  {checkoutTotal.toLocaleString('vi-VN')} đ
                 </span>
               </div>
+              <p className="text-xs text-gray-500 mt-2">
+                {checkoutItems.length} sản phẩm
+              </p>
             </div>
           </div>
         </motion.div>

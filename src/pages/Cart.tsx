@@ -7,7 +7,22 @@ import { useAuthStore } from '../store/authStore'
 export default function Cart() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
-  const { items, totalItems, totalAmount, loading, error, fetchCart, updateQuantity, removeFromCart } = useCartStore()
+  const { 
+    items, 
+    totalItems, 
+    totalAmount, 
+    loading, 
+    error, 
+    fetchCart, 
+    updateQuantity, 
+    removeFromCart,
+    selectedItems,
+    toggleSelectItem,
+    selectAllItems,
+    deselectAllItems,
+    getSelectedTotal,
+    getSelectedCount,
+  } = useCartStore()
 
   useEffect(() => {
     if (user) {
@@ -42,8 +57,28 @@ export default function Cart() {
       }
       return
     }
+    
+    if (selectedItems.length === 0) {
+      alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán')
+      return
+    }
+    
+    // Save selected items to localStorage for checkout page
+    localStorage.setItem('selectedItems', JSON.stringify(selectedItems))
     navigate('/checkout')
   }
+  
+  const handleSelectAll = () => {
+    if (selectedItems.length === items.length) {
+      deselectAllItems()
+    } else {
+      selectAllItems()
+    }
+  }
+  
+  const selectedTotal = getSelectedTotal()
+  const selectedCount = getSelectedCount()
+  const allSelected = items.length > 0 && selectedItems.length === items.length
 
   if (!user) {
     // Allow viewing cart without login
@@ -91,6 +126,26 @@ export default function Cart() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
+            {/* Select All */}
+            <div className="card p-4 flex items-center justify-between bg-gray-50">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={handleSelectAll}
+                  className="w-5 h-5 text-primary-600 rounded focus:ring-primary-500"
+                />
+                <span className="font-medium">
+                  Chọn tất cả ({items.length} sản phẩm)
+                </span>
+              </div>
+              {selectedCount > 0 && selectedCount < items.length && (
+                <span className="text-sm text-gray-600">
+                  Đã chọn {selectedCount}/{items.length}
+                </span>
+              )}
+            </div>
+            
             {items.map((item, index) => (
               <motion.div
                 key={item.productId}
@@ -99,6 +154,16 @@ export default function Cart() {
                 transition={{ delay: index * 0.05 }}
                 className="card p-4 flex gap-4"
               >
+                {/* Checkbox */}
+                <div className="flex items-start pt-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.includes(item.productId)}
+                    onChange={() => toggleSelectItem(item.productId)}
+                    className="w-5 h-5 text-primary-600 rounded focus:ring-primary-500"
+                  />
+                </div>
+                
                 <img
                   src={item.productImage || 'https://via.placeholder.com/150'}
                   alt={item.productName}
@@ -154,22 +219,31 @@ export default function Cart() {
               <h2 className="text-2xl font-bold mb-4">Tổng đơn hàng</h2>
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Số lượng:</span>
+                  <span className="text-gray-600">Tổng sản phẩm:</span>
                   <span className="font-semibold">{totalItems} sản phẩm</span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Đã chọn:</span>
+                  <span className="font-semibold text-primary-600">{selectedCount} sản phẩm</span>
+                </div>
                 <div className="flex justify-between text-lg font-bold border-t pt-3">
-                  <span>Tổng cộng:</span>
+                  <span>Tổng thanh toán:</span>
                   <span className="text-primary-600">
-                    {totalAmount.toLocaleString('vi-VN')} đ
+                    {selectedTotal.toLocaleString('vi-VN')} đ
                   </span>
                 </div>
+                {selectedCount < items.length && (
+                  <p className="text-xs text-gray-500 italic">
+                    * Chỉ thanh toán {selectedCount} sản phẩm đã chọn
+                  </p>
+                )}
               </div>
               <button
                 onClick={handleCheckout}
-                disabled={items.some(item => !item.inStock)}
+                disabled={selectedCount === 0 || items.some(item => !item.inStock && selectedItems.includes(item.productId))}
                 className="w-full btn-primary disabled:opacity-50"
               >
-                Thanh toán
+                Thanh toán ({selectedCount})
               </button>
               <Link
                 to="/products"
