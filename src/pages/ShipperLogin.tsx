@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { motion } from 'framer-motion';
+import axios from '../api/axios';
 
 export default function ShipperLogin() {
   const navigate = useNavigate();
-  const { login, loading, error } = useAuthStore();
+  const { setAuth } = useAuthStore();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -13,18 +16,28 @@ export default function ShipperLogin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+    
     try {
-      await login(formData.username, formData.password);
+      const response = await axios.post('/api/auth/login', {
+        username: formData.username,
+        password: formData.password,
+      });
+      
+      const { user, token } = response.data;
+      
       // Check if user is shipper
-      const user = useAuthStore.getState().user;
-      if (user?.role === 'SHIPPER') {
+      if (user.role === 'SHIPPER') {
+        setAuth(user, token);
         navigate('/shipper/dashboard');
       } else {
-        alert('Tài khoản này không phải là shipper');
-        useAuthStore.getState().logout();
+        setError('Tài khoản này không phải là shipper');
       }
-    } catch (err) {
-      console.error('Login failed:', err);
+    } catch (err: any) {
+      setError(err?.response?.data?.error || 'Đăng nhập thất bại');
+    } finally {
+      setLoading(false);
     }
   };
 
