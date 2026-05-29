@@ -354,7 +354,8 @@ export default function AdminOrders() {
 
       {/* Pagination */}
       {!loading && orders.length > 0 && totalPages > 1 && (
-        <div className="mt-8 flex items-center justify-between">          <p className="text-sm text-gray-600">
+        <div className="mt-8 flex items-center justify-between">
+          <p className="text-sm text-gray-600">
             Trang {currentPage + 1} / {totalPages} • Tổng {totalOrders} đơn hàng
           </p>
           <div className="flex gap-2">
@@ -375,10 +376,6 @@ export default function AdminOrders() {
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
 
       {/* Assign Shipper Modal */}
       {showAssignModal && selectedOrderForAssign && (
