@@ -46,7 +46,7 @@ public class Shipper {
     @Column(name = "successful_deliveries")
     private Integer successfulDeliveries = 0;
     
-    @Column(name = "rating", precision = 3, scale = 2)
+    @Column(name = "rating")
     private Double rating = 5.0; // Default 5.0
     
     @Column(name = "total_ratings")
