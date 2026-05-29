@@ -276,8 +276,6 @@ public class ShipperService {
         shipperRepository.save(shipper);
         log.info("Shipper deliveries updated successfully");
     }
-}
-
     
     /**
      * Get shipper by user ID

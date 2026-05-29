@@ -56,8 +56,6 @@ public interface ShipperRepository extends JpaRepository<Shipper, Long> {
     @Query("SELECT COUNT(s), AVG(s.rating), SUM(s.totalDeliveries), SUM(s.successfulDeliveries) " +
            "FROM Shipper s WHERE s.isActive = true")
     Object[] getShipperStatistics();
-}
-
     
     // Find shipper by user ID
     Optional<Shipper> findByUserId(Long userId);
