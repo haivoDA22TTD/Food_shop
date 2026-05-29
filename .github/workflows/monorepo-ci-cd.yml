@@ -37,29 +37,45 @@ jobs:
         id: filter
         uses: dorny/paths-filter@v3
         with:
-          base: ${{ github.event.before }}
           filters: |
             api_gateway:
-              - '**'
               - 'src/**'
               - 'pom.xml'
               - 'Dockerfile'
+              - '.github/workflows/**'
             eureka_server:
-              - 'eureka-server/**'
+              - 'src/**'
+              - 'pom.xml'
+              - 'Dockerfile'
+              - '.github/workflows/**'
             identity_service:
-              - 'identity-service/**'
+              - 'src/**'
+              - 'pom.xml'
+              - 'Dockerfile'
+              - '.github/workflows/**'
             order_service:
-              - '**'
               - 'src/**'
               - 'pom.xml'
               - 'Dockerfile'
               - '.github/workflows/**'
             product_service:
-              - 'product-service/**'
+              - 'src/**'
+              - 'pom.xml'
+              - 'Dockerfile'
+              - '.github/workflows/**'
             payment_service:
-              - 'payment_service/**'
+              - 'src/**'
+              - 'pom.xml'
+              - 'Dockerfile'
+              - '.github/workflows/**'
             frontend:
-              - '**'
+              - 'src/**'
+              - 'public/**'
+              - 'index.html'
+              - 'package.json'
+              - 'vite.config.ts'
+              - 'tsconfig.json'
+              - '.github/workflows/**'
 
   build-api-gateway:
     name: Build API Gateway
