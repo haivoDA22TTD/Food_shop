@@ -73,9 +73,16 @@ export default function Profile() {
 
       // Get registration options from server
       const optionsResponse = await axios.post('/api/auth/passkey/register/options')
-      const options = optionsResponse.data
+      
+      // Parse JSON string if needed
+      let options = optionsResponse.data
+      if (typeof options === 'string') {
+        options = JSON.parse(options)
+      }
 
-      // Parse the options
+      console.log('Registration options:', options)
+
+      // Parse the options for WebAuthn API
       const publicKeyOptions = {
         ...options,
         challenge: Uint8Array.from(atob(options.challenge.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)),
@@ -106,6 +113,8 @@ export default function Profile() {
         },
         type: credential.type
       }
+
+      console.log('Sending credential to server:', credentialJSON)
 
       // Send to server for verification
       await axios.post('/api/auth/passkey/register/verify', {
