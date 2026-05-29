@@ -456,8 +456,6 @@ public class OrderService {
                 orderItem.getSubtotal()
         );
     }
-}
-
     
     /**
      * Assign shipper to order
@@ -570,8 +568,6 @@ public class OrderService {
         Page<Order> orders = orderRepository.findOrdersReadyForAssignment(pageable);
         return orders.map(this::convertToOrderResponse);
     }
-}
-
     
     /**
      * Get order by ID for shipper (verify ownership)
