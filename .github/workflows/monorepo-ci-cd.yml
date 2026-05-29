@@ -81,7 +81,7 @@ jobs:
     name: Build API Gateway
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.api_gateway == 'true' || github.ref_name == 'API-Gateway' || github.ref_name == 'main'
+    if: needs.changes.outputs.api_gateway == 'true' && github.ref_name == 'API-Gateway'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -117,7 +117,7 @@ jobs:
     name: Build Eureka Server
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.eureka_server == 'true' || github.ref_name == 'Service-Discovery' || github.ref_name == 'main'
+    if: needs.changes.outputs.eureka_server == 'true' && github.ref_name == 'Service-Discovery'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -142,7 +142,7 @@ jobs:
     name: Build Identity Service
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.identity_service == 'true' || github.ref_name == 'Identity-Service' || github.ref_name == 'main'
+    if: needs.changes.outputs.identity_service == 'true' && github.ref_name == 'Identity-Service'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -167,7 +167,7 @@ jobs:
     name: Build Order Service
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.order_service == 'true' || github.ref_name == 'Order-service' || github.ref_name == 'main'
+    if: needs.changes.outputs.order_service == 'true' && github.ref_name == 'Order-service'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -192,7 +192,7 @@ jobs:
     name: Build Product Service
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.product_service == 'true' || github.ref_name == 'Product-Service' || github.ref_name == 'main'
+    if: needs.changes.outputs.product_service == 'true' && github.ref_name == 'Product-Service'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -213,7 +213,7 @@ jobs:
     name: Build Frontend
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.frontend == 'true' || github.ref_name == 'Frontend' || github.ref_name == 'main'
+    if: needs.changes.outputs.frontend == 'true' && github.ref_name == 'Frontend'
     defaults:
       run:
         working-directory: .
