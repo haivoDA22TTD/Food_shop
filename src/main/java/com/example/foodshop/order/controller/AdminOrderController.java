@@ -77,8 +77,6 @@ public class AdminOrderController {
                     .body(Map.of("error", "Unable to retrieve order statistics"));
         }
     }
-}
-
     
     /**
      * Assign shipper to order

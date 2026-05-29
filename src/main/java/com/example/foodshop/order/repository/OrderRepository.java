@@ -60,8 +60,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     
     // Find orders by status and created before a specific time (for auto-cancel)
     List<Order> findByStatusAndCreatedAtBefore(OrderStatus status, LocalDateTime createdAt);
-}
-
     
     // Find orders by shipper ID
     Page<Order> findByShipperIdOrderByCreatedAtDesc(Long shipperId, Pageable pageable);
