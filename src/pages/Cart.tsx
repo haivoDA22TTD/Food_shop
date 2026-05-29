@@ -10,7 +10,6 @@ export default function Cart() {
   const { 
     items, 
     totalItems, 
-    totalAmount, 
     loading, 
     error, 
     fetchCart, 

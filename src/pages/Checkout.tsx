@@ -8,7 +8,7 @@ import { useAuthStore } from '../store/authStore'
 export default function Checkout() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
-  const { items, clearCart, syncCartWithServer } = useCartStore()
+  const { items, syncCartWithServer } = useCartStore()
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState('')
