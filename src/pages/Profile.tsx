@@ -36,12 +36,11 @@ export default function Profile() {
   const loadPasskeys = async (targetUserId: number) => {
     setLoadingPasskeys(true)
     try {
-      const response = await axios.get('/api/passkey/list', {
-        params: { userId: targetUserId },
-      })
+      const response = await axios.get('/api/auth/passkey/list')
       setPasskeys(Array.isArray(response.data) ? response.data : [])
     } catch (err: any) {
-      setError(err?.response?.data || 'Khong the tai danh sach Passkey.')
+      console.error('Error loading passkeys:', err)
+      setError(err?.response?.data?.error || 'Khong the tai danh sach Passkey.')
     } finally {
       setLoadingPasskeys(false)
     }
@@ -72,34 +71,24 @@ export default function Profile() {
         return
       }
 
-      const startResponse = await axios.post('/api/passkey/register/start', {
-        userId: userId,
-      })
+      // Get registration options from server
+      const optionsResponse = await axios.post('/api/auth/passkey/register/options')
+      const options = optionsResponse.data
 
-      const challenge = startResponse.data?.challenge
-      if (!challenge) {
-        throw new Error('Khong lay duoc challenge cho Passkey.')
+      // Parse the options
+      const publicKeyOptions = {
+        ...options,
+        challenge: Uint8Array.from(atob(options.challenge.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)),
+        user: {
+          ...options.user,
+          id: Uint8Array.from(atob(options.user.id.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
+        }
       }
 
-      const credential = (await navigator.credentials.create({
-        publicKey: {
-          challenge: Uint8Array.from(atob(challenge), (c) => c.charCodeAt(0)),
-          rp: {
-            name: 'Food Shop',
-          },
-          user: {
-            id: Uint8Array.from(String(userId), (c) => c.charCodeAt(0)),
-            name: user.username,
-            displayName: user.username,
-          },
-          pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
-          timeout: 60000,
-          attestation: 'none',
-          authenticatorSelection: {
-            userVerification: 'preferred',
-          },
-        },
-      })) as PublicKeyCredential | null
+      // Create credential
+      const credential = await navigator.credentials.create({
+        publicKey: publicKeyOptions
+      }) as PublicKeyCredential | null
 
       if (!credential) {
         throw new Error('Khong tao duoc Passkey.')
@@ -107,11 +96,21 @@ export default function Profile() {
 
       const response = credential.response as AuthenticatorAttestationResponse
 
-      await axios.post('/api/passkey/register/finish', {
-        userId: userId,
-        credentialId: toBase64(credential.rawId),
-        publicKey: toBase64(response.attestationObject),
-        nickname: `Passkey ${new Date().toLocaleString('vi-VN')}`,
+      // Convert credential to JSON format
+      const credentialJSON = {
+        id: credential.id,
+        rawId: toBase64(credential.rawId),
+        response: {
+          attestationObject: toBase64(response.attestationObject),
+          clientDataJSON: toBase64(response.clientDataJSON)
+        },
+        type: credential.type
+      }
+
+      // Send to server for verification
+      await axios.post('/api/auth/passkey/register/verify', {
+        credential: JSON.stringify(credentialJSON),
+        nickname: `Passkey ${new Date().toLocaleString('vi-VN')}`
       })
 
       setMessage('Thiet lap Passkey thanh cong.')
@@ -119,7 +118,8 @@ export default function Profile() {
         await loadPasskeys(userId)
       }
     } catch (err: any) {
-      setError(err?.response?.data || err?.message || 'Thiet lap Passkey that bai.')
+      console.error('Error setting up passkey:', err)
+      setError(err?.response?.data?.error || err?.message || 'Thiet lap Passkey that bai.')
     } finally {
       setRegisteringPasskey(false)
     }
@@ -129,15 +129,14 @@ export default function Profile() {
     setError('')
     setMessage('')
     try {
-      await axios.delete(`/api/passkey/${passkeyId}`, {
-        params: { userId: userId },
-      })
+      await axios.delete(`/api/auth/passkey/${passkeyId}`)
       setMessage('Da xoa Passkey.')
       if (userId) {
         await loadPasskeys(userId)
       }
     } catch (err: any) {
-      setError(err?.response?.data || 'Khong the xoa Passkey.')
+      console.error('Error deleting passkey:', err)
+      setError(err?.response?.data?.error || 'Khong the xoa Passkey.')
     }
   }
 
