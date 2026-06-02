@@ -118,52 +118,16 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- WebAuthn (Passkey) using Yubico library -->
-        <!-- Using version 2.5.2 - compatible with Spring Boot 3.x -->
+        <!-- WebAuthn (Passkey) -->
         <dependency>
             <groupId>com.yubico</groupId>
             <artifactId>webauthn-server-core</artifactId>
-            <version>2.5.2</version>
-            <exclusions>
-                <!-- Exclude ALL jackson transitive deps from yubico-util to avoid
-                     dependency on non-existent jackson-databind:2.19.5-SNAPSHOT.
-                     We declare them explicitly below with stable versions. -->
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.dataformat</groupId>
-                    <artifactId>jackson-dataformat-cbor</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-annotations</artifactId>
-                </exclusion>
-            </exclusions>
+            <version>2.5.0</version>
         </dependency>
-        
-        <!-- Additional dependencies for Yubico WebAuthn 2.x -->
         <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jdk8</artifactId>
-        </dependency>
-        <!-- jackson-dataformat-cbor: explicit declaration (replaces excluded transitive).
-             Version pinned in dependencyManagement to 2.16.2. -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-cbor</artifactId>
-        </dependency>
-
-        <!-- Swagger/OpenAPI Documentation -->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.3.0</version>
+            <groupId>com.yubico</groupId>
+            <artifactId>yubico-util</artifactId>
+            <version>2.5.0</version>
         </dependency>
     </dependencies>
 
@@ -175,29 +139,6 @@
                 <version>${spring-cloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-            <!-- Force jackson to stable version, overriding the 2.19.5-SNAPSHOT
-                 pulled transitively by webauthn-server-core -> yubico-util -> jackson-dataformat-cbor.
-                 Using 2.16.2 which is aligned with Spring Boot 3.2.x managed version range. -->
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>2.16.2</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>2.16.2</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-                <version>2.16.2</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.dataformat</groupId>
-                <artifactId>jackson-dataformat-cbor</artifactId>
-                <version>2.16.2</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

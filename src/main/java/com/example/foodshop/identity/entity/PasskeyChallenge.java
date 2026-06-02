@@ -24,9 +24,6 @@ public class PasskeyChallenge {
     @Column(name = "challenge", unique = true, nullable = false, length = 1024)
     private String challenge;
     
-    @Column(name = "request_json", columnDefinition = "TEXT")
-    private String requestJson; // Serialized PublicKeyCredentialCreationOptions or AssertionRequest
-    
     @Column(name = "type", nullable = false)
     private String type; // REGISTRATION, AUTHENTICATION
     
