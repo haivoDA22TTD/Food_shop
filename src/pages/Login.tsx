@@ -82,20 +82,44 @@ export default function Login() {
         return
       }
 
-      // Step 1: Start authentication - get challenge
-      const startResponse = await axios.post('/api/passkey/authenticate/start', {
-        username: username || 'anonymous' // Can be empty for resident keys
+      // Helper: base64url -> Uint8Array
+      const base64UrlToBytes = (b64url: string): Uint8Array => {
+        const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/')
+        const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4)
+        const binary = atob(padded)
+        const bytes = new Uint8Array(binary.length)
+        for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i)
+        return bytes
+      }
+
+      const toBase64 = (buffer: ArrayBuffer): string => {
+        const bytes = new Uint8Array(buffer)
+        let binary = ''
+        for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i])
+        return btoa(binary)
+      }
+
+      // Step 1: Start authentication - get challenge options
+      const startResponse = await axios.post('/api/auth/passkey/login/options', {
+        email: username || '' // Backend uses email as identifier
       })
       
-      const { challenge } = startResponse.data
+      // Backend returns full credential request options as JSON string
+      let options = startResponse.data
+      if (typeof options === 'string') options = JSON.parse(options)
       
       // Step 2: Get credential from authenticator
+      const publicKeyOptions: PublicKeyCredentialRequestOptions = {
+        ...options,
+        challenge: base64UrlToBytes(options.challenge),
+        allowCredentials: options.allowCredentials?.map((c: any) => ({
+          ...c,
+          id: base64UrlToBytes(c.id)
+        }))
+      }
+      
       const credential = await navigator.credentials.get({
-        publicKey: {
-          challenge: Uint8Array.from(atob(challenge), c => c.charCodeAt(0)),
-          timeout: 60000,
-          userVerification: 'preferred'
-        }
+        publicKey: publicKeyOptions
       }) as PublicKeyCredential
       
       if (!credential) {
@@ -106,12 +130,22 @@ export default function Login() {
       
       const response = credential.response as AuthenticatorAssertionResponse
       
+      // Build JSON-serialized assertion for backend (matches Yubico's parseAssertionResponseJson format)
+      const assertionJSON = {
+        id: credential.id,
+        rawId: toBase64(credential.rawId),
+        type: credential.type,
+        response: {
+          authenticatorData: toBase64(response.authenticatorData),
+          clientDataJSON: toBase64(response.clientDataJSON),
+          signature: toBase64(response.signature),
+          userHandle: response.userHandle ? toBase64(response.userHandle) : null
+        }
+      }
+      
       // Step 3: Send credential to server for verification
-      const finishResponse = await axios.post('/api/passkey/authenticate/finish', {
-        credentialId: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))),
-        signature: btoa(String.fromCharCode(...new Uint8Array(response.signature))),
-        authenticatorData: btoa(String.fromCharCode(...new Uint8Array(response.authenticatorData))),
-        clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(response.clientDataJSON)))
+      const finishResponse = await axios.post('/api/auth/passkey/login/verify', {
+        assertion: JSON.stringify(assertionJSON)
       })
       
       const payload = normalizeAuthPayload(finishResponse.data, username)
