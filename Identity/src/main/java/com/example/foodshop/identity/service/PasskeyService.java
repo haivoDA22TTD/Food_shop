@@ -44,7 +44,6 @@ public class PasskeyService {
         this.credentialRepository = credentialRepository;
         this.userRepository = userRepository;
 
-        // Initialize RelyingParty
         this.relyingParty = RelyingParty.builder()
                 .identity(RelyingPartyIdentity.builder()
                         .id(rpId)
@@ -156,11 +155,8 @@ public class PasskeyService {
 
         PublicKeyCredentialCreationOptions creationOptions = relyingParty.startRegistration(registrationOptions);
 
-        // toCredentialsCreateJson() serializes for both browser AND server storage.
-        // fromJson() restores an identical instance from this format.
         String requestJson = creationOptions.toCredentialsCreateJson();
 
-        // Save challenge + full request JSON to database
         PasskeyChallenge passkeyChallenge = new PasskeyChallenge();
         passkeyChallenge.setUserId(userId);
         passkeyChallenge.setChallenge(creationOptions.getChallenge().getBase64Url());
@@ -178,16 +174,13 @@ public class PasskeyService {
     @Transactional
     public void verifyRegistration(Long userId, String credentialJson, String nickname)
             throws IOException, RegistrationFailedException {
-
         try {
-            // Find challenge
             PasskeyChallenge passkeyChallenge = challengeRepository.findAll().stream()
                     .filter(c -> c.getUserId().equals(userId) && c.getType().equals("REGISTRATION"))
                     .filter(c -> c.getExpiresAt().isAfter(LocalDateTime.now()))
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("Invalid or expired challenge"));
 
-            // Deserialize the original creation options from DB using Yubico's fromJson()
             PublicKeyCredentialCreationOptions originalOptions =
                     PublicKeyCredentialCreationOptions.fromJson(passkeyChallenge.getRequestJson());
 
@@ -201,7 +194,6 @@ public class PasskeyService {
 
             RegistrationResult result = relyingParty.finishRegistration(options);
 
-            // Save credential
             PasskeyCredential passkeyCredential = new PasskeyCredential();
             passkeyCredential.setUserId(userId);
             passkeyCredential.setCredentialId(result.getKeyId().getId().getBase64Url());
@@ -211,7 +203,6 @@ public class PasskeyService {
             passkeyCredential.setIsActive(true);
             credentialRepository.save(passkeyCredential);
 
-            // Delete used challenge
             challengeRepository.delete(passkeyChallenge);
 
             log.info("Passkey registered successfully for user: {}", userId);
@@ -228,20 +219,14 @@ public class PasskeyService {
     @Transactional
     public String generateAuthenticationOptions(String email) {
         StartAssertionOptions.StartAssertionOptionsBuilder builder = StartAssertionOptions.builder();
-
         if (email != null && !email.trim().isEmpty()) {
-            // Verify user exists when email is provided
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("User not found: " + email));
             builder.username(email);
         }
-        // else: usernameless/resident key flow - browser will show all available passkeys
 
         AssertionRequest request = relyingParty.startAssertion(builder.build());
 
-        // AssertionRequest.toJson() stores full request including username for server-side restoration.
-        // AssertionRequest.fromJson() restores identical instance.
-        // toCredentialsGetJson() is returned to the browser client.
         String requestJson;
         String credentialsGetJson;
         try {
@@ -251,13 +236,12 @@ public class PasskeyService {
             throw new RuntimeException("Failed to serialize AssertionRequest", e);
         }
 
-        // Save challenge + full request JSON to database
-        // For usernameless flow, we cannot save with userId - use a special marker
         Long savedUserId = null;
         if (email != null && !email.trim().isEmpty()) {
             User user = userRepository.findByEmail(email).orElse(null);
             if (user != null) savedUserId = user.getId();
         }
+
         PasskeyChallenge passkeyChallenge = new PasskeyChallenge();
         passkeyChallenge.setUserId(savedUserId);
         passkeyChallenge.setChallenge(request.getPublicKeyCredentialRequestOptions().getChallenge().getBase64Url());
@@ -275,7 +259,6 @@ public class PasskeyService {
     @Transactional
     public User verifyAuthentication(String assertionJson)
             throws IOException, AssertionFailedException {
-
         try {
             PublicKeyCredential<AuthenticatorAssertionResponse, ClientAssertionExtensionOutputs> pkc =
                     PublicKeyCredential.parseAssertionResponseJson(assertionJson);
@@ -287,19 +270,16 @@ public class PasskeyService {
             User user = userRepository.findById(credential.getUserId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-            // Find challenge - support both username-bound and usernameless (userId=null) challenges
             PasskeyChallenge passkeyChallenge = challengeRepository.findAll().stream()
                     .filter(c -> c.getType().equals("AUTHENTICATION"))
                     .filter(c -> c.getExpiresAt().isAfter(LocalDateTime.now()))
                     .filter(c -> {
-                        // Match by userId if both are set, OR if challenge is usernameless (userId=null)
                         if (c.getUserId() == null) return true;
                         return c.getUserId().equals(user.getId());
                     })
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("Invalid or expired challenge"));
 
-            // Deserialize the original assertion request using Yubico's fromJson() — correct approach
             AssertionRequest originalRequest = AssertionRequest.fromJson(passkeyChallenge.getRequestJson());
 
             FinishAssertionOptions options = FinishAssertionOptions.builder()
@@ -313,12 +293,10 @@ public class PasskeyService {
                 throw new RuntimeException("Authentication failed");
             }
 
-            // Update credential sign count
             credential.setSignCount(result.getSignatureCount());
             credential.setLastUsedAt(LocalDateTime.now());
             credentialRepository.save(credential);
 
-            // Delete used challenge
             challengeRepository.delete(passkeyChallenge);
 
             log.info("Passkey authentication successful for user: {}", user.getEmail());
