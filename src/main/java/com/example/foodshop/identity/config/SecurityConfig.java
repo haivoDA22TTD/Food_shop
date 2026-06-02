@@ -59,6 +59,11 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/oauth2/**").permitAll()
                 .requestMatchers("/login/oauth2/**").permitAll()
+                // Swagger UI endpoints
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                // Internal endpoints for microservices communication (no auth required)
+                .requestMatchers("/internal/**").permitAll()
+                // Public API endpoints (auth required)
                 .requestMatchers("/api/users/**").authenticated()
                 .anyRequest().denyAll()
             )

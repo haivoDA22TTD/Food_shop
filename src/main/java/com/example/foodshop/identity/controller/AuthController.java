@@ -10,8 +10,6 @@ import com.example.foodshop.identity.service.TokenBlacklistService;
 import com.example.foodshop.identity.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,8 +25,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-    
-    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     @Autowired
     private UserService userService;
@@ -94,17 +90,31 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "No token provided"));
+        }
+        
         try {
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                tokenBlacklistService.blacklistToken(token);
-            }
+            String token = authHeader.substring(7);
+            tokenBlacklistService.blacklistToken(token);
             return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
         } catch (IllegalStateException e) {
-            log.error("Logout failed - Redis unavailable: {}", e.getMessage());
+            // Redis connection failed
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(Map.of("error", "Logout service temporarily unavailable", "detail", e.getMessage()));
+                    .body(Map.of(
+                        "error", "Logout service temporarily unavailable",
+                        "detail", e.getMessage()
+                    ));
+        } catch (Exception e) {
+            // Other errors
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                        "error", "Logout failed",
+                        "detail", e.getMessage()
+                    ));
         }
     }
     
@@ -112,11 +122,10 @@ public class AuthController {
     public ResponseEntity<?> checkRedisHealth() {
         try {
             tokenBlacklistService.isBlacklisted("test-token");
-            return ResponseEntity.ok(Map.of("status", "connected", "message", "Redis is working"));
+            return ResponseEntity.ok(Map.of("redis", "connected"));
         } catch (Exception e) {
-            log.error("Redis health check failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(Map.of("status", "disconnected", "error", e.getMessage()));
+                    .body(Map.of("redis", "disconnected", "error", e.getMessage()));
         }
     }
 
