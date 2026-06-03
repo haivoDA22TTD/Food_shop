@@ -17,4 +17,6 @@ public interface PasskeyChallengeRepository extends JpaRepository<PasskeyChallen
     void deleteByUserIdAndType(Long userId, String type);
     
     void deleteByType(String type);
+    
+    Optional<PasskeyChallenge> findTopByUserIdAndTypeOrderByCreatedAtDesc(Long userId, String type);
 }

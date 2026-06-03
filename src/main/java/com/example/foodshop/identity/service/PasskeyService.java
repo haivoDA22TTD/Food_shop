@@ -270,12 +270,9 @@ public class PasskeyService {
             User user = userRepository.findByEmail(email).orElse(null);
             if (user != null) {
                 savedUserId = user.getId();
-                // Delete old AUTHENTICATION challenges for this user to avoid "Incorrect challenge"
                 challengeRepository.deleteByUserIdAndType(savedUserId, "AUTHENTICATION");
             }
         }
-        // Also delete any stale usernameless AUTHENTICATION challenges
-        challengeRepository.deleteByType("AUTHENTICATION");
         PasskeyChallenge passkeyChallenge = new PasskeyChallenge();
         passkeyChallenge.setUserId(savedUserId);
         passkeyChallenge.setChallenge(request.getPublicKeyCredentialRequestOptions().getChallenge().getBase64Url());
@@ -305,17 +302,9 @@ public class PasskeyService {
             User user = userRepository.findById(credential.getUserId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-            // Find challenge - match by userId, prefer exact match over usernameless
-            PasskeyChallenge passkeyChallenge = challengeRepository.findAll().stream()
-                    .filter(c -> c.getType().equals("AUTHENTICATION"))
-                    .filter(c -> c.getExpiresAt().isAfter(LocalDateTime.now()))
-                    .filter(c -> c.getUserId() != null && c.getUserId().equals(user.getId()))
-                    .reduce((a, b) -> b) // take the LATEST challenge (last in stream)
-                    .or(() -> challengeRepository.findAll().stream()
-                            .filter(c -> c.getType().equals("AUTHENTICATION"))
-                            .filter(c -> c.getExpiresAt().isAfter(LocalDateTime.now()))
-                            .filter(c -> c.getUserId() == null)
-                            .reduce((a, b) -> b))
+            // Find the LATEST authentication challenge for this user
+            PasskeyChallenge passkeyChallenge = challengeRepository
+                    .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), "AUTHENTICATION")
                     .orElseThrow(() -> new RuntimeException("Invalid or expired challenge"));
 
             // Deserialize the original assertion request using Yubico's fromJson() — correct approach
