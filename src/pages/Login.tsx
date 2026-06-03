@@ -170,7 +170,8 @@ export default function Login() {
           clientDataJSON: toBase64Url(response.clientDataJSON),
           signature: toBase64Url(response.signature),
           userHandle: response.userHandle ? toBase64Url(response.userHandle) : null
-        }
+        },
+        clientExtensionResults: credential.getClientExtensionResults() || {}
       }
       
       // Step 3: Send credential to server for verification

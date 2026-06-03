@@ -122,13 +122,25 @@ export default function Profile() {
       }
 
       // Create credential
-      const credential = await navigator.credentials.create({
-        publicKey: publicKeyOptions
-      }) as PublicKeyCredential | null
+      console.log('Creating credential with options:', publicKeyOptions)
+      
+      let credential: PublicKeyCredential | null = null
+      try {
+        credential = await navigator.credentials.create({
+          publicKey: publicKeyOptions
+        }) as PublicKeyCredential | null
+      } catch (createError: any) {
+        console.error('ERROR creating credential:', createError)
+        console.error('Error name:', createError.name)
+        console.error('Error message:', createError.message)
+        throw createError
+      }
 
       if (!credential) {
         throw new Error('Khong tao duoc Passkey.')
       }
+      
+      console.log('Credential created successfully:', credential)
 
       const response = credential.response as AuthenticatorAttestationResponse
 
@@ -140,7 +152,8 @@ export default function Profile() {
           attestationObject: toBase64Url(response.attestationObject),
           clientDataJSON: toBase64Url(response.clientDataJSON)
         },
-        type: credential.type
+        type: credential.type,
+        clientExtensionResults: credential.getClientExtensionResults() || {}
       }
 
       console.log('Sending credential to server:', credentialJSON)
