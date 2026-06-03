@@ -98,13 +98,26 @@ export default function Profile() {
 
       console.log('Registration options:', options)
 
+      // Backend returns format: { publicKey: { challenge, rp, user, ... } }
+      const publicKeyData = options.publicKey || options
+      
+      if (!publicKeyData.challenge) {
+        console.error('No challenge in response:', publicKeyData)
+        throw new Error('Server response thiếu challenge')
+      }
+      
+      if (!publicKeyData.user || !publicKeyData.user.id) {
+        console.error('No user data in response:', publicKeyData)
+        throw new Error('Server response thiếu user data')
+      }
+
       // Parse the options for WebAuthn API
       const publicKeyOptions = {
-        ...options,
-        challenge: Uint8Array.from(atob(options.challenge.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)),
+        ...publicKeyData,
+        challenge: Uint8Array.from(atob(publicKeyData.challenge.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)),
         user: {
-          ...options.user,
-          id: Uint8Array.from(atob(options.user.id.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
+          ...publicKeyData.user,
+          id: Uint8Array.from(atob(publicKeyData.user.id.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
         }
       }
 
