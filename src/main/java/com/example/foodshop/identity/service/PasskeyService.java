@@ -160,6 +160,9 @@ public class PasskeyService {
         // toCredentialsCreateJson() is for browser only
         String requestJson = creationOptions.toJson();
 
+        // Delete old REGISTRATION challenges for this user to avoid stale challenge conflict
+        challengeRepository.deleteByUserIdAndType(userId, "REGISTRATION");
+
         // Save challenge + full request JSON to database
         PasskeyChallenge passkeyChallenge = new PasskeyChallenge();
         passkeyChallenge.setUserId(userId);
@@ -181,22 +184,9 @@ public class PasskeyService {
             throws IOException, RegistrationFailedException {
 
         try {
-            // Find challenge - check userId != null to avoid NullPointerException
-            PasskeyChallenge passkeyChallenge = challengeRepository.findAll().stream()
-                    .filter(c -> c.getType().equals("REGISTRATION"))
-                    .filter(c -> c.getUserId() != null && c.getUserId().equals(userId))
-                    .filter(c -> c.getExpiresAt().isAfter(LocalDateTime.now()))
-                    .filter(c -> {
-                        // Validate that requestJson can be parsed (skip corrupt challenges)
-                        try {
-                            PublicKeyCredentialCreationOptions.fromJson(c.getRequestJson());
-                            return true;
-                        } catch (Exception e) {
-                            log.warn("Skipping corrupt challenge: {}", c.getChallenge());
-                            return false;
-                        }
-                    })
-                    .findFirst()
+            // Find the LATEST registration challenge for this user
+            PasskeyChallenge passkeyChallenge = challengeRepository
+                    .findTopByUserIdAndTypeOrderByCreatedAtDesc(userId, "REGISTRATION")
                     .orElseThrow(() -> new RuntimeException("Invalid or expired challenge"));
 
             // Deserialize the original creation options from DB using Yubico's fromJson()
