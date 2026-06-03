@@ -180,9 +180,10 @@ public class PasskeyService {
             throws IOException, RegistrationFailedException {
 
         try {
-            // Find challenge
+            // Find challenge - check userId != null to avoid NullPointerException
             PasskeyChallenge passkeyChallenge = challengeRepository.findAll().stream()
-                    .filter(c -> c.getUserId().equals(userId) && c.getType().equals("REGISTRATION"))
+                    .filter(c -> c.getType().equals("REGISTRATION"))
+                    .filter(c -> c.getUserId() != null && c.getUserId().equals(userId))
                     .filter(c -> c.getExpiresAt().isAfter(LocalDateTime.now()))
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("Invalid or expired challenge"));
