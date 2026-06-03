@@ -107,20 +107,35 @@ export default function Login() {
         email: username || '' // Backend uses email as identifier
       })
       
+      console.log('=== PASSKEY LOGIN DEBUG ===')
+      console.log('1. Raw response:', startResponse)
+      console.log('2. Response data type:', typeof startResponse.data)
+      console.log('3. Response data:', startResponse.data)
+      
       // Backend returns full credential request options as JSON string
       let options = startResponse.data
-      if (typeof options === 'string') options = JSON.parse(options)
+      if (typeof options === 'string') {
+        console.log('4. Parsing JSON string...')
+        options = JSON.parse(options)
+      }
       
-      console.log('Raw options from backend:', options)
-      console.log('Options keys:', Object.keys(options))
+      console.log('5. Parsed options:', options)
+      console.log('6. Options keys:', Object.keys(options))
+      console.log('7. Has publicKey?', 'publicKey' in options)
       
       // Step 2: Get credential from authenticator
       // The backend returns the format from toCredentialsGetJson()
       // which has the structure: { publicKey: { challenge, rpId, allowCredentials, ... } }
       const publicKeyData = options.publicKey || options
       
+      console.log('8. publicKeyData:', publicKeyData)
+      console.log('9. publicKeyData keys:', Object.keys(publicKeyData))
+      console.log('10. challenge:', publicKeyData.challenge)
+      console.log('11. rpId:', publicKeyData.rpId)
+      console.log('12. allowCredentials:', publicKeyData.allowCredentials)
+      
       if (!publicKeyData.challenge) {
-        console.error('No challenge found in response:', publicKeyData)
+        console.error('ERROR: No challenge found in response:', publicKeyData)
         throw new Error('Server response thiếu challenge')
       }
       
