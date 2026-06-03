@@ -73,7 +73,21 @@ export default function Profile() {
         return
       }
 
+      console.log('=== PASSKEY REGISTRATION DEBUG ===')
+      console.log('1. User:', user)
+      console.log('2. UserId:', userId)
+      
+      // Check token
+      const authStorage = localStorage.getItem('auth-storage')
+      console.log('3. Auth storage:', authStorage)
+      if (authStorage) {
+        const { state } = JSON.parse(authStorage)
+        console.log('4. Token exists:', !!state?.token)
+        console.log('5. Token preview:', state?.token?.substring(0, 50) + '...')
+      }
+
       // Get registration options from server
+      console.log('6. Calling /api/auth/passkey/register/options...')
       const optionsResponse = await axios.post('/api/auth/passkey/register/options')
       
       // Parse JSON string if needed
