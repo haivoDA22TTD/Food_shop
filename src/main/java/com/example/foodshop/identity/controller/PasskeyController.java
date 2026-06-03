@@ -38,8 +38,9 @@ public class PasskeyController {
     @Operation(summary = "Generate passkey registration options")
     public ResponseEntity<?> getRegistrationOptions(Authentication authentication) {
         try {
-            String email = authentication.getName();
-            User user = userRepository.findByEmail(email)
+            String username = authentication.getName();
+            // Find user by username (not email) because JWT sub claim contains username
+            User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             String optionsJson = passkeyService.generateRegistrationOptions(user.getId());
@@ -65,8 +66,8 @@ public class PasskeyController {
             Authentication authentication,
             @RequestBody Map<String, Object> request) {
         try {
-            String email = authentication.getName();
-            User user = userRepository.findByEmail(email)
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
             
             String credentialJson = (String) request.get("credential");
@@ -148,8 +149,8 @@ public class PasskeyController {
     @Operation(summary = "Get user's passkeys")
     public ResponseEntity<List<PasskeyCredential>> getUserPasskeys(Authentication authentication) {
         try {
-            String email = authentication.getName();
-            User user = userRepository.findByEmail(email)
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
             
             List<PasskeyCredential> passkeys = passkeyService.getUserPasskeys(user.getId());
@@ -170,8 +171,8 @@ public class PasskeyController {
             Authentication authentication,
             @PathVariable Long credentialId) {
         try {
-            String email = authentication.getName();
-            User user = userRepository.findByEmail(email)
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
             
             passkeyService.deletePasskey(user.getId(), credentialId);
