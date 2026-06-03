@@ -39,10 +39,15 @@ public class PasskeyController {
     public ResponseEntity<?> getRegistrationOptions(Authentication authentication) {
         try {
             String username = authentication.getName();
+            log.info("=== PASSKEY REGISTRATION DEBUG ===");
+            log.info("Attempting to find user by username: {}", username);
+            
             // Find user by username (not email) because JWT sub claim contains username
             User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
 
+            log.info("User found: id={}, email={}", user.getId(), user.getEmail());
+            
             String optionsJson = passkeyService.generateRegistrationOptions(user.getId());
             
             // Return as raw JSON string with proper content type
