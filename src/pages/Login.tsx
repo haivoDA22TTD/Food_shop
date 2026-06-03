@@ -92,11 +92,14 @@ export default function Login() {
         return bytes
       }
 
-      const toBase64 = (buffer: ArrayBuffer): string => {
+      // Helper: ArrayBuffer -> base64url (NOT standard base64)
+      const toBase64Url = (buffer: ArrayBuffer): string => {
         const bytes = new Uint8Array(buffer)
         let binary = ''
         for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i])
-        return btoa(binary)
+        const b64 = btoa(binary)
+        // Convert base64 to base64url
+        return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
       }
 
       // Step 1: Start authentication - get challenge options
@@ -145,13 +148,13 @@ export default function Login() {
       // Build JSON-serialized assertion for backend (matches Yubico's parseAssertionResponseJson format)
       const assertionJSON = {
         id: credential.id,
-        rawId: toBase64(credential.rawId),
+        rawId: toBase64Url(credential.rawId),
         type: credential.type,
         response: {
-          authenticatorData: toBase64(response.authenticatorData),
-          clientDataJSON: toBase64(response.clientDataJSON),
-          signature: toBase64(response.signature),
-          userHandle: response.userHandle ? toBase64(response.userHandle) : null
+          authenticatorData: toBase64Url(response.authenticatorData),
+          clientDataJSON: toBase64Url(response.clientDataJSON),
+          signature: toBase64Url(response.signature),
+          userHandle: response.userHandle ? toBase64Url(response.userHandle) : null
         }
       }
       

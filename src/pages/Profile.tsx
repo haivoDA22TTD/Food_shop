@@ -11,13 +11,15 @@ interface PasskeyItem {
   lastUsedAt?: string
 }
 
-const toBase64 = (buffer: ArrayBuffer): string => {
+const toBase64Url = (buffer: ArrayBuffer): string => {
   const bytes = new Uint8Array(buffer)
   let binary = ''
   for (let i = 0; i < bytes.length; i += 1) {
     binary += String.fromCharCode(bytes[i])
   }
-  return btoa(binary)
+  const b64 = btoa(binary)
+  // Convert base64 to base64url
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
 }
 
 export default function Profile() {
@@ -103,13 +105,13 @@ export default function Profile() {
 
       const response = credential.response as AuthenticatorAttestationResponse
 
-      // Convert credential to JSON format
+      // Convert credential to JSON format (use base64url encoding)
       const credentialJSON = {
         id: credential.id,
-        rawId: toBase64(credential.rawId),
+        rawId: toBase64Url(credential.rawId),
         response: {
-          attestationObject: toBase64(response.attestationObject),
-          clientDataJSON: toBase64(response.clientDataJSON)
+          attestationObject: toBase64Url(response.attestationObject),
+          clientDataJSON: toBase64Url(response.clientDataJSON)
         },
         type: credential.type
       }
