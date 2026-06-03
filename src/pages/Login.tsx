@@ -108,11 +108,23 @@ export default function Login() {
       let options = startResponse.data
       if (typeof options === 'string') options = JSON.parse(options)
       
+      console.log('Raw options from backend:', options)
+      console.log('Options keys:', Object.keys(options))
+      
       // Step 2: Get credential from authenticator
+      // The backend returns the format from toCredentialsGetJson()
+      // which has the structure: { publicKey: { challenge, rpId, allowCredentials, ... } }
+      const publicKeyData = options.publicKey || options
+      
+      if (!publicKeyData.challenge) {
+        console.error('No challenge found in response:', publicKeyData)
+        throw new Error('Server response thiếu challenge')
+      }
+      
       const publicKeyOptions: PublicKeyCredentialRequestOptions = {
-        ...options,
-        challenge: base64UrlToBytes(options.challenge),
-        allowCredentials: options.allowCredentials?.map((c: any) => ({
+        ...publicKeyData,
+        challenge: base64UrlToBytes(publicKeyData.challenge),
+        allowCredentials: publicKeyData.allowCredentials?.map((c: any) => ({
           ...c,
           id: base64UrlToBytes(c.id)
         }))
