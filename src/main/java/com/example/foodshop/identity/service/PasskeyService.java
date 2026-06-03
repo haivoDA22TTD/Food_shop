@@ -185,6 +185,16 @@ public class PasskeyService {
                     .filter(c -> c.getType().equals("REGISTRATION"))
                     .filter(c -> c.getUserId() != null && c.getUserId().equals(userId))
                     .filter(c -> c.getExpiresAt().isAfter(LocalDateTime.now()))
+                    .filter(c -> {
+                        // Validate that requestJson can be parsed (skip corrupt challenges)
+                        try {
+                            PublicKeyCredentialCreationOptions.fromJson(c.getRequestJson());
+                            return true;
+                        } catch (Exception e) {
+                            log.warn("Skipping corrupt challenge: {}", c.getChallenge());
+                            return false;
+                        }
+                    })
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("Invalid or expired challenge"));
 
@@ -361,5 +371,16 @@ public class PasskeyService {
     @Transactional
     public void cleanupExpiredChallenges() {
         challengeRepository.deleteByExpiresAtBefore(LocalDateTime.now());
+    }
+    
+    /**
+     * Clean up all challenges for a user (useful for debugging)
+     */
+    @Transactional
+    public void cleanupUserChallenges(Long userId) {
+        challengeRepository.findAll().stream()
+                .filter(c -> c.getUserId() != null && c.getUserId().equals(userId))
+                .forEach(c -> challengeRepository.delete(c));
+        log.info("Cleaned up all challenges for user: {}", userId);
     }
 }
