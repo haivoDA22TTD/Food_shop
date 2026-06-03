@@ -54,8 +54,10 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/passkey/**").permitAll()
+                // Public passkey login endpoints (no auth required)
+                .requestMatchers("/api/auth/passkey/login/**").permitAll()
+                // Public auth endpoints
+                .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/oauth2/**").permitAll()
                 .requestMatchers("/login/oauth2/**").permitAll()
@@ -63,6 +65,8 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 // Internal endpoints for microservices communication (no auth required)
                 .requestMatchers("/internal/**").permitAll()
+                // Protected passkey registration endpoints (auth required)
+                .requestMatchers("/api/auth/passkey/register/**", "/api/auth/passkey/list", "/api/auth/passkey/**").authenticated()
                 // Public API endpoints (auth required)
                 .requestMatchers("/api/users/**").authenticated()
                 .anyRequest().denyAll()
