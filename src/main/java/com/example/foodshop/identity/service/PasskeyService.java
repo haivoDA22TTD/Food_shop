@@ -156,9 +156,9 @@ public class PasskeyService {
 
         PublicKeyCredentialCreationOptions creationOptions = relyingParty.startRegistration(registrationOptions);
 
-        // toCredentialsCreateJson() serializes for both browser AND server storage.
-        // fromJson() restores an identical instance from this format.
-        String requestJson = creationOptions.toCredentialsCreateJson();
+        // Use toJson() for database storage (can be restored with fromJson())
+        // toCredentialsCreateJson() is for browser only
+        String requestJson = creationOptions.toJson();
 
         // Save challenge + full request JSON to database
         PasskeyChallenge passkeyChallenge = new PasskeyChallenge();
@@ -169,7 +169,8 @@ public class PasskeyService {
         passkeyChallenge.setExpiresAt(LocalDateTime.now().plusMinutes(CHALLENGE_EXPIRY_MINUTES));
         challengeRepository.save(passkeyChallenge);
 
-        return requestJson;
+        // Return toCredentialsCreateJson() for browser
+        return creationOptions.toCredentialsCreateJson();
     }
 
     /**
