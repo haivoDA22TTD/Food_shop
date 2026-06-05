@@ -19,4 +19,10 @@ public interface PasskeyChallengeRepository extends JpaRepository<PasskeyChallen
     void deleteByType(String type);
     
     Optional<PasskeyChallenge> findTopByUserIdAndTypeOrderByCreatedAtDesc(Long userId, String type);
+    
+    // Find latest challenge by type only (for usernameless flow or when userId is unknown)
+    Optional<PasskeyChallenge> findTopByTypeOrderByCreatedAtDesc(String type);
+    
+    // Find latest challenge by type and check if not expired
+    Optional<PasskeyChallenge> findTopByTypeAndExpiresAtAfterOrderByCreatedAtDesc(String type, LocalDateTime now);
 }

@@ -56,6 +56,8 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 // Public passkey login endpoints (no auth required)
                 .requestMatchers("/api/auth/passkey/login/**").permitAll()
+                // Debug endpoint for cleanup (public for testing, should be protected in production)
+                .requestMatchers("/api/auth/passkey/debug/**").permitAll()
                 // Public auth endpoints
                 .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
