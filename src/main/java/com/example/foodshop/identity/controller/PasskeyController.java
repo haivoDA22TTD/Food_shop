@@ -1,4 +1,4 @@
-liepackage com.example.foodshop.identity.controller;
+package com.example.foodshop.identity.controller;
 
 import com.example.foodshop.identity.entity.PasskeyCredential;
 import com.example.foodshop.identity.entity.User;
