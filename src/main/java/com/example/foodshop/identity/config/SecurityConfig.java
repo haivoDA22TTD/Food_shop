@@ -59,7 +59,7 @@ public class SecurityConfig {
                 // Debug endpoint for cleanup (public for testing, should be protected in production)
                 .requestMatchers("/api/auth/passkey/debug/**").permitAll()
                 // Public auth endpoints
-                .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/api/auth/create-admin").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/oauth2/**").permitAll()
                 .requestMatchers("/login/oauth2/**").permitAll()

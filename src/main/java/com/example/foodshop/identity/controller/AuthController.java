@@ -140,4 +140,38 @@ public class AuthController {
         }
         return ResponseEntity.status(401).body("Invalid token");
     }
+    
+    /**
+     * Emergency endpoint to create admin account
+     * For production: Should be protected or removed after use
+     */
+    @PostMapping("/create-admin")
+    public ResponseEntity<?> createAdmin(@RequestBody Map<String, String> request) {
+        try {
+            String username = request.get("username");
+            String email = request.get("email");
+            String password = request.get("password");
+            
+            if (username == null || email == null || password == null) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Missing required fields: username, email, password"));
+            }
+            
+            RegisterRequest registerRequest = new RegisterRequest();
+            registerRequest.setUsername(username);
+            registerRequest.setEmail(email);
+            registerRequest.setPassword(password);
+            registerRequest.setRole("ADMIN");
+            
+            User user = userService.registerUser(registerRequest);
+            String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole());
+            
+            AuthResponse response = new AuthResponse(token, user.getId(), user.getUsername(), 
+                                                    user.getEmail(), user.getRole());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
 }
