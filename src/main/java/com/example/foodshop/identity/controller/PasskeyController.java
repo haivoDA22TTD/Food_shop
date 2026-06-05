@@ -141,12 +141,10 @@ public class PasskeyController {
 
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
-            response.put("user", Map.of(
-                    "id", user.getId(),
-                    "username", user.getUsername(),
-                    "email", user.getEmail(),
-                    "role", user.getRole()
-            ));
+            response.put("userId", user.getId());
+            response.put("username", user.getUsername());
+            response.put("email", user.getEmail());
+            response.put("role", user.getRole());
             
             log.info("Returning JWT token for user: {}", user.getUsername());
             return ResponseEntity.ok(response);
