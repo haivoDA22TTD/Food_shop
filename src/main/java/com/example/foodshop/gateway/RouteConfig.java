@@ -38,13 +38,15 @@ public class RouteConfig {
                                         .setName("authServiceCircuitBreaker")
                                         .setFallbackUri("forward:/fallback/auth")))
                         .uri(identityServiceUri))
-                // Order Service routes
+                // Order Service routes (includes shipper endpoints)
                 .route("order-service", r -> r
                         .path("/api/orders/**", "/api/cart/**", "/api/admin/orders/**")
                         .filters(f -> f
                                 .retry(config -> config
                                         .setRetries(2)
-                                        .setMethods(org.springframework.http.HttpMethod.GET, org.springframework.http.HttpMethod.POST)
+                                        .setMethods(org.springframework.http.HttpMethod.GET, 
+                                                  org.springframework.http.HttpMethod.POST,
+                                                  org.springframework.http.HttpMethod.PUT)
                                         .setStatuses(org.springframework.http.HttpStatus.BAD_GATEWAY,
                                                 org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
                                                 org.springframework.http.HttpStatus.GATEWAY_TIMEOUT))
