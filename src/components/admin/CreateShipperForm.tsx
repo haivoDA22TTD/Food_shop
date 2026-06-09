@@ -276,10 +276,7 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
           <div className="flex justify-end gap-4">
             <button
               type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                onCancel();
-              }}
+              onClick={onCancel}
               className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
               disabled={formState.isSubmitting}
             >
@@ -289,13 +286,6 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
               type="submit"
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
               disabled={formState.isSubmitting}
-              onClick={(e) => {
-                // Ensure the button triggers submit
-                if (!formState.isSubmitting) {
-                  // Button click will trigger form onSubmit
-                  console.log('Submit button clicked');
-                }
-              }}
             >
               {formState.isSubmitting ? 'Creating...' : 'Create Shipper'}
             </button>
