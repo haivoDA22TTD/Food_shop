@@ -89,14 +89,29 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
     }
 
     console.log('VALIDATION PASSED - Calling API...');
+    console.log('Token from store:', token ? 'EXISTS' : 'NULL');
     setFormState((prev) => ({ ...prev, isSubmitting: true }));
 
     try {
       if (!token) {
+        console.error('NO TOKEN - User not authenticated');
         toast.error('Authentication token not found. Please login again.');
         setFormState((prev) => ({ ...prev, isSubmitting: false }));
         return;
       }
+
+      const requestBody = {
+        username: formState.username,
+        password: formState.password,
+        email: formState.email,
+        name: formState.name,
+        phone: formState.phone,
+        vehicleType: formState.vehicleType || null,
+        vehicleNumber: formState.vehicleNumber || null,
+      };
+      
+      console.log('Request body:', requestBody);
+      console.log('Sending request to /api/auth/create-shipper...');
 
       const response = await fetch('/api/auth/create-shipper', {
         method: 'POST',
@@ -104,29 +119,27 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          username: formState.username,
-          password: formState.password,
-          email: formState.email,
-          name: formState.name,
-          phone: formState.phone,
-          vehicleType: formState.vehicleType || null,
-          vehicleNumber: formState.vehicleNumber || null,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
       if (response.ok) {
+        const data = await response.json();
+        console.log('Success response:', data);
         toast.success('Shipper account created successfully!');
         setFormState((prev) => ({ ...prev, isSubmitting: false }));
         onSuccess();
       } else {
         const errorData = await response.json();
+        console.error('Error response:', errorData);
         const errorMessage = errorData.error || 'Failed to create shipper account';
         toast.error(errorMessage);
         setFormState((prev) => ({ ...prev, isSubmitting: false }));
       }
     } catch (error) {
-      console.error('Error creating shipper:', error);
+      console.error('Network/Fetch error:', error);
       toast.error('Network error. Please try again.');
       setFormState((prev) => ({ ...prev, isSubmitting: false }));
     }
