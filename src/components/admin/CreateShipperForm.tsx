@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+import { useAuthStore } from '../../store/authStore';
 
 interface CreateShipperFormProps {
   onSuccess: () => void;
@@ -23,6 +24,7 @@ interface FormState {
  * Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5, 8.6
  */
 const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCancel }) => {
+  const token = useAuthStore((state) => state.token);
   const [formState, setFormState] = useState<FormState>({
     username: '',
     password: '',
@@ -48,9 +50,8 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
       errors.password = 'Password must be at least 8 characters';
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formState.email || !emailRegex.test(formState.email)) {
+    // Email validation (simple)
+    if (!formState.email || !formState.email.includes('@')) {
       errors.email = 'Valid email is required';
     }
 
@@ -59,13 +60,12 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
       errors.name = 'Name is required';
     }
 
-    // Phone validation - accept Vietnamese phone formats (10-12 digits)
-    const phoneDigitsOnly = formState.phone.replace(/[\s\-]/g, ''); // Remove spaces and dashes
-    const phoneRegex = /^(\+84|84|0)[0-9]{9,11}$/; // Vietnamese phone: 0/84/+84 + 9-11 digits
-    if (!formState.phone || !phoneRegex.test(phoneDigitsOnly)) {
-      errors.phone = 'Valid phone number is required (10-12 digits, Vietnamese format)';
+    // Phone validation (simple - just check if has digits)
+    if (!formState.phone || formState.phone.replace(/\D/g, '').length < 10) {
+      errors.phone = 'Phone must have at least 10 digits';
     }
 
+    console.log('Validation errors:', errors);
     setFormState((prev) => ({ ...prev, errors }));
     return Object.keys(errors).length === 0;
   };
@@ -92,7 +92,6 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
     setFormState((prev) => ({ ...prev, isSubmitting: true }));
 
     try {
-      const token = localStorage.getItem('token');
       if (!token) {
         toast.error('Authentication token not found. Please login again.');
         setFormState((prev) => ({ ...prev, isSubmitting: false }));
