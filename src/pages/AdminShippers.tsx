@@ -528,6 +528,17 @@ export default function AdminShippers() {
         </div>
       )}
 
+      {/* Create Shipper Account Modal */}
+      {showCreateAccountModal && (
+        <CreateShipperForm
+          onSuccess={() => {
+            setShowCreateAccountModal(false);
+            loadShippers();
+          }}
+          onCancel={() => setShowCreateAccountModal(false)}
+        />
+      )}
+
       {/* Edit Modal */}
       {showEditModal && selectedShipper && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
