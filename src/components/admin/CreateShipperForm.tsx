@@ -59,10 +59,11 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
       errors.name = 'Name is required';
     }
 
-    // Phone validation
-    const phoneRegex = /^\+?[0-9]{10,15}$/;
-    if (!formState.phone || !phoneRegex.test(formState.phone.replace(/\s/g, ''))) {
-      errors.phone = 'Valid phone number is required (10-15 digits)';
+    // Phone validation - accept Vietnamese phone formats
+    const phoneDigitsOnly = formState.phone.replace(/[\s\-]/g, ''); // Remove spaces and dashes
+    const phoneRegex = /^(\+84|84|0)[0-9]{9,10}$/; // Vietnamese phone: +84/84/0 + 9-10 digits
+    if (!formState.phone || !phoneRegex.test(phoneDigitsOnly)) {
+      errors.phone = 'Valid phone number is required (Vietnamese format: 0XXXXXXXXX or +84XXXXXXXXX)';
     }
 
     setFormState((prev) => ({ ...prev, errors }));
@@ -71,22 +72,23 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    console.log('Form submitted, validating...', formState);
+    e.stopPropagation(); // Prevent event bubbling
 
-    if (!validateForm()) {
-      console.log('Validation failed:', formState.errors);
+    // Force validation check
+    const isValid = validateForm();
+    
+    if (!isValid) {
       toast.error('Please fill in all required fields correctly');
       return;
     }
 
-    console.log('Validation passed, submitting to API...');
     setFormState((prev) => ({ ...prev, isSubmitting: true }));
 
     try {
       const token = localStorage.getItem('token');
       if (!token) {
         toast.error('Authentication token not found. Please login again.');
+        setFormState((prev) => ({ ...prev, isSubmitting: false }));
         return;
       }
 
@@ -109,16 +111,17 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
 
       if (response.ok) {
         toast.success('Shipper account created successfully!');
+        setFormState((prev) => ({ ...prev, isSubmitting: false }));
         onSuccess();
       } else {
         const errorData = await response.json();
         const errorMessage = errorData.error || 'Failed to create shipper account';
         toast.error(errorMessage);
+        setFormState((prev) => ({ ...prev, isSubmitting: false }));
       }
     } catch (error) {
       console.error('Error creating shipper:', error);
       toast.error('Network error. Please try again.');
-    } finally {
       setFormState((prev) => ({ ...prev, isSubmitting: false }));
     }
   };
@@ -273,8 +276,11 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
           <div className="flex justify-end gap-4">
             <button
               type="button"
-              onClick={onCancel}
-              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                onCancel();
+              }}
+              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
               disabled={formState.isSubmitting}
             >
               Cancel
@@ -283,6 +289,13 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
               type="submit"
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
               disabled={formState.isSubmitting}
+              onClick={(e) => {
+                // Ensure the button triggers submit
+                if (!formState.isSubmitting) {
+                  // Button click will trigger form onSubmit
+                  console.log('Submit button clicked');
+                }
+              }}
             >
               {formState.isSubmitting ? 'Creating...' : 'Create Shipper'}
             </button>
