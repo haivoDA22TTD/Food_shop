@@ -72,16 +72,23 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation(); // Prevent event bubbling
+    e.stopPropagation();
 
     // Force validation check
     const isValid = validateForm();
     
+    console.log('=== FORM VALIDATION ===');
+    console.log('Is Valid:', isValid);
+    console.log('Form State:', formState);
+    console.log('Errors:', formState.errors);
+    
     if (!isValid) {
+      console.log('VALIDATION FAILED - Showing toast...');
       toast.error('Please fill in all required fields correctly');
       return;
     }
 
+    console.log('VALIDATION PASSED - Calling API...');
     setFormState((prev) => ({ ...prev, isSubmitting: true }));
 
     try {
