@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useShipperStore, Shipper } from '../store/shipperStore';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
+import CreateShipperForm from '../components/admin/CreateShipperForm';
 
 export default function AdminShippers() {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ export default function AdminShippers() {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateAccountModal, setShowCreateAccountModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedShipper, setSelectedShipper] = useState<Shipper | null>(null);
   const [formData, setFormData] = useState({
@@ -240,9 +242,15 @@ export default function AdminShippers() {
           </select>
           <button
             onClick={() => setShowCreateModal(true)}
+            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            + Thêm Shipper Profile
+          </button>
+          <button
+            onClick={() => setShowCreateAccountModal(true)}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            + Thêm Shipper
+            + Tạo Tài Khoản Shipper
           </button>
         </div>
       </div>

@@ -41,9 +41,16 @@ export default function Login() {
       // Sync local cart with server
       await syncCartWithServer()
       
-      // Redirect to previous page or home
-      const redirect = searchParams.get('redirect') || '/'
-      navigate(redirect)
+      // Role-based routing
+      if (payload.role === 'ADMIN') {
+        navigate('/admin/products')
+      } else if (payload.role === 'SHIPPER') {
+        navigate('/shipper/dashboard')
+      } else {
+        // Regular users - check for redirect parameter or go home
+        const redirect = searchParams.get('redirect') || '/'
+        navigate(redirect)
+      }
     } catch (err: any) {
       const timeoutMessage =
         err.code === 'ECONNABORTED'
@@ -193,7 +200,15 @@ export default function Login() {
         },
         payload.token
       )
-      navigate('/')
+      
+      // Role-based routing
+      if (payload.role === 'ADMIN') {
+        navigate('/admin/products')
+      } else if (payload.role === 'SHIPPER') {
+        navigate('/shipper/dashboard')
+      } else {
+        navigate('/')
+      }
       
     } catch (err: any) {
       console.error('Passkey login error:', err)

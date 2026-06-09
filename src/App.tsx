@@ -16,6 +16,7 @@ import AdminShippers from './pages/AdminShippers'
 import ShipperLogin from './pages/ShipperLogin'
 import ShipperDashboard from './pages/ShipperDashboard'
 import Chatbot from './components/Chatbot'
+import ProtectedRoute from './components/auth/ProtectedRoute'
 
 function App() {
   return (
@@ -38,7 +39,14 @@ function App() {
         </Route>
         {/* Shipper Routes (No Layout) */}
         <Route path="shipper/login" element={<ShipperLogin />} />
-        <Route path="shipper/dashboard" element={<ShipperDashboard />} />
+        <Route 
+          path="shipper/dashboard" 
+          element={
+            <ProtectedRoute requiredRole="SHIPPER">
+              <ShipperDashboard />
+            </ProtectedRoute>
+          } 
+        />
       </Routes>
       <Chatbot />
     </BrowserRouter>
