@@ -59,11 +59,11 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
       errors.name = 'Name is required';
     }
 
-    // Phone validation - accept Vietnamese phone formats
+    // Phone validation - accept Vietnamese phone formats (10-12 digits)
     const phoneDigitsOnly = formState.phone.replace(/[\s\-]/g, ''); // Remove spaces and dashes
-    const phoneRegex = /^(\+84|84|0)[0-9]{9,10}$/; // Vietnamese phone: +84/84/0 + 9-10 digits
+    const phoneRegex = /^(\+84|84|0)[0-9]{9,11}$/; // Vietnamese phone: 0/84/+84 + 9-11 digits
     if (!formState.phone || !phoneRegex.test(phoneDigitsOnly)) {
-      errors.phone = 'Valid phone number is required (Vietnamese format: 0XXXXXXXXX or +84XXXXXXXXX)';
+      errors.phone = 'Valid phone number is required (10-12 digits, Vietnamese format)';
     }
 
     setFormState((prev) => ({ ...prev, errors }));
