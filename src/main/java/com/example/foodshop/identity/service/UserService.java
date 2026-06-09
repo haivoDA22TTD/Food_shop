@@ -1,6 +1,8 @@
 package com.example.foodshop.identity.service;
 
+import com.example.foodshop.identity.client.OrderServiceClient;
 import com.example.foodshop.identity.dto.RegisterRequest;
+import com.example.foodshop.identity.dto.ShipperRegistrationRequest;
 import com.example.foodshop.identity.dto.UserDTO;
 import com.example.foodshop.identity.entity.User;
 import com.example.foodshop.identity.repository.UserRepository;
@@ -15,6 +17,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final OrderServiceClient orderServiceClient;
 
     @Value("${app.admin.default.username:admin}")
     private String defaultAdminUsername;
@@ -26,9 +29,11 @@ public class UserService {
     private String defaultAdminPassword;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, 
+                      OrderServiceClient orderServiceClient) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.orderServiceClient = orderServiceClient;
     }
 
     @Transactional
@@ -117,5 +122,64 @@ public class UserService {
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+    }
+
+    /**
+     * Register a new shipper account and create shipper profile in Order Service.
+     * 
+     * @param request The shipper registration request
+     * @return The created User entity with role SHIPPER
+     * @throws RuntimeException if username/email exists or Order Service fails
+     */
+    @Transactional
+    public User registerShipper(ShipperRegistrationRequest request) {
+        // Validate username uniqueness
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new RuntimeException("Username already exists");
+        }
+        
+        // Validate email uniqueness
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email already exists");
+        }
+        
+        // Validate email format (additional validation beyond @Email annotation)
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+        if (!request.getEmail().matches(emailRegex)) {
+            throw new RuntimeException("Invalid email format");
+        }
+        
+        // Create User entity with role SHIPPER
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setRole("SHIPPER");
+        user.setAccountLocked(false);
+        
+        // Save user to database
+        User savedUser = userRepository.save(user);
+        
+        // Create shipper profile in Order Service
+        try {
+            OrderServiceClient.CreateShipperProfileRequest profileRequest = 
+                new OrderServiceClient.CreateShipperProfileRequest(
+                    savedUser.getId(),
+                    request.getName(),
+                    request.getPhone(),
+                    request.getEmail(),
+                    request.getVehicleType(),
+                    request.getVehicleNumber()
+                );
+            
+            orderServiceClient.createShipperProfile(profileRequest);
+            
+        } catch (OrderServiceClient.OrderServiceException e) {
+            // If Order Service fails, the transaction will roll back
+            throw new RuntimeException("Unable to create shipper profile in Order Service: " + 
+                e.getMessage(), e);
+        }
+        
+        return savedUser;
     }
 }
