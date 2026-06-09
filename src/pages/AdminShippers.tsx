@@ -196,7 +196,7 @@ export default function AdminShippers() {
       )}
 
       {/* Statistics */}
-      {statistics && (
+      {false && statistics && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="text-sm text-gray-600 mb-1">Tổng Shipper</div>
@@ -241,21 +241,57 @@ export default function AdminShippers() {
             <option value="ON_BREAK">Đang nghỉ</option>
           </select>
           <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            + Thêm Shipper Profile
-          </button>
-          <button
             onClick={() => setShowCreateAccountModal(true)}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            + Tạo Tài Khoản Shipper
+            + Tạo Shipper
           </button>
         </div>
       </div>
 
+      {/* Message when no backend API */}
+      <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded mb-6">
+        <p className="text-sm">
+          <strong>Lưu ý:</strong> Hiện tại hệ thống chỉ hỗ trợ tạo tài khoản shipper với authentication (username/password). 
+          Backend API quản lý danh sách shipper đang được phát triển.
+        </p>
+      </div>
+
+      {/* Instructions */}
+      <div className="bg-white rounded-lg shadow p-8">
+        <h2 className="text-xl font-bold mb-4">Hướng dẫn tạo tài khoản Shipper</h2>
+        <ol className="list-decimal list-inside space-y-2 text-gray-700">
+          <li>Click button <strong>"+ Tạo Shipper"</strong> phía trên</li>
+          <li>Điền đầy đủ thông tin:
+            <ul className="list-disc list-inside ml-6 mt-1">
+              <li>Username (tối thiểu 3 ký tự)</li>
+              <li>Password (tối thiểu 8 ký tự)</li>
+              <li>Email (định dạng email hợp lệ)</li>
+              <li>Full Name (họ tên đầy đủ)</li>
+              <li>Phone (10-15 số)</li>
+              <li>Vehicle Type (tùy chọn: Motorbike, Car, Bicycle)</li>
+              <li>Vehicle Number (tùy chọn: biển số xe)</li>
+            </ul>
+          </li>
+          <li>Click <strong>"Create Shipper"</strong> để tạo tài khoản</li>
+          <li>Shipper có thể đăng nhập ngay với username/password vừa tạo</li>
+          <li>Sau khi login, shipper sẽ tự động chuyển đến trang quản lý đơn hàng</li>
+        </ol>
+
+        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded">
+          <p className="text-sm text-blue-800">
+            <strong>Ví dụ:</strong><br/>
+            Username: <code>shipper1</code><br/>
+            Password: <code>Shipper@123</code><br/>
+            Email: <code>shipper1@example.com</code><br/>
+            Name: <code>Nguyễn Văn A</code><br/>
+            Phone: <code>+84901234567</code>
+          </p>
+        </div>
+      </div>
+
       {/* Shippers Table */}
+      {false && (
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {loading ? (
           <div className="text-center py-12">
@@ -422,6 +458,7 @@ export default function AdminShippers() {
           </div>
         )}
       </div>
+      )}
 
       {/* Create Modal */}
       {showCreateModal && (

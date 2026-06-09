@@ -71,11 +71,16 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    console.log('Form submitted, validating...', formState);
 
     if (!validateForm()) {
+      console.log('Validation failed:', formState.errors);
+      toast.error('Please fill in all required fields correctly');
       return;
     }
 
+    console.log('Validation passed, submitting to API...');
     setFormState((prev) => ({ ...prev, isSubmitting: true }));
 
     try {
