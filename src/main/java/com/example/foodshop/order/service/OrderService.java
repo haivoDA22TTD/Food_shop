@@ -47,9 +47,6 @@ public class OrderService {
     private PaymentServiceClient paymentServiceClient;
     
     @Autowired
-    private com.example.foodshop.order.client.IdentityServiceClient identityServiceClient;
-    
-    @Autowired
     private OrderAutomationService orderAutomationService;
     
     @Autowired
@@ -422,18 +419,10 @@ public class OrderService {
         response.setCreatedAt(order.getCreatedAt());
         response.setUpdatedAt(order.getUpdatedAt());
         
-        // Fetch user information from Identity Service
+        // Set user information
         response.setUserId(order.getUserId());
-        try {
-            com.example.foodshop.order.client.UserDTO user = identityServiceClient.getUserById(order.getUserId());
-            response.setUsername(user.getUsername());
-            response.setUserEmail(user.getEmail());
-        } catch (Exception e) {
-            log.warn("Failed to fetch user info for userId {}: {}", order.getUserId(), e.getMessage());
-            // Fallback to showing User ID if Identity Service is unavailable
-            response.setUsername("User #" + order.getUserId());
-            response.setUserEmail(null);
-        }
+        response.setUsername("User #" + order.getUserId()); // Fallback username
+        response.setUserEmail(null);
         
         // Add shipper information
         response.setShipperId(order.getShipperId());
@@ -446,15 +435,7 @@ public class OrderService {
     }
     
     private OrderItemResponse convertToOrderItemResponse(OrderItem orderItem) {
-        return new OrderItemResponse(
-                orderItem.getId(),
-                orderItem.getProductId(),
-                orderItem.getProductName(),
-                orderItem.getProductPrice(),
-                orderItem.getProductImage(),
-                orderItem.getQuantity(),
-                orderItem.getSubtotal()
-        );
+        return new OrderItemResponse(orderItem);
     }
     
     /**

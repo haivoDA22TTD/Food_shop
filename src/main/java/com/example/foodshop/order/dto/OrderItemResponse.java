@@ -1,14 +1,18 @@
 package com.example.foodshop.order.dto;
 
+import com.example.foodshop.order.entity.OrderItem;
+
 import java.math.BigDecimal;
 
+/**
+ * DTO for order items in shipper order responses
+ */
 public class OrderItemResponse {
     
     private Long id;
     private Long productId;
     private String productName;
-    private BigDecimal productPrice;
-    private String productImage;
+    private BigDecimal price;
     private Integer quantity;
     private BigDecimal subtotal;
     
@@ -16,15 +20,13 @@ public class OrderItemResponse {
     public OrderItemResponse() {
     }
     
-    public OrderItemResponse(Long id, Long productId, String productName, BigDecimal productPrice,
-                            String productImage, Integer quantity, BigDecimal subtotal) {
-        this.id = id;
-        this.productId = productId;
-        this.productName = productName;
-        this.productPrice = productPrice;
-        this.productImage = productImage;
-        this.quantity = quantity;
-        this.subtotal = subtotal;
+    public OrderItemResponse(OrderItem orderItem) {
+        this.id = orderItem.getId();
+        this.productId = orderItem.getProductId();
+        this.productName = orderItem.getProductName();
+        this.price = orderItem.getProductPrice();
+        this.quantity = orderItem.getQuantity();
+        this.subtotal = orderItem.getSubtotal();
     }
     
     // Getters and Setters
@@ -52,20 +54,12 @@ public class OrderItemResponse {
         this.productName = productName;
     }
     
-    public BigDecimal getProductPrice() {
-        return productPrice;
+    public BigDecimal getPrice() {
+        return price;
     }
     
-    public void setProductPrice(BigDecimal productPrice) {
-        this.productPrice = productPrice;
-    }
-    
-    public String getProductImage() {
-        return productImage;
-    }
-    
-    public void setProductImage(String productImage) {
-        this.productImage = productImage;
+    public void setPrice(BigDecimal price) {
+        this.price = price;
     }
     
     public Integer getQuantity() {
