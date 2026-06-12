@@ -225,17 +225,20 @@ public class PasskeyService {
 
     /**
      * Generate authentication options for WebAuthn
-     * email can be empty/null for resident key (usernameless) flow
+     * identifier can be email OR username, or empty/null for resident key (usernameless) flow
      */
     @Transactional
-    public String generateAuthenticationOptions(String email) {
+    public String generateAuthenticationOptions(String identifier) {
         StartAssertionOptions.StartAssertionOptionsBuilder builder = StartAssertionOptions.builder();
 
-        if (email != null && !email.trim().isEmpty()) {
-            // Verify user exists when email is provided
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("User not found: " + email));
-            builder.username(email);
+        if (identifier != null && !identifier.trim().isEmpty()) {
+            // Try to find user by email OR username (to support both regular users and admin)
+            User user = userRepository.findByEmail(identifier)
+                    .or(() -> userRepository.findByUsername(identifier))
+                    .orElseThrow(() -> new RuntimeException("User not found: " + identifier));
+            
+            // Always use email for WebAuthn (required by spec)
+            builder.username(user.getEmail());
         }
         // else: usernameless/resident key flow - browser will show all available passkeys
 
@@ -256,8 +259,10 @@ public class PasskeyService {
         // Save challenge + full request JSON to database
         // For usernameless flow, we cannot save with userId - use a special marker
         Long savedUserId = null;
-        if (email != null && !email.trim().isEmpty()) {
-            User user = userRepository.findByEmail(email).orElse(null);
+        if (identifier != null && !identifier.trim().isEmpty()) {
+            User user = userRepository.findByEmail(identifier)
+                    .or(() -> userRepository.findByUsername(identifier))
+                    .orElse(null);
             if (user != null) {
                 savedUserId = user.getId();
                 challengeRepository.deleteByUserIdAndType(savedUserId, "AUTHENTICATION");

@@ -100,9 +100,9 @@ public class PasskeyController {
     @Operation(summary = "Generate passkey authentication options")
     public ResponseEntity<?> getAuthenticationOptions(@RequestBody Map<String, String> request) {
         try {
-            String email = request.get("email");
+            String identifier = request.get("email"); // Can be email OR username
             
-            String optionsJson = passkeyService.generateAuthenticationOptions(email);
+            String optionsJson = passkeyService.generateAuthenticationOptions(identifier);
             
             // Return as raw JSON string with proper content type
             return ResponseEntity.ok()
