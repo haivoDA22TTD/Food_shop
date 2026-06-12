@@ -1,5 +1,6 @@
 package com.example.foodshop.identity.controller;
 
+import com.example.foodshop.identity.config.TestConfig;
 import com.example.foodshop.identity.dto.ShipperRegistrationRequest;
 import com.example.foodshop.identity.entity.User;
 import com.example.foodshop.identity.security.JwtUtil;
@@ -11,9 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -26,6 +30,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Transactional
+@Import(TestConfig.class)
 class AuthControllerCreateShipperTest {
 
     @Autowired
