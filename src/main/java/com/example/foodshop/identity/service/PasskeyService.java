@@ -297,7 +297,7 @@ public class PasskeyService {
                     .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), "AUTHENTICATION")
                     .orElseThrow(() -> new RuntimeException("Invalid or expired challenge"));
 
-            // Deserialize the original assertion request using Yubico's fromJson() GÇö correct approach
+            // Deserialize the original assertion request using Yubico's fromJson() - correct approach
             AssertionRequest originalRequest = AssertionRequest.fromJson(passkeyChallenge.getRequestJson());
 
             FinishAssertionOptions options = FinishAssertionOptions.builder()
