@@ -1,9 +1,10 @@
 package com.example.foodshop.identity.controller;
 
-import com.example.foodshop.identity.config.TestConfig;
 import com.example.foodshop.identity.dto.ShipperRegistrationRequest;
 import com.example.foodshop.identity.entity.User;
 import com.example.foodshop.identity.security.JwtUtil;
+import com.example.foodshop.identity.service.AuthRateLimitService;
+import com.example.foodshop.identity.service.TokenBlacklistService;
 import com.example.foodshop.identity.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
@@ -20,6 +20,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -32,7 +35,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-@Import(TestConfig.class)
 class AuthControllerCreateShipperTest {
 
     @Autowired
@@ -46,6 +48,12 @@ class AuthControllerCreateShipperTest {
 
     @MockBean
     private JwtUtil jwtUtil;
+
+    @MockBean
+    private TokenBlacklistService tokenBlacklistService;
+
+    @MockBean
+    private AuthRateLimitService authRateLimitService;
 
     private ShipperRegistrationRequest validRequest;
     private User mockShipperUser;
@@ -72,6 +80,12 @@ class AuthControllerCreateShipperTest {
         // Mock JWT generation
         when(jwtUtil.generateToken(anyString(), anyLong(), anyString()))
             .thenReturn("mock.jwt.token");
+        
+        // Mock Redis-dependent services
+        when(authRateLimitService.allow(anyString(), anyInt(), any()))
+            .thenReturn(true);
+        when(tokenBlacklistService.isBlacklisted(anyString()))
+            .thenReturn(false);
     }
 
     @Test
