@@ -100,13 +100,9 @@ public class PasskeyController {
     @Operation(summary = "Generate passkey authentication options")
     public ResponseEntity<?> getAuthenticationOptions(@RequestBody Map<String, String> request) {
         try {
-            String identifier = request.get("email"); // Can be username or email
-            log.info("=== PASSKEY LOGIN OPTIONS DEBUG ===");
-            log.info("Received identifier: {}", identifier);
+            String email = request.get("email");
             
-            String optionsJson = passkeyService.generateAuthenticationOptions(identifier);
-            
-            log.info("Generated authentication options successfully");
+            String optionsJson = passkeyService.generateAuthenticationOptions(email);
             
             // Return as raw JSON string with proper content type
             return ResponseEntity.ok()
@@ -127,26 +123,21 @@ public class PasskeyController {
     @Operation(summary = "Verify passkey authentication")
     public ResponseEntity<Map<String, Object>> verifyAuthentication(@RequestBody Map<String, Object> request) {
         try {
-            log.info("=== PASSKEY LOGIN VERIFY DEBUG ===");
             String assertionJson = (String) request.get("assertion");
-            log.info("Received assertion length: {}", assertionJson != null ? assertionJson.length() : 0);
             
             User user = passkeyService.verifyAuthentication(assertionJson);
 
-            log.info("Authentication successful for user: email={}, id={}", user.getEmail(), user.getId());
-
-            // Generate JWT token with username (not email) as the sub claim
-            // This matches the pattern used in regular login
-            String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole());
+            // Generate JWT token with user details
+            String token = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getRole());
 
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
-            response.put("userId", user.getId());
-            response.put("username", user.getUsername());
-            response.put("email", user.getEmail());
-            response.put("role", user.getRole());
+            response.put("user", Map.of(
+                    "id", user.getId(),
+                    "email", user.getEmail(),
+                    "role", user.getRole()
+            ));
             
-            log.info("Returning JWT token for user: {}", user.getUsername());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error verifying authentication", e);
@@ -198,28 +189,6 @@ public class PasskeyController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error deleting passkey", e);
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
-    }
-    
-    /**
-     * Debug endpoint: Clean up expired challenges (should be called by scheduled job in production)
-     */
-    @PostMapping("/debug/cleanup-challenges")
-    @Operation(summary = "Clean up expired challenges")
-    public ResponseEntity<Map<String, Object>> cleanupChallenges() {
-        try {
-            passkeyService.cleanupExpiredChallenges();
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Expired challenges cleaned up");
-            
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Error cleaning up challenges", e);
             Map<String, Object> error = new HashMap<>();
             error.put("error", e.getMessage());
             return ResponseEntity.badRequest().body(error);
