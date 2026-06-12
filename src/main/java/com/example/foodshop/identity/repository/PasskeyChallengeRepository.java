@@ -2,6 +2,7 @@ package com.example.foodshop.identity.repository;
 
 import com.example.foodshop.identity.entity.PasskeyChallenge;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -29,10 +30,18 @@ public interface PasskeyChallengeRepository extends JpaRepository<PasskeyChallen
     /**
      * Delete expired challenges
      */
+    @Modifying
     void deleteByExpiresAtBefore(LocalDateTime dateTime);
     
     /**
      * Delete all challenges for a user
      */
+    @Modifying
     void deleteByUserId(Long userId);
+    
+    /**
+     * Delete challenges by user ID and type
+     */
+    @Modifying
+    void deleteByUserIdAndType(Long userId, String type);
 }
