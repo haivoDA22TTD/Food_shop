@@ -3,6 +3,7 @@ package com.example.foodshop.identity.controller;
 import com.example.foodshop.identity.dto.AuthRequest;
 import com.example.foodshop.identity.dto.AuthResponse;
 import com.example.foodshop.identity.dto.RegisterRequest;
+import com.example.foodshop.identity.dto.ShipperRegistrationRequest;
 import com.example.foodshop.identity.entity.User;
 import com.example.foodshop.identity.security.JwtUtil;
 import com.example.foodshop.identity.service.AuthRateLimitService;
@@ -140,38 +141,39 @@ public class AuthController {
         }
         return ResponseEntity.status(401).body("Invalid token");
     }
-    
+
     /**
-     * Emergency endpoint to create admin account
-     * For production: Should be protected or removed after use
+     * Create a new shipper account (admin-only)
+     * Creates user with SHIPPER role and shipper profile in Order Service
      */
-    @PostMapping("/create-admin")
-    public ResponseEntity<?> createAdmin(@RequestBody Map<String, String> request) {
+    @PostMapping("/create-shipper")
+    public ResponseEntity<?> createShipper(@Valid @RequestBody ShipperRegistrationRequest request) {
         try {
-            String username = request.get("username");
-            String email = request.get("email");
-            String password = request.get("password");
+            // Register shipper (creates user + shipper profile)
+            User user = userService.registerShipper(request);
             
-            if (username == null || email == null || password == null) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Missing required fields: username, email, password"));
-            }
-            
-            RegisterRequest registerRequest = new RegisterRequest();
-            registerRequest.setUsername(username);
-            registerRequest.setEmail(email);
-            registerRequest.setPassword(password);
-            registerRequest.setRole("ADMIN");
-            
-            User user = userService.registerUser(registerRequest);
+            // Generate JWT token
             String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole());
             
+            // Return AuthResponse with flat structure
             AuthResponse response = new AuthResponse(token, user.getId(), user.getUsername(), 
                                                     user.getEmail(), user.getRole());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            
+        } catch (RuntimeException e) {
+            String errorMessage = e.getMessage();
+            
+            // Return 400 Bad Request for validation errors
+            if (errorMessage.contains("already exists") || 
+                errorMessage.contains("Missing required fields") ||
+                errorMessage.contains("Invalid email format")) {
+                return ResponseEntity.badRequest().body(Map.of("error", errorMessage));
+            }
+            
+            // Return 500 Internal Server Error for Order Service failures
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to create shipper account", 
+                               "detail", errorMessage));
         }
     }
 }
