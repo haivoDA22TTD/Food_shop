@@ -54,7 +54,10 @@ public class PasskeyService {
                     @Override
                     public Set<PublicKeyCredentialDescriptor> getCredentialIdsForUsername(String username) {
                         try {
-                            User user = userRepository.findByEmail(username).orElse(null);
+                            // Try to find user by email OR username (to support both regular users and admin)
+                            User user = userRepository.findByEmail(username)
+                                    .or(() -> userRepository.findByUsername(username))
+                                    .orElse(null);
                             if (user == null) return Collections.emptySet();
 
                             List<PasskeyCredential> credentials = credentialRepository.findByUserIdAndIsActive(user.getId(), true);
@@ -73,7 +76,10 @@ public class PasskeyService {
 
                     @Override
                     public Optional<ByteArray> getUserHandleForUsername(String username) {
-                        User user = userRepository.findByEmail(username).orElse(null);
+                        // Try to find user by email OR username (to support both regular users and admin)
+                        User user = userRepository.findByEmail(username)
+                                .or(() -> userRepository.findByUsername(username))
+                                .orElse(null);
                         if (user == null) return Optional.empty();
                         return Optional.of(new ByteArray(user.getId().toString().getBytes()));
                     }
