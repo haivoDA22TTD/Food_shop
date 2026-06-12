@@ -54,6 +54,9 @@ class AuthControllerCreateShipperTest {
 
     @MockBean
     private AuthRateLimitService authRateLimitService;
+    
+    @MockBean
+    private org.springframework.web.client.RestTemplate restTemplate;
 
     private ShipperRegistrationRequest validRequest;
     private User mockShipperUser;
