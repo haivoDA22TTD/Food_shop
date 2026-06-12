@@ -45,7 +45,8 @@ public class UserService {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setRole("USER");
+        // Allow custom role from request, default to USER
+        user.setRole(request.getRole() != null ? request.getRole() : "USER");
         user.setAccountLocked(false);
 
         return userRepository.save(user);

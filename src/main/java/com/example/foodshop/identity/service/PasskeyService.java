@@ -225,17 +225,22 @@ public class PasskeyService {
 
     /**
      * Generate authentication options for WebAuthn
-     * email can be empty/null for resident key (usernameless) flow
+     * identifier can be username or email, or empty/null for resident key (usernameless) flow
      */
     @Transactional
-    public String generateAuthenticationOptions(String email) {
+    public String generateAuthenticationOptions(String identifier) {
         StartAssertionOptions.StartAssertionOptionsBuilder builder = StartAssertionOptions.builder();
 
-        if (email != null && !email.trim().isEmpty()) {
-            // Verify user exists when email is provided
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("User not found: " + email));
-            builder.username(email);
+        User user = null;
+        if (identifier != null && !identifier.trim().isEmpty()) {
+            // Try to find user by username first, then by email
+            user = userRepository.findByUsername(identifier)
+                    .orElseGet(() -> userRepository.findByEmail(identifier)
+                            .orElseThrow(() -> new RuntimeException("User not found: " + identifier)));
+            
+            log.info("Found user for identifier '{}': id={}, email={}", identifier, user.getId(), user.getEmail());
+            // Use email as username for WebAuthn (required by CredentialRepository)
+            builder.username(user.getEmail());
         }
         // else: usernameless/resident key flow - browser will show all available passkeys
 
@@ -256,12 +261,9 @@ public class PasskeyService {
         // Save challenge + full request JSON to database
         // For usernameless flow, we cannot save with userId - use a special marker
         Long savedUserId = null;
-        if (email != null && !email.trim().isEmpty()) {
-            User user = userRepository.findByEmail(email).orElse(null);
-            if (user != null) {
-                savedUserId = user.getId();
-                challengeRepository.deleteByUserIdAndType(savedUserId, "AUTHENTICATION");
-            }
+        if (user != null) {
+            savedUserId = user.getId();
+            challengeRepository.deleteByUserIdAndType(savedUserId, "AUTHENTICATION");
         }
         PasskeyChallenge passkeyChallenge = new PasskeyChallenge();
         passkeyChallenge.setUserId(savedUserId);
@@ -270,6 +272,9 @@ public class PasskeyService {
         passkeyChallenge.setType("AUTHENTICATION");
         passkeyChallenge.setExpiresAt(LocalDateTime.now().plusMinutes(CHALLENGE_EXPIRY_MINUTES));
         challengeRepository.save(passkeyChallenge);
+        
+        log.info("Saved AUTHENTICATION challenge: id={}, userId={}, expiresAt={}", 
+                passkeyChallenge.getId(), savedUserId, passkeyChallenge.getExpiresAt());
 
         return credentialsGetJson;
     }
@@ -282,22 +287,44 @@ public class PasskeyService {
             throws IOException, AssertionFailedException {
 
         try {
+            log.info("=== PASSKEY AUTHENTICATION VERIFICATION START ===");
+            
             PublicKeyCredential<AuthenticatorAssertionResponse, ClientAssertionExtensionOutputs> pkc =
                     PublicKeyCredential.parseAssertionResponseJson(assertionJson);
 
             String credentialId = pkc.getId().getBase64Url();
+            log.info("Credential ID from assertion: {}", credentialId);
+            
             PasskeyCredential credential = credentialRepository.findByCredentialIdAndIsActive(credentialId, true)
                     .orElseThrow(() -> new RuntimeException("Credential not found"));
+            log.info("Found credential for userId: {}", credential.getUserId());
 
             User user = userRepository.findById(credential.getUserId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
+            log.info("Found user: {}", user.getEmail());
 
-            // Find the LATEST authentication challenge for this user
+            // Try to find challenge by userId first, then fallback to latest challenge
             PasskeyChallenge passkeyChallenge = challengeRepository
                     .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), "AUTHENTICATION")
-                    .orElseThrow(() -> new RuntimeException("Invalid or expired challenge"));
+                    .orElseGet(() -> {
+                        log.warn("No challenge found for userId={}, falling back to latest AUTHENTICATION challenge", user.getId());
+                        return challengeRepository
+                                .findTopByTypeAndExpiresAtAfterOrderByCreatedAtDesc("AUTHENTICATION", LocalDateTime.now())
+                                .orElseThrow(() -> new RuntimeException("Invalid or expired challenge"));
+                    });
+            
+            log.info("Found challenge: id={}, userId={}, created={}", 
+                    passkeyChallenge.getId(), 
+                    passkeyChallenge.getUserId(), 
+                    passkeyChallenge.getCreatedAt());
 
-            // Deserialize the original assertion request using Yubico's fromJson() - correct approach
+            // Check if challenge is expired
+            if (passkeyChallenge.getExpiresAt().isBefore(LocalDateTime.now())) {
+                log.error("Challenge expired: expiresAt={}, now={}", passkeyChallenge.getExpiresAt(), LocalDateTime.now());
+                throw new RuntimeException("Challenge expired");
+            }
+
+            // Deserialize the original assertion request using Yubico's fromJson() — correct approach
             AssertionRequest originalRequest = AssertionRequest.fromJson(passkeyChallenge.getRequestJson());
 
             FinishAssertionOptions options = FinishAssertionOptions.builder()
@@ -308,6 +335,7 @@ public class PasskeyService {
             AssertionResult result = relyingParty.finishAssertion(options);
 
             if (!result.isSuccess()) {
+                log.error("Authentication failed: result.isSuccess() = false");
                 throw new RuntimeException("Authentication failed");
             }
 

@@ -2,46 +2,27 @@ package com.example.foodshop.identity.repository;
 
 import com.example.foodshop.identity.entity.PasskeyChallenge;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface PasskeyChallengeRepository extends JpaRepository<PasskeyChallenge, Long> {
     
-    /**
-     * Find challenge by challenge string
-     */
     Optional<PasskeyChallenge> findByChallenge(String challenge);
     
-    /**
-     * Find the most recent challenge for a user by type
-     */
-    Optional<PasskeyChallenge> findTopByUserIdAndTypeOrderByCreatedAtDesc(Long userId, String type);
-    
-    /**
-     * Find all challenges for a user
-     */
-    List<PasskeyChallenge> findByUserId(Long userId);
-    
-    /**
-     * Delete expired challenges
-     */
-    @Modifying
     void deleteByExpiresAtBefore(LocalDateTime dateTime);
     
-    /**
-     * Delete all challenges for a user
-     */
-    @Modifying
-    void deleteByUserId(Long userId);
-    
-    /**
-     * Delete challenges by user ID and type
-     */
-    @Modifying
     void deleteByUserIdAndType(Long userId, String type);
+    
+    void deleteByType(String type);
+    
+    Optional<PasskeyChallenge> findTopByUserIdAndTypeOrderByCreatedAtDesc(Long userId, String type);
+    
+    // Find latest challenge by type only (for usernameless flow or when userId is unknown)
+    Optional<PasskeyChallenge> findTopByTypeOrderByCreatedAtDesc(String type);
+    
+    // Find latest challenge by type and check if not expired
+    Optional<PasskeyChallenge> findTopByTypeAndExpiresAtAfterOrderByCreatedAtDesc(String type, LocalDateTime now);
 }
