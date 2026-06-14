@@ -237,11 +237,15 @@ public class PasskeyService {
     public String generateAuthenticationOptions(String email) {
         StartAssertionOptions.StartAssertionOptionsBuilder builder = StartAssertionOptions.builder();
 
+        // Resolve identifier: frontend may send username OR email — support both
+        User resolvedUser = null;
         if (email != null && !email.trim().isEmpty()) {
-            // Verify user exists when email is provided
-            User user = userRepository.findByEmail(email)
+            resolvedUser = userRepository.findByEmail(email)
+                    .or(() -> userRepository.findByUsername(email))
                     .orElseThrow(() -> new RuntimeException("User not found: " + email));
-            builder.username(email);
+            // Yubico CredentialRepository.getCredentialIdsForUsername() uses email as the key,
+            // so always pass email (not username) to builder.username()
+            builder.username(resolvedUser.getEmail());
         }
         // else: usernameless/resident key flow - browser will show all available passkeys
 
@@ -262,12 +266,9 @@ public class PasskeyService {
         // Save challenge + full request JSON to database
         // For usernameless flow, we cannot save with userId - use a special marker
         Long savedUserId = null;
-        if (email != null && !email.trim().isEmpty()) {
-            User user = userRepository.findByEmail(email).orElse(null);
-            if (user != null) {
-                savedUserId = user.getId();
-                challengeRepository.deleteByUserIdAndType(savedUserId, "AUTHENTICATION");
-            }
+        if (resolvedUser != null) {
+            savedUserId = resolvedUser.getId();
+            challengeRepository.deleteByUserIdAndType(savedUserId, "AUTHENTICATION");
         } else {
             // Usernameless flow: clean up stale null-userId AUTHENTICATION challenges to avoid accumulation
             challengeRepository.findTopByUserIdIsNullAndTypeOrderByCreatedAtDesc("AUTHENTICATION")
