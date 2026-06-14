@@ -21,7 +21,13 @@ public interface PasskeyChallengeRepository extends JpaRepository<PasskeyChallen
      * Find the most recent challenge for a user by type
      */
     Optional<PasskeyChallenge> findTopByUserIdAndTypeOrderByCreatedAtDesc(Long userId, String type);
-    
+
+    /**
+     * Find the most recent usernameless (userId = null) challenge by type
+     * Used for passkey login when no email is provided (resident key / discoverable credential flow)
+     */
+    Optional<PasskeyChallenge> findTopByUserIdIsNullAndTypeOrderByCreatedAtDesc(String type);
+
     /**
      * Find all challenges for a user
      */

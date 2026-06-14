@@ -268,6 +268,10 @@ public class PasskeyService {
                 savedUserId = user.getId();
                 challengeRepository.deleteByUserIdAndType(savedUserId, "AUTHENTICATION");
             }
+        } else {
+            // Usernameless flow: clean up stale null-userId AUTHENTICATION challenges to avoid accumulation
+            challengeRepository.findTopByUserIdIsNullAndTypeOrderByCreatedAtDesc("AUTHENTICATION")
+                    .ifPresent(challengeRepository::delete);
         }
         PasskeyChallenge passkeyChallenge = new PasskeyChallenge();
         passkeyChallenge.setUserId(savedUserId);
@@ -298,10 +302,31 @@ public class PasskeyService {
             User user = userRepository.findById(credential.getUserId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-            // Find the LATEST authentication challenge for this user
+            // Extract the challenge value from clientDataJSON to look up the correct challenge row.
+            // This is the correct approach: challenge is unique, so we don't depend on userId
+            // which may be NULL when the login was initiated without an email (usernameless / resident key flow).
+            String challengeBase64Url;
+            try {
+                byte[] clientDataBytes = pkc.getResponse().getClientDataJSON().getBytes();
+                String clientDataStr = new String(clientDataBytes);
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                com.fasterxml.jackson.databind.JsonNode clientData = mapper.readTree(clientDataStr);
+                challengeBase64Url = clientData.get("challenge").asText();
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to extract challenge from clientDataJSON: " + e.getMessage(), e);
+            }
+
+            // Look up challenge by its unique challenge string (works for both email and usernameless flows)
             PasskeyChallenge passkeyChallenge = challengeRepository
-                    .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), "AUTHENTICATION")
-                    .orElseThrow(() -> new RuntimeException("Invalid or expired challenge"));
+                    .findByChallenge(challengeBase64Url)
+                    .orElseGet(() -> {
+                        // Fallback: try by userId (email flow) then by null userId (usernameless flow)
+                        return challengeRepository
+                                .findTopByUserIdAndTypeOrderByCreatedAtDesc(user.getId(), "AUTHENTICATION")
+                                .orElseGet(() -> challengeRepository
+                                        .findTopByUserIdIsNullAndTypeOrderByCreatedAtDesc("AUTHENTICATION")
+                                        .orElseThrow(() -> new RuntimeException("Invalid or expired challenge")));
+                    });
 
             // Deserialize the original assertion request using Yubico's fromJson() - correct approach
             AssertionRequest originalRequest = AssertionRequest.fromJson(passkeyChallenge.getRequestJson());
