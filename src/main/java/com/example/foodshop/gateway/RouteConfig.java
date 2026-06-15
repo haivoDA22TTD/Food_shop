@@ -40,7 +40,7 @@ public class RouteConfig {
                         .uri(identityServiceUri))
                 // Order Service routes (includes shipper endpoints)
                 .route("order-service", r -> r
-                        .path("/api/orders/**", "/api/cart/**", "/api/admin/orders/**")
+                        .path("/api/orders/**", "/api/cart/**", "/api/admin/orders/**", "/api/admin/shippers/**", "/api/shipper/**")
                         .filters(f -> f
                                 .retry(config -> config
                                         .setRetries(2)
