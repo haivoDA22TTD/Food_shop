@@ -35,7 +35,7 @@ public class UserService {
     @Value("${app.admin.default.password:admin123}")
     private String defaultAdminPassword;
 
-    @Value("${app.order.service.url:http://localhost:8082}")
+    @Value("${app.order.service.url:lb://order-service}")
     private String orderServiceUrl;
 
     @Autowired
