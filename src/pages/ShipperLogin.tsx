@@ -24,12 +24,20 @@ export default function ShipperLogin() {
         username: formData.username,
         password: formData.password,
       });
-      
-      const { user, token } = response.data;
-      
-      // Check if user is shipper
-      if (user.role === 'SHIPPER') {
-        setAuth(user, token);
+
+      // Backend trả về flat format: { token, userId, username, email, role }
+      const data = response.data;
+      const token = data.token;
+      const role = data.role || data.user?.role;
+
+      if (role === 'SHIPPER') {
+        const userObj = {
+          id: data.userId || data.user?.id,
+          username: data.username || data.user?.username,
+          email: data.email || data.user?.email,
+          role: role,
+        };
+        setAuth(userObj, token);
         navigate('/shipper/dashboard');
       } else {
         setError('Tài khoản này không phải là shipper');

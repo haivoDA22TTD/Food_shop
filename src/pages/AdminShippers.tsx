@@ -8,9 +8,11 @@ export default function AdminShippers() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const {
+    shippers,
     loading,
     error,
     clearError,
+    fetchShippers,
   } = useShipperStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,7 +24,17 @@ export default function AdminShippers() {
       navigate('/');
       return;
     }
-  }, [user, navigate]);
+    fetchShippers();
+  }, [user, navigate, fetchShippers]);
+
+  // Filter shippers locally based on search and status
+  const filteredShippers = (shippers || []).filter((s: any) => {
+    const matchSearch = !searchQuery ||
+      s.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.phone?.includes(searchQuery);
+    const matchStatus = !statusFilter || s.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -141,21 +153,52 @@ export default function AdminShippers() {
         </div>
       </div>
 
-      {/* Shippers Table - Temporarily disabled until backend API is ready */}
-      {/*
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        ... (table content) ...
+      {/* Shippers Table */}
+      <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
+        {loading ? (
+          <div className="p-8 text-center text-gray-500">Đang tải...</div>
+        ) : filteredShippers.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">Chưa có shipper nào</div>
+        ) : (
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tên</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SĐT</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phương tiện</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Đánh giá</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredShippers.map((s: any) => (
+                <tr key={s.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{s.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{s.email}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{s.phone}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{s.vehicleType || '-'} {s.vehicleNumber || ''}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                      s.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' :
+                      s.status === 'BUSY' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>{s.status}</span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-yellow-600">⭐ {s.rating?.toFixed(1) || '5.0'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
-      */}
-
-      {/* Shippers Table and Create Modal - Temporarily disabled until backend API is ready */}
-      {/* The CreateShipperForm component below provides the account creation functionality */}
 
       {/* Create Shipper Account Modal */}
       {showCreateAccountModal && (
         <CreateShipperForm
           onSuccess={() => {
             setShowCreateAccountModal(false);
+            fetchShippers(); // Reload danh sách sau khi tạo thành công
           }}
           onCancel={() => setShowCreateAccountModal(false)}
         />
