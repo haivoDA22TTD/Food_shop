@@ -126,15 +126,24 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
       console.log('Response ok:', response.ok);
 
       if (response.ok) {
-        const data = await response.json();
+        // Body may be empty (204) or JSON (201) — handle both safely
+        const text = await response.text();
+        const data = text ? JSON.parse(text) : {};
         console.log('Success response:', data);
-        toast.success('Shipper account created successfully!');
+        toast.success('Tạo tài khoản Shipper thành công!');
         setFormState((prev) => ({ ...prev, isSubmitting: false }));
         onSuccess();
       } else {
-        const errorData = await response.json();
-        console.error('Error response:', errorData);
-        const errorMessage = errorData.error || 'Failed to create shipper account';
+        // Parse error body safely
+        const text = await response.text();
+        let errorMessage = 'Không thể tạo tài khoản Shipper';
+        try {
+          const errorData = text ? JSON.parse(text) : {};
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (_) {
+          errorMessage = text || errorMessage;
+        }
+        console.error('Error response:', text);
         toast.error(errorMessage);
         setFormState((prev) => ({ ...prev, isSubmitting: false }));
       }
