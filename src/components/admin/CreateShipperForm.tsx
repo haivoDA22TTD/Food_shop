@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAuthStore } from '../../store/authStore';
+import axios from '../../api/axios';
 
 interface CreateShipperFormProps {
   onSuccess: () => void;
@@ -113,45 +114,22 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
       console.log('Request body:', requestBody);
       console.log('Sending request to /api/auth/create-shipper...');
 
-      const response = await fetch('/api/auth/create-shipper', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestBody),
+      // Dùng axios thay fetch để tự động gắn baseURL của API Gateway
+      const { data } = await axios.post('/api/auth/create-shipper', requestBody, {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-
-      if (response.ok) {
-        // Body may be empty (204) or JSON (201) — handle both safely
-        const text = await response.text();
-        const data = text ? JSON.parse(text) : {};
-        console.log('Success response:', data);
-        toast.success('Tạo tài khoản Shipper thành công!');
-        setFormState((prev) => ({ ...prev, isSubmitting: false }));
-        onSuccess();
-      } else {
-        // Parse error body safely
-        const text = await response.text();
-        let errorMessage = 'Không thể tạo tài khoản Shipper';
-        try {
-          const errorData = text ? JSON.parse(text) : {};
-          errorMessage = errorData.error || errorData.message || errorMessage;
-        } catch (_) {
-          errorMessage = text || errorMessage;
-        }
-        console.error('Error response:', text);
-        toast.error(errorMessage);
-        setFormState((prev) => ({ ...prev, isSubmitting: false }));
-      }
-    } catch (error) {
-      console.error('Network/Fetch error:', error);
-      toast.error('Network error. Please try again.');
+      console.log('Success response:', data);
+      toast.success('Tạo tài khoản Shipper thành công!');
+      setFormState((prev) => ({ ...prev, isSubmitting: false }));
+      onSuccess();
+    } catch (error: any) {
+      console.error('Create shipper error:', error);
+      const msg = error?.response?.data?.error || error?.response?.data?.message || 'Không thể tạo Shipper. Vui lòng thử lại.';
+      toast.error(msg);
       setFormState((prev) => ({ ...prev, isSubmitting: false }));
     }
+  };
   };
 
   const handleInputChange = (field: keyof FormState, value: string) => {
