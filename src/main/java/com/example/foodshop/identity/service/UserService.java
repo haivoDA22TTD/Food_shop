@@ -187,7 +187,7 @@ public class UserService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(shipperProfileRequest, headers);
 
-            String url = orderServiceUrl + "/internal/shippers";
+            String url = orderServiceUrl.replaceAll("/+$", "") + "/internal/shippers";
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
             if (!response.getStatusCode().is2xxSuccessful()) {
