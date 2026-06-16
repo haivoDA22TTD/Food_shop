@@ -130,7 +130,6 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
       setFormState((prev) => ({ ...prev, isSubmitting: false }));
     }
   };
-  };
 
   const handleInputChange = (field: keyof FormState, value: string) => {
     setFormState((prev) => ({
