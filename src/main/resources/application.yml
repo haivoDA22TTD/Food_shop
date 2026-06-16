@@ -50,11 +50,11 @@ spring:
                 redis-rate-limiter.requestedTokens: 1
                 key-resolver: "#{@ipKeyResolver}"
         
-        # Order Service - Orders & Cart
+        # Order Service - Orders, Cart & Shippers
         - id: order-service
           uri: lb://order-service
           predicates:
-            - Path=/api/orders/**, /api/cart/**, /api/admin/orders/**
+            - Path=/api/orders/**, /api/cart/**, /api/admin/orders/**, /api/admin/shippers/**
           filters:
             - StripPrefix=0
             - name: RequestRateLimiter
