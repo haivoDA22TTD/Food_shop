@@ -125,8 +125,13 @@ const CreateShipperForm: React.FC<CreateShipperFormProps> = ({ onSuccess, onCanc
       onSuccess();
     } catch (error: any) {
       console.error('Create shipper error:', error);
-      const msg = error?.response?.data?.error || error?.response?.data?.message || 'Không thể tạo Shipper. Vui lòng thử lại.';
-      toast.error(msg);
+      const errData = error?.response?.data;
+      // Hiện cả error lẫn detail để dễ debug
+      const msg = [errData?.error, errData?.detail, errData?.message]
+        .filter(Boolean)
+        .join(' | ') || 'Không thể tạo Shipper. Vui lòng thử lại.';
+      console.error('Error detail:', errData);
+      toast.error(msg, { duration: 8000 });
       setFormState((prev) => ({ ...prev, isSubmitting: false }));
     }
   };
