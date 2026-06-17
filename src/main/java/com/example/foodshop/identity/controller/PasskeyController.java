@@ -128,7 +128,7 @@ public class PasskeyController {
             User user = passkeyService.verifyAuthentication(assertionJson);
 
             // Generate JWT token with username (consistent with regular login)
-            String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole());
+            String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole(), user.getEmail());
 
             // Return AuthResponse with flat structure (consistent with regular login)
             Map<String, Object> response = new HashMap<>();

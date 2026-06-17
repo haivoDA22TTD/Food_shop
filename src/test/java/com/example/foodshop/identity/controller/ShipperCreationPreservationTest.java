@@ -81,7 +81,7 @@ public class ShipperCreationPreservationTest {
     @BeforeEach
     void setUp() {
         // Mock JWT generation
-        when(jwtUtil.generateToken(anyString(), anyLong(), anyString()))
+        when(jwtUtil.generateToken(anyString(), anyLong(), anyString(), anyString()))
             .thenReturn("mock.jwt.token");
 
         // Mock Redis-dependent services
@@ -339,7 +339,7 @@ public class ShipperCreationPreservationTest {
         userRepository.save(regularUser);
 
         // Mock authentication
-        when(jwtUtil.generateToken("regular_user", regularUser.getId(), "USER"))
+        when(jwtUtil.generateToken("regular_user", regularUser.getId(), "USER", regularUser.getEmail()))
             .thenReturn("regular.user.jwt.token");
 
         AuthRequest loginRequest = new AuthRequest();
@@ -382,7 +382,7 @@ public class ShipperCreationPreservationTest {
         User savedShipper = userRepository.save(existingShipper);
 
         // Mock JWT generation for login
-        when(jwtUtil.generateToken("existing_shipper", savedShipper.getId(), "SHIPPER"))
+        when(jwtUtil.generateToken("existing_shipper", savedShipper.getId(), "SHIPPER", savedShipper.getEmail()))
             .thenReturn("existing.shipper.jwt.token");
 
         AuthRequest loginRequest = new AuthRequest();

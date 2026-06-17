@@ -93,7 +93,7 @@ class AuthControllerCreateShipperTest {
         mockShipperUser.setRole("SHIPPER");
 
         // Mock JWT generation
-        when(jwtUtil.generateToken(anyString(), anyLong(), anyString()))
+        when(jwtUtil.generateToken(anyString(), anyLong(), anyString(), anyString()))
             .thenReturn("mock.jwt.token");
         
         // Mock Redis-dependent services
@@ -350,7 +350,7 @@ class AuthControllerCreateShipperTest {
         request.setVehicleNumber("59A-12345");
 
         // Mock JWT generation to return a valid token
-        when(jwtUtil.generateToken(anyString(), anyLong(), anyString()))
+        when(jwtUtil.generateToken(anyString(), anyLong(), anyString(), anyString()))
             .thenReturn("mock.jwt.token.for.shipper");
 
         // When - Admin attempts to create shipper account
@@ -401,7 +401,7 @@ class AuthControllerCreateShipperTest {
         request.setVehicleNumber("59A-12346");
 
         // Mock JWT generation
-        when(jwtUtil.generateToken(anyString(), anyLong(), anyString()))
+        when(jwtUtil.generateToken(anyString(), anyLong(), anyString(), anyString()))
             .thenReturn("mock.jwt.token.timeout");
 
         // When - Admin attempts to create shipper account
@@ -451,7 +451,7 @@ class AuthControllerCreateShipperTest {
         request.setVehicleNumber("59A-12347");
 
         // Mock JWT generation
-        when(jwtUtil.generateToken(anyString(), anyLong(), anyString()))
+        when(jwtUtil.generateToken(anyString(), anyLong(), anyString(), anyString()))
             .thenReturn("mock.jwt.token.error");
 
         // When - Admin attempts to create shipper account
