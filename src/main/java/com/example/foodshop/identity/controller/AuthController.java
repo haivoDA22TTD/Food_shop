@@ -52,7 +52,7 @@ public class AuthController {
 
         try {
             User user = userService.registerUser(request);
-            String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole());
+            String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole(), user.getEmail());
             
             AuthResponse response = new AuthResponse(token, user.getId(), user.getUsername(), 
                                                     user.getEmail(), user.getRole());
@@ -77,7 +77,7 @@ public class AuthController {
             );
 
             User user = userService.findByUsername(request.getUsername());
-            String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole());
+            String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole(), user.getEmail());
 
             AuthResponse response = new AuthResponse(token, user.getId(), user.getUsername(), 
                                                     user.getEmail(), user.getRole());
@@ -153,7 +153,7 @@ public class AuthController {
             User user = userService.registerShipper(request);
             
             // Generate JWT token
-            String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole());
+            String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole(), user.getEmail());
             
             // Return AuthResponse with flat structure
             AuthResponse response = new AuthResponse(token, user.getId(), user.getUsername(), 
