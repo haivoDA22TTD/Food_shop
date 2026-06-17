@@ -2,15 +2,15 @@
 FROM maven:3.9.5-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# Copy pom.xml and download dependencies
+# Copy pom.xml first (for better layer caching)
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
 
 # Copy source code
 COPY src ./src
 
-# Build application (skip tests for faster build)
-RUN mvn clean package -DskipTests
+# Build application - skip 'go-offline' to avoid resolving SNAPSHOT transitive deps
+# mvn package will download only the required stable versions
+RUN mvn clean package -DskipTests -B
 
 # Stage 2: Runtime
 FROM eclipse-temurin:17-jre-alpine
