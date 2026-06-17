@@ -11,6 +11,8 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -72,6 +74,20 @@ public class SecurityConfig {
                 // Public API endpoints (auth required)
                 .requestMatchers("/api/users/**").authenticated()
                 .anyRequest().denyAll()
+            )
+            // For API requests (/api/**), return 401 JSON instead of redirecting to Google OAuth
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    String path = request.getRequestURI();
+                    if (path.startsWith("/api/")) {
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{"error":"Unauthorized","message":"Token expired or invalid. Please login again."}");
+                    } else {
+                        // For non-API requests, use default OAuth2 redirect
+                        response.sendRedirect("/oauth2/authorization/google");
+                    }
+                })
             )
             .oauth2Login(oauth2 -> oauth2
                 .successHandler(oAuth2LoginSuccessHandler)
