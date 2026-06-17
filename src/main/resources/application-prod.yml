@@ -1,0 +1,116 @@
+server:
+  port: ${PORT:10000}
+  max-http-header-size: 64KB
+  netty:
+    max-initial-line-length: 16384
+    max-header-size: 65536
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      httpclient:
+        max-header-size: 65536
+        response-timeout: 60s
+        connect-timeout: 10000
+        pool:
+          max-idle-time: 30s
+      httpserver:
+        max-initial-line-length: 16384
+        max-header-size: 65536
+      default-filters:
+        - RemoveRequestHeader=Forwarded
+        - RemoveRequestHeader=X-Forwarded-For
+        - RemoveRequestHeader=X-Forwarded-Proto
+        - RemoveRequestHeader=X-Forwarded-Host
+        - RemoveRequestHeader=X-Forwarded-Port
+        # Prevent duplicate CORS headers when downstream service also sets them.
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials RETAIN_FIRST
+      discovery:
+        locator:
+          enabled: false
+          lower-case-service-id: true
+
+app:
+  gateway:
+    # Route directly to identity service in production to reduce discovery-related timeouts.
+    identity-uri: ${IDENTITY_SERVICE_URL:https://identity-service-olir.onrender.com}
+    order-uri: ${ORDER_SERVICE_URL:https://order-service.onrender.com}
+    product-uri: ${PRODUCT_SERVICE_URL:https://product-service.onrender.com}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: https://eureka-server-cqff.onrender.com/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+    registry-fetch-interval-seconds: 10
+    eureka-server-connect-timeout-seconds: 60
+    eureka-server-read-timeout-seconds: 60
+    eureka-server-total-connections: 10
+    eureka-server-total-connections-per-host: 10
+  instance:
+    hostname: ${RENDER_EXTERNAL_HOSTNAME}
+    prefer-ip-address: false
+    non-secure-port-enabled: false
+    secure-port-enabled: true
+    secure-port: 443
+    home-page-url: https://${eureka.instance.hostname}/
+    status-page-url: https://${eureka.instance.hostname}/actuator/info
+    health-check-url: https://${eureka.instance.hostname}/actuator/health
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+    instance-id: ${spring.application.name}:${random.value}
+
+# Logging
+logging:
+  level:
+    org.springframework.cloud.gateway: WARN
+    reactor.netty: WARN
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      authServiceCircuitBreaker:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 20
+        minimumNumberOfCalls: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 15s
+        permittedNumberOfCallsInHalfOpenState: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+      orderServiceCircuitBreaker:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 20
+        minimumNumberOfCalls: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 15s
+        permittedNumberOfCallsInHalfOpenState: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+      productServiceCircuitBreaker:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 20
+        minimumNumberOfCalls: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 15s
+        permittedNumberOfCallsInHalfOpenState: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+  timelimiter:
+    instances:
+      authServiceCircuitBreaker:
+        timeoutDuration: 20s
+      orderServiceCircuitBreaker:
+        timeoutDuration: 20s
+      productServiceCircuitBreaker:
+        timeoutDuration: 20s
