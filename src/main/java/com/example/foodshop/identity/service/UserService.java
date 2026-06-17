@@ -35,7 +35,7 @@ public class UserService {
     @Value("${app.admin.default.password:admin123}")
     private String defaultAdminPassword;
 
-    @Value("${app.order.service.url:http://localhost:8082}")
+    @Value("${app.order.service.url:https://order-service.onrender.com}")
     private String orderServiceUrl;
 
     @Autowired
@@ -187,7 +187,7 @@ public class UserService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(shipperProfileRequest, headers);
 
-            String url = orderServiceUrl + "/internal/shippers";
+            String url = orderServiceUrl.replaceAll("/+$", "") + "/internal/shippers";
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
             if (!response.getStatusCode().is2xxSuccessful()) {
