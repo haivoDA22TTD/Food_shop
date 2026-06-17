@@ -67,8 +67,6 @@ public class SecurityConfig {
                 .requestMatchers("/internal/**").permitAll()
                 // Protected passkey registration endpoints (auth required)
                 .requestMatchers("/api/auth/passkey/register/**", "/api/auth/passkey/list", "/api/auth/passkey/**").authenticated()
-                // Admin-only endpoints
-                .requestMatchers("/api/auth/create-shipper").hasRole("ADMIN")
                 // Public API endpoints (auth required)
                 .requestMatchers("/api/users/**").authenticated()
                 .anyRequest().denyAll()
