@@ -30,4 +30,17 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
+// Response interceptor: handle 401 (token expired) gracefully
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired - clear auth state and redirect to login
+      localStorage.removeItem('auth-storage')
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
+
 export default axiosInstance
