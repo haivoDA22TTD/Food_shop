@@ -82,7 +82,7 @@ public class SecurityConfig {
                     if (path.startsWith("/api/")) {
                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                         response.setContentType("application/json");
-                        response.getWriter().write("{"error":"Unauthorized","message":"Token expired or invalid. Please login again."}");
+                        String body = "{" + (char)34 + "error" + (char)34 + ":" + (char)34 + "Unauthorized" + (char)34 + "}"; response.getWriter().write(body);
                     } else {
                         // For non-API requests, use default OAuth2 redirect
                         response.sendRedirect("/oauth2/authorization/google");
