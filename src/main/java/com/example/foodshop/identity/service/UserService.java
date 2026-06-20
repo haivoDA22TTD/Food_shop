@@ -7,15 +7,24 @@ import com.example.foodshop.identity.entity.User;
 import com.example.foodshop.identity.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RestTemplate restTemplate;
 
     @Value("${app.admin.default.username:admin}")
     private String defaultAdminUsername;
@@ -26,10 +35,14 @@ public class UserService {
     @Value("${app.admin.default.password:admin123}")
     private String defaultAdminPassword;
 
+    @Value("${app.order.service.url:http://localhost:8082}")
+    private String orderServiceUrl;
+
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RestTemplate restTemplate) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.restTemplate = restTemplate;
     }
 
     @Transactional
@@ -121,8 +134,7 @@ public class UserService {
 
     /**
      * Register a new shipper account (admin-initiated)
-     * Creates user in Identity Service with SHIPPER role.
-     * Shipper profile in Order Service will be created lazily on first login.
+     * Creates user in Identity Service and shipper profile in Order Service
      */
     @Transactional
     public User registerShipper(ShipperRegistrationRequest request) {
@@ -158,8 +170,34 @@ public class UserService {
         user.setRole("SHIPPER");
         user.setAccountLocked(false);
 
-        // Save user to database and return immediately
-        // Shipper profile will be created in Order Service on first login (lazy initialization)
-        return userRepository.save(user);
+        // Save user to database
+        User savedUser = userRepository.save(user);
+
+        // Create shipper profile in Order Service
+        try {
+            Map<String, Object> shipperProfileRequest = new HashMap<>();
+            shipperProfileRequest.put("userId", savedUser.getId());
+            shipperProfileRequest.put("name", request.getName());
+            shipperProfileRequest.put("phone", request.getPhone());
+            shipperProfileRequest.put("email", request.getEmail());
+            shipperProfileRequest.put("vehicleType", request.getVehicleType());
+            shipperProfileRequest.put("vehicleNumber", request.getVehicleNumber());
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(shipperProfileRequest, headers);
+
+            String url = orderServiceUrl + "/internal/shippers";
+            ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new RuntimeException("Unable to create shipper profile in Order Service");
+            }
+        } catch (Exception e) {
+            // Rollback user creation if shipper profile creation fails
+            throw new RuntimeException("Unable to create shipper profile in Order Service: " + e.getMessage());
+        }
+
+        return savedUser;
     }
 }

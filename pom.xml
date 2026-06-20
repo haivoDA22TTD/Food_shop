@@ -89,11 +89,6 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
-        <!-- Load Balancer — cần thiết để @LoadBalanced RestTemplate resolve lb://SERVICE-NAME qua Eureka -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
-        </dependency>
         <!-- Ensure Apache HttpComponents 5 classes are packaged for Eureka RestTemplate transport -->
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>

@@ -40,7 +40,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         
         User user = userService.processOAuth2User(email, name, googleId);
         
-        String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole(), user.getEmail());
+        String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole());
         
         // Always redirect to frontend domain to avoid gateway oauth redirect loops.
         String redirectUrl = String.format(
