@@ -239,26 +239,37 @@ class AuthControllerCreateShipperTest {
                 .andExpect(jsonPath("$.error").value("Invalid email format"));
     }
 
+    /**
+     * This test is NO LONGER VALID after the fix.
+     * The fix removes the Order Service call, so Order Service failures no longer affect user creation.
+     * The bug condition tests below verify the new expected behavior.
+     */
     @Test
     @WithMockUser(roles = "ADMIN")
     void testCreateShipper_InternalServerError_OrderServiceFailure() throws Exception {
-        // Given - Order Service fails with exception
+        // UPDATED: After fix, Order Service failures do NOT cause user creation to fail
+        // This test now verifies that user IS created even when Order Service would fail
+        
+        // Given - Order Service would fail (but we don't call it anymore)
         when(restTemplate.postForEntity(anyString(), any(HttpEntity.class), eq(String.class)))
             .thenThrow(new RestClientException("Unable to create shipper profile in Order Service"));
 
         userRepository.deleteAll();
 
-        // When & Then - On unfixed code, this returns 500 error (current buggy behavior)
+        // When & Then - After fix, user creation SUCCEEDS (Order Service not called)
         mockMvc.perform(post("/api/auth/create-shipper")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validRequest)))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.error").exists())
-                .andExpect(jsonPath("$.detail").exists());
+                .andExpect(status().isCreated())  // CHANGED: Now returns 201 (success)
+                .andExpect(jsonPath("$.token").exists())
+                .andExpect(jsonPath("$.userId").exists())
+                .andExpect(jsonPath("$.username").value("shipper123"))
+                .andExpect(jsonPath("$.role").value("SHIPPER"));
 
-        // Verify User was NOT created due to rollback (current buggy behavior)
+        // Verify User WAS created (Order Service failure doesn't affect Identity Service)
         User user = userRepository.findByUsername("shipper123").orElse(null);
-        assertThat(user).isNull();  // User should NOT exist due to transaction rollback
+        assertThat(user).isNotNull();  // User SHOULD exist after fix
+        assertThat(user.getRole()).isEqualTo("SHIPPER");
     }
 
     @Test
