@@ -309,16 +309,22 @@ export default function Checkout() {
               <div
                 key={addr.id}
                 onClick={() => {
-                  setFormData(prev => ({
-                    ...prev,
-                    city: addr.provinceCode ? String(addr.provinceCode) : prev.city,
-                    district: addr.districtCode ? String(addr.districtCode) : prev.district,
-                    ward: addr.wardCode ? String(addr.wardCode) : prev.ward,
-                    street: addr.street || prev.street,
-                    phoneNumber: addr.phoneNumber || prev.phoneNumber,
-                  }))
-                  setAddressLabel(addr.label || '')
-                  setSaveAddress(false)
+                  const isSelected = formData.city === String(addr.provinceCode) && formData.street === (addr.street || '')
+                  if (isSelected) {
+                    setFormData(prev => ({ ...prev, city: '', district: '', ward: '', street: '', phoneNumber: '' }))
+                    setAddressLabel('')
+                  } else {
+                    setFormData(prev => ({
+                      ...prev,
+                      city: addr.provinceCode ? String(addr.provinceCode) : prev.city,
+                      district: addr.districtCode ? String(addr.districtCode) : prev.district,
+                      ward: addr.wardCode ? String(addr.wardCode) : prev.ward,
+                      street: addr.street || prev.street,
+                      phoneNumber: addr.phoneNumber || prev.phoneNumber,
+                    }))
+                    setAddressLabel(addr.label || '')
+                    setSaveAddress(false)
+                  }
                 }}
                 className={`border rounded-lg p-4 cursor-pointer transition-all ${
                   formData.city === String(addr.provinceCode) && formData.street === (addr.street || '')
@@ -345,15 +351,22 @@ export default function Checkout() {
                     >
                       {deletingAddressId === addr.id ? '...' : '✕'}
                     </button>
-                    <span className={`px-2 py-0.5 text-xs rounded whitespace-nowrap ${
-                      formData.city === String(addr.provinceCode) && formData.street === (addr.street || '')
-                        ? 'bg-primary-100 text-primary-700'
-                        : 'bg-blue-100 text-blue-700'
-                    }`}>
-                      {formData.city === String(addr.provinceCode) && formData.street === (addr.street || '')
-                        ? 'Đã chọn'
-                        : 'Chọn'}
-                    </span>
+                    {formData.city === String(addr.provinceCode) && formData.street === (addr.street || '') ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setFormData(prev => ({ ...prev, city: '', district: '', ward: '', street: '', phoneNumber: '' }))
+                          setAddressLabel('')
+                        }}
+                        className="px-2 py-0.5 text-xs rounded bg-primary-100 text-primary-700 hover:bg-primary-200"
+                      >
+                        Bỏ chọn
+                      </button>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded whitespace-nowrap">
+                        Chọn
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
