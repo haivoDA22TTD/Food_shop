@@ -353,25 +353,66 @@ export default function AdminOrders() {
       )}
 
       {/* Pagination */}
-      {!loading && orders.length > 0 && totalPages > 1 && (
-        <div className="mt-8 flex items-center justify-between">
+      {!loading && orders.length > 0 && totalPages > 0 && (
+        <div className="mt-8 flex flex-col items-center gap-4">
           <p className="text-sm text-gray-600">
             Trang {currentPage + 1} / {totalPages} • Tổng {totalOrders} đơn hàng
           </p>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(0)}
+              disabled={currentPage === 0}
+              className="px-3 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            >
+              « Đầu
+            </button>
             <button
               onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
               disabled={currentPage === 0}
-              className="px-4 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              ← Trước
+              ←
             </button>
+            {(() => {
+              const pages = []
+              const start = Math.max(0, currentPage - 2)
+              const end = Math.min(totalPages - 1, currentPage + 2)
+              if (start > 0) {
+                pages.push(<span key="start-dots" className="px-2 text-gray-400">...</span>)
+              }
+              for (let i = start; i <= end; i++) {
+                pages.push(
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(i)}
+                    className={`px-3 py-2 border rounded-lg text-sm ${
+                      i === currentPage
+                        ? 'bg-primary-600 text-white border-primary-600'
+                        : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                )
+              }
+              if (end < totalPages - 1) {
+                pages.push(<span key="end-dots" className="px-2 text-gray-400">...</span>)
+              }
+              return pages
+            })()}
             <button
               onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
               disabled={currentPage >= totalPages - 1}
-              className="px-4 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sau →
+              →
+            </button>
+            <button
+              onClick={() => setCurrentPage(totalPages - 1)}
+              disabled={currentPage >= totalPages - 1}
+              className="px-3 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            >
+              Cuối »
             </button>
           </div>
         </div>
