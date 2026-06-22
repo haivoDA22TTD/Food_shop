@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import Layout from '../components/Layout';
+import { useAuthStore } from '../store/authStore';
 
 interface OrderItem {
   id: number;
@@ -50,6 +51,7 @@ interface DashboardState {
  * Validates: Requirements 4.1, 4.2, 4.5, 4.6, 5.1, 5.6
  */
 const ShipperDashboard: React.FC = () => {
+  const { token } = useAuthStore();
   const [state, setState] = useState<DashboardState>({
     orders: [],
     loading: true,
@@ -72,7 +74,6 @@ const ShipperDashboard: React.FC = () => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
-      const token = localStorage.getItem('token');
       if (!token) {
         toast.error('Authentication token not found. Please login again.');
         return;
@@ -121,7 +122,6 @@ const ShipperDashboard: React.FC = () => {
 
   const updateOrderStatus = async (orderId: number, newStatus: string, notes?: string) => {
     try {
-      const token = localStorage.getItem('token');
       if (!token) {
         toast.error('Authentication token not found. Please login again.');
         return;
