@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import Layout from '../components/Layout';
 import { useAuthStore } from '../store/authStore';
+import axios from '../api/axios';
 
 interface OrderItem {
   id: number;
