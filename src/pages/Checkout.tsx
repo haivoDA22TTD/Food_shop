@@ -44,6 +44,7 @@ export default function Checkout() {
   const [addressLabel, setAddressLabel] = useState('')
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([])
   const [loadingAddresses, setLoadingAddresses] = useState(false)
+  const [deletingAddressId, setDeletingAddressId] = useState<number | null>(null)
 
   // Location data from API
   const [provinces, setProvinces] = useState<Array<{ code: number; name: string }>>([])
@@ -244,6 +245,20 @@ export default function Checkout() {
     }
   }
 
+  const handleDeleteAddress = async (e: React.MouseEvent, addressId: number) => {
+    e.stopPropagation()
+    if (!confirm('Xóa địa chỉ này?')) return
+    setDeletingAddressId(addressId)
+    try {
+      await axios.delete(`/api/user/addresses/${addressId}`)
+      setSavedAddresses(prev => prev.filter(a => a.id !== addressId))
+    } catch (err: any) {
+      alert('Không thể xóa địa chỉ')
+    } finally {
+      setDeletingAddressId(null)
+    }
+  }
+
   if (checkoutItems.length === 0 && !syncing) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -321,11 +336,25 @@ export default function Checkout() {
                       <p className="text-sm text-gray-500 mt-1">{addr.phoneNumber}</p>
                     )}
                   </div>
-                  <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded whitespace-nowrap">
-                    {formData.city === String(addr.provinceCode) && formData.street === (addr.street || '')
-                      ? 'Đã chọn'
-                      : 'Chọn'}
-                  </span>
+                  <div className="flex flex-col items-center gap-1 ml-2">
+                    <button
+                      onClick={(e) => handleDeleteAddress(e, addr.id)}
+                      disabled={deletingAddressId === addr.id}
+                      className="px-2 py-0.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded text-xs disabled:opacity-50"
+                      title="Xóa địa chỉ"
+                    >
+                      {deletingAddressId === addr.id ? '...' : '✕'}
+                    </button>
+                    <span className={`px-2 py-0.5 text-xs rounded whitespace-nowrap ${
+                      formData.city === String(addr.provinceCode) && formData.street === (addr.street || '')
+                        ? 'bg-primary-100 text-primary-700'
+                        : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      {formData.city === String(addr.provinceCode) && formData.street === (addr.street || '')
+                        ? 'Đã chọn'
+                        : 'Chọn'}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
