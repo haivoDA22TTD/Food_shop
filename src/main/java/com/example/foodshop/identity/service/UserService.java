@@ -5,6 +5,7 @@ import com.example.foodshop.identity.dto.ShipperRegistrationRequest;
 import com.example.foodshop.identity.dto.UserDTO;
 import com.example.foodshop.identity.entity.User;
 import com.example.foodshop.identity.repository.UserRepository;
+import com.example.foodshop.identity.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -25,6 +26,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RestTemplate restTemplate;
+    private final JwtUtil jwtUtil;
 
     @Value("${app.admin.default.username:admin}")
     private String defaultAdminUsername;
@@ -35,14 +37,15 @@ public class UserService {
     @Value("${app.admin.default.password:admin123}")
     private String defaultAdminPassword;
 
-    @Value("${app.order.service.url:http://localhost:8082}")
-    private String orderServiceUrl;
+    @Value("${app.gateway.url:http://localhost:8080}")
+    private String gatewayUrl;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RestTemplate restTemplate) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RestTemplate restTemplate, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.restTemplate = restTemplate;
+        this.jwtUtil = jwtUtil;
     }
 
     @Transactional
@@ -173,21 +176,23 @@ public class UserService {
         // Save user to database
         User savedUser = userRepository.save(user);
 
-        // Create shipper profile in Order Service
+        // Create shipper profile in Order Service via Gateway with admin JWT
         try {
             Map<String, Object> shipperProfileRequest = new HashMap<>();
-            shipperProfileRequest.put("userId", savedUser.getId());
             shipperProfileRequest.put("name", request.getName());
             shipperProfileRequest.put("phone", request.getPhone());
             shipperProfileRequest.put("email", request.getEmail());
             shipperProfileRequest.put("vehicleType", request.getVehicleType());
             shipperProfileRequest.put("vehicleNumber", request.getVehicleNumber());
 
+            String adminJwt = jwtUtil.generateToken("admin", 0L, "ADMIN");
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(adminJwt);
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(shipperProfileRequest, headers);
 
-            String url = orderServiceUrl + "/internal/shippers";
+            String url = gatewayUrl + "/api/admin/shippers";
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
             if (!response.getStatusCode().is2xxSuccessful()) {
