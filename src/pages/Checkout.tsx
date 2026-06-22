@@ -5,6 +5,15 @@ import axios from '../api/axios'
 import { useCartStore } from '../store/cartStore'
 import { useAuthStore } from '../store/authStore'
 
+interface SavedAddress {
+  id: number
+  fullAddress: string
+  phoneNumber: string
+  label: string
+  isDefault: boolean
+  createdAt: string
+}
+
 export default function Checkout() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
@@ -26,6 +35,11 @@ export default function Checkout() {
     notes: '',
     paymentMethod: 'COD',
   })
+
+  const [saveAddress, setSaveAddress] = useState(false)
+  const [addressLabel, setAddressLabel] = useState('')
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([])
+  const [loadingAddresses, setLoadingAddresses] = useState(false)
 
   // Location data from API
   const [provinces, setProvinces] = useState<Array<{ code: number; name: string }>>([])
@@ -132,6 +146,23 @@ export default function Checkout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]) // Only run when user changes, not syncCartWithServer
 
+  // Fetch saved addresses
+  useEffect(() => {
+    const loadSavedAddresses = async () => {
+      if (!user) return
+      setLoadingAddresses(true)
+      try {
+        const response = await axios.get('/api/user/addresses')
+        setSavedAddresses(response.data || [])
+      } catch (err) {
+        console.error('Failed to load saved addresses:', err)
+      } finally {
+        setLoadingAddresses(false)
+      }
+    }
+    loadSavedAddresses()
+  }, [user])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -179,7 +210,9 @@ export default function Checkout() {
         phoneNumber: formData.phoneNumber,
         notes: formData.notes,
         paymentMethod: formData.paymentMethod,
-        selectedProductIds: selectedProductIds, // Send selected items
+        selectedProductIds: selectedProductIds,
+        saveAddress: saveAddress,
+        addressLabel: saveAddress ? addressLabel || undefined : undefined,
       })
       
       // Clear selected items from localStorage
@@ -240,6 +273,44 @@ export default function Checkout() {
       {error && (
         <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded mb-6">
           {error}
+        </div>
+      )}
+
+      {/* Saved Addresses */}
+      {savedAddresses.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-3">Địa chỉ đã lưu</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {savedAddresses.map((addr) => (
+              <div
+                key={addr.id}
+                onClick={() => {
+                  setFormData(prev => ({
+                    ...prev,
+                    phoneNumber: addr.phoneNumber || prev.phoneNumber,
+                  }))
+                  setAddressLabel(addr.label || '')
+                  alert(`Đã chọn địa chỉ:\n${addr.fullAddress}\n\nVui lòng điền thông tin Tỉnh/Quận/Phường bên dưới hoặc nhập địa chỉ mới.`)
+                }}
+                className="border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-all"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    {addr.label && (
+                      <p className="text-sm font-semibold text-blue-700 mb-1">{addr.label}</p>
+                    )}
+                    <p className="text-sm text-gray-800 line-clamp-2">{addr.fullAddress}</p>
+                    {addr.phoneNumber && (
+                      <p className="text-sm text-gray-500 mt-1">{addr.phoneNumber}</p>
+                    )}
+                  </div>
+                  <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded whitespace-nowrap">
+                    Chọn
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -338,6 +409,33 @@ export default function Checkout() {
                 placeholder="0123456789"
                 required
               />
+            </div>
+
+            {/* Save Address */}
+            <div className="border-t pt-4">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="saveAddress"
+                  checked={saveAddress}
+                  onChange={(e) => setSaveAddress(e.target.checked)}
+                  className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <div className="flex-1">
+                  <label htmlFor="saveAddress" className="text-sm font-medium text-gray-700 cursor-pointer">
+                    Lưu địa chỉ này vào sổ địa chỉ
+                  </label>
+                  {saveAddress && (
+                    <input
+                      type="text"
+                      value={addressLabel}
+                      onChange={(e) => setAddressLabel(e.target.value)}
+                      className="input-field mt-2"
+                      placeholder="Ghi chú cho địa chỉ (VD: Nhà riêng, Văn phòng...)"
+                    />
+                  )}
+                </div>
+              </div>
             </div>
 
             <div>
