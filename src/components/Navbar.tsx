@@ -65,6 +65,11 @@ export default function Navbar() {
                     </Link>
                   </>
                 )}
+                {user.role?.toUpperCase() === 'SHIPPER' && (
+                  <Link to="/shipper/dashboard" className="text-gray-700 hover:text-primary-600 transition-colors">
+                    🚚 Quản lý giao hàng
+                  </Link>
+                )}
                 <Link to="/profile" className="text-gray-700 hover:text-primary-600 transition-colors">
                   Tài khoản
                 </Link>
@@ -136,6 +141,11 @@ export default function Navbar() {
                       Quản lý đơn hàng
                     </Link>
                   </>
+                )}
+                {user.role?.toUpperCase() === 'SHIPPER' && (
+                  <Link to="/shipper/dashboard" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                    🚚 Quản lý giao hàng
+                  </Link>
                 )}
                 <Link to="/profile" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">
                   Tài khoản
