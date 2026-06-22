@@ -6,39 +6,31 @@ interface ProtectedRouteProps {
   requiredRole: string;
 }
 
-/**
- * Protected route component for role-based access control
- * Validates: Requirements 7.5, 7.6
- */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
-  const token = localStorage.getItem('token');
-  const userStr = localStorage.getItem('user');
+  // Zustand persist stores under key "auth-storage" as { state: { user, token }, version }
+  let authStr = localStorage.getItem('auth-storage');
+  let token: string | null = null;
+  let user: any = null;
 
-  // Check if token exists
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // Check if user data exists
-  let user;
   try {
-    user = userStr ? JSON.parse(userStr) : null;
+    if (authStr) {
+      const parsed = JSON.parse(authStr);
+      const state = parsed.state || parsed;
+      token = state.token;
+      user = state.user;
+    }
   } catch (error) {
-    console.error('Failed to parse user data:', error);
+    console.error('Failed to parse auth data:', error);
+  }
+
+  if (!token || !user || !user.role) {
     return <Navigate to="/login" replace />;
   }
 
-  // Check if user has a role
-  if (!user || !user.role) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // Check if user has the required role
   if (user.role !== requiredRole) {
-    return <Navigate to="/unauthorized" replace />;
+    return <Navigate to="/login" replace />;
   }
 
-  // User is authenticated and has the required role
   return <>{children}</>;
 };
 
