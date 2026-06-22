@@ -89,7 +89,7 @@ const ShipperDashboard: React.FC = () => {
         params['status'] = status;
       }
 
-      const { data } = await axios.get('/api/orders/shipper/my-orders', { params });
+      const { data } = await axios.get('/api/shipper/orders', { params });
       setState((prev) => ({
         ...prev,
         orders: data.content,
@@ -115,7 +115,12 @@ const ShipperDashboard: React.FC = () => {
         return;
       }
 
-      await axios.put(`/api/orders/shipper/${orderId}/status`, { status: newStatus, notes });
+      if (newStatus === 'IN_TRANSIT') {
+        await axios.put(`/api/shipper/orders/${orderId}/pickup`);
+      } else if (newStatus === 'DELIVERED') {
+        await axios.put(`/api/shipper/orders/${orderId}/deliver`, { notes });
+      }
+
       toast.success(`Order status updated to ${newStatus}`);
       fetchOrders(state.pagination.page, state.selectedStatus);
     } catch (error: any) {
