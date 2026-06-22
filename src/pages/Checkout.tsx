@@ -8,6 +8,10 @@ import { useAuthStore } from '../store/authStore'
 interface SavedAddress {
   id: number
   fullAddress: string
+  provinceCode: number | null
+  districtCode: number | null
+  wardCode: number | null
+  street: string | null
   phoneNumber: string
   label: string
   isDefault: boolean
@@ -213,6 +217,10 @@ export default function Checkout() {
         selectedProductIds: selectedProductIds,
         saveAddress: saveAddress,
         addressLabel: saveAddress ? addressLabel || undefined : undefined,
+        provinceCode: saveAddress ? parseInt(formData.city) : undefined,
+        districtCode: saveAddress ? parseInt(formData.district) : undefined,
+        wardCode: saveAddress ? parseInt(formData.ward) : undefined,
+        street: saveAddress ? formData.street : undefined,
       })
       
       // Clear selected items from localStorage
@@ -279,7 +287,8 @@ export default function Checkout() {
       {/* Saved Addresses */}
       {savedAddresses.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-3">Địa chỉ đã lưu</h2>
+          <h2 className="text-lg font-semibold mb-1">Địa chỉ đã lưu</h2>
+          <p className="text-sm text-gray-500 mb-3">Click vào địa chỉ để điền tự động vào form bên dưới</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {savedAddresses.map((addr) => (
               <div
@@ -287,12 +296,20 @@ export default function Checkout() {
                 onClick={() => {
                   setFormData(prev => ({
                     ...prev,
+                    city: addr.provinceCode ? String(addr.provinceCode) : prev.city,
+                    district: addr.districtCode ? String(addr.districtCode) : prev.district,
+                    ward: addr.wardCode ? String(addr.wardCode) : prev.ward,
+                    street: addr.street || prev.street,
                     phoneNumber: addr.phoneNumber || prev.phoneNumber,
                   }))
                   setAddressLabel(addr.label || '')
-                  alert(`Đã chọn địa chỉ:\n${addr.fullAddress}\n\nVui lòng điền thông tin Tỉnh/Quận/Phường bên dưới hoặc nhập địa chỉ mới.`)
+                  setSaveAddress(false)
                 }}
-                className="border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-all"
+                className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                  formData.city === String(addr.provinceCode) && formData.street === (addr.street || '')
+                    ? 'border-primary-500 bg-primary-50'
+                    : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50'
+                }`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
@@ -305,7 +322,9 @@ export default function Checkout() {
                     )}
                   </div>
                   <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded whitespace-nowrap">
-                    Chọn
+                    {formData.city === String(addr.provinceCode) && formData.street === (addr.street || '')
+                      ? 'Đã chọn'
+                      : 'Chọn'}
                   </span>
                 </div>
               </div>
