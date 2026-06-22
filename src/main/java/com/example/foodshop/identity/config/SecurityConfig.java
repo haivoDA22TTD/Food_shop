@@ -67,6 +67,8 @@ public class SecurityConfig {
                 .requestMatchers("/internal/**").permitAll()
                 // Protected passkey registration endpoints (auth required)
                 .requestMatchers("/api/auth/passkey/register/**", "/api/auth/passkey/list", "/api/auth/passkey/**").authenticated()
+                // Admin/protected auth endpoints (auth required)
+                .requestMatchers("/api/auth/create-shipper", "/api/auth/logout", "/api/auth/validate", "/api/auth/redis-health").authenticated()
                 // Public API endpoints (auth required)
                 .requestMatchers("/api/users/**").authenticated()
                 .anyRequest().denyAll()
