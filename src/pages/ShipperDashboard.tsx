@@ -79,44 +79,31 @@ const ShipperDashboard: React.FC = () => {
         return;
       }
 
-      const params = new URLSearchParams({
+      const params: Record<string, string> = {
         page: page.toString(),
         size: state.pagination.size.toString(),
-      });
+      };
 
       if (status !== 'ALL') {
-        params.append('status', status);
+        params['status'] = status;
       }
 
-      const response = await fetch(`/api/orders/shipper/my-orders?${params}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const { data } = await axios.get('/api/orders/shipper/my-orders', { params });
+      setState((prev) => ({
+        ...prev,
+        orders: data.content,
+        pagination: {
+          page: data.pageable.pageNumber,
+          size: data.pageable.pageSize,
+          totalPages: data.totalPages,
+          totalElements: data.totalElements,
         },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setState((prev) => ({
-          ...prev,
-          orders: data.content,
-          pagination: {
-            page: data.pageable.pageNumber,
-            size: data.pageable.pageSize,
-            totalPages: data.totalPages,
-            totalElements: data.totalElements,
-          },
-          loading: false,
-        }));
-      } else {
-        const errorData = await response.json();
-        const errorMessage = errorData.error || 'Failed to fetch orders';
-        setState((prev) => ({ ...prev, error: errorMessage, loading: false }));
-        toast.error(errorMessage);
-      }
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      setState((prev) => ({ ...prev, error: 'Network error', loading: false }));
-      toast.error('Network error. Please try again.');
+        loading: false,
+      }));
+    } catch (error: any) {
+      const msg = error?.response?.data?.error || 'Không thể tải danh sách đơn hàng';
+      setState((prev) => ({ ...prev, error: msg, loading: false }));
+      toast.error(msg);
     }
   };
 
@@ -127,27 +114,12 @@ const ShipperDashboard: React.FC = () => {
         return;
       }
 
-      const response = await fetch(`/api/orders/shipper/${orderId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: newStatus, notes }),
-      });
-
-      if (response.ok) {
-        toast.success(`Order status updated to ${newStatus}`);
-        // Refresh orders
-        fetchOrders(state.pagination.page, state.selectedStatus);
-      } else {
-        const errorData = await response.json();
-        const errorMessage = errorData.error || 'Failed to update order status';
-        toast.error(errorMessage);
-      }
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      toast.error('Network error. Please try again.');
+      await axios.put(`/api/orders/shipper/${orderId}/status`, { status: newStatus, notes });
+      toast.success(`Order status updated to ${newStatus}`);
+      fetchOrders(state.pagination.page, state.selectedStatus);
+    } catch (error: any) {
+      const msg = error?.response?.data?.error || 'Không thể cập nhật trạng thái';
+      toast.error(msg);
     }
   };
 
