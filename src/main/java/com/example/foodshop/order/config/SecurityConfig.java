@@ -46,9 +46,12 @@ public class SecurityConfig {
                 
                 // Admin endpoints require ADMIN role
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                
+
+                // Shipper endpoints require SHIPPER role
+                .requestMatchers("/api/shipper/**").hasRole("SHIPPER")
+
                 // User endpoints require authentication
-                .requestMatchers("/api/orders/**", "/api/cart/**", "/api/user/addresses/**", "/api/shipper/**").authenticated()
+                .requestMatchers("/api/orders/**", "/api/cart/**", "/api/user/addresses/**").authenticated()
                 
                 // Deny all other requests
                 .anyRequest().denyAll()
