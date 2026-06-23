@@ -49,10 +49,7 @@ public class RouteConfig {
                                                   org.springframework.http.HttpMethod.PUT)
                                         .setStatuses(org.springframework.http.HttpStatus.BAD_GATEWAY,
                                                 org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
-                                                org.springframework.http.HttpStatus.GATEWAY_TIMEOUT))
-                                .circuitBreaker(config -> config
-                                        .setName("orderServiceCircuitBreaker")
-                                        .setFallbackUri("forward:/fallback/order")))
+                                                org.springframework.http.HttpStatus.GATEWAY_TIMEOUT)))
                         .uri(orderServiceUri))
                 // Product Service routes
                 .route("product-service", r -> r
