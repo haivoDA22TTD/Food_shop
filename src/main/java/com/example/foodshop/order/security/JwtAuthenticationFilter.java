@@ -4,6 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,6 +19,8 @@ import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -37,28 +41,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 username = jwtUtil.extractUsername(jwt);
             } catch (Exception e) {
-                logger.warn("Failed to extract username from JWT: " + e.getMessage());
+                log.warn("Failed to extract username from JWT: {}", e.getMessage());
             }
 
             try {
                 userId = jwtUtil.extractUserId(jwt);
             } catch (Exception e) {
-                logger.warn("Failed to extract userId from JWT (continuing without): " + e.getMessage());
+                log.warn("Failed to extract userId from JWT (continuing without): {}", e.getMessage());
             }
 
             try {
                 role = jwtUtil.extractRole(jwt);
             } catch (Exception e) {
-                logger.warn("Failed to extract role from JWT: " + e.getMessage());
+                log.warn("Failed to extract role from JWT: {}", e.getMessage());
             }
 
-            logger.info("JWT extraction result - username: {}, userId: {}, role: {}", username, userId, role);
+            log.info("JWT extraction result - username: {}, userId: {}, role: {}", username, userId, role);
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             if (jwtUtil.validateToken(jwt)) {
                 String effectiveRole = (role != null) ? role : "USER";
-                logger.info("Setting authentication for user '{}' with role '{}'", username, effectiveRole);
+                log.info("Setting authentication for user '{}' with role '{}'", username, effectiveRole);
 
                 List<SimpleGrantedAuthority> authorities = List.of(
                     new SimpleGrantedAuthority("ROLE_" + effectiveRole)
@@ -71,7 +75,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             } else {
-                logger.warn("JWT token validation failed for user '{}'", username);
+                log.warn("JWT token validation failed for user '{}'", username);
             }
         }
 
