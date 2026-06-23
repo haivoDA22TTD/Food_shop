@@ -19,14 +19,11 @@ public class CorsConfig {
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
-        // Use specific origins instead of patterns to avoid duplicate CORS headers
-        corsConfig.setAllowedOrigins(Arrays.asList(
-                "https://frontend-qpuj.onrender.com",
-                "https://frontend-gpuj.onrender.com",
-                "https://frontend-gpu1.onrender.com",
-                "http://localhost:5173",
-                "http://localhost:3000",
-                "http://127.0.0.1:5173"
+        // Use allowedOriginPatterns to support dynamic Render subdomain
+        corsConfig.setAllowedOriginPatterns(Arrays.asList(
+                "https://frontend-*.onrender.com",
+                "http://localhost:*",
+                "http://127.0.0.1:*"
         ));
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         corsConfig.setAllowedHeaders(Arrays.asList("*"));
