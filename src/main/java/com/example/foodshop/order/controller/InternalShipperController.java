@@ -1,84 +1,46 @@
 package com.example.foodshop.order.controller;
 
-import com.example.foodshop.order.dto.CreateShipperProfileRequest;
-import com.example.foodshop.order.dto.ShipperResponse;
-import com.example.foodshop.order.entity.Shipper;
-import com.example.foodshop.order.entity.ShipperStatus;
-import com.example.foodshop.order.repository.ShipperRepository;
+import com.example.foodshop.order.dto.ShipperRequest;
+import com.example.foodshop.order.service.ShipperService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.Optional;
 
-/**
- * Internal controller for shipper profile management.
- * Used by Identity Service for inter-service communication.
- * 
- * Validates: Requirements 1.3 - Shipper profile creation
- */
 @RestController
 @RequestMapping("/internal/shippers")
 public class InternalShipperController {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(InternalShipperController.class);
+
     @Autowired
-    private ShipperRepository shipperRepository;
-    
-    /**
-     * Creates a shipper profile in the Order Service.
-     * Called by Identity Service after creating a user account with role SHIPPER.
-     * 
-     * @param request The shipper profile creation request
-     * @return ShipperResponse with HTTP 201 on success
-     */
+    private ShipperService shipperService;
+
     @PostMapping
-    public ResponseEntity<?> createShipperProfile(@Valid @RequestBody CreateShipperProfileRequest request) {
+    public ResponseEntity<?> createShipper(@RequestBody Map<String, Object> request) {
         try {
-            // Validate that userId is not already linked to another shipper
-            Optional<Shipper> existingByUserId = shipperRepository.findByUserId(request.getUserId());
-            if (existingByUserId.isPresent()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "UserId already linked to another shipper"));
-            }
-            
-            // Validate that phone number is unique
-            Optional<Shipper> existingByPhone = shipperRepository.findByPhone(request.getPhone());
-            if (existingByPhone.isPresent()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Phone number already exists"));
-            }
-            
-            // Create Shipper entity with default values
-            Shipper shipper = new Shipper();
-            shipper.setUserId(request.getUserId());
-            shipper.setName(request.getName());
-            shipper.setPhone(request.getPhone());
-            shipper.setEmail(request.getEmail());
-            shipper.setVehicleType(request.getVehicleType());
-            shipper.setVehicleNumber(request.getVehicleNumber());
-            
-            // Set default values as per requirements
-            shipper.setStatus(ShipperStatus.AVAILABLE);
-            shipper.setIsActive(true);
-            shipper.setRating(5.0);
-            shipper.setTotalDeliveries(0);
-            shipper.setSuccessfulDeliveries(0);
-            shipper.setTotalRatings(0);
-            
-            // Save shipper to database
-            Shipper savedShipper = shipperRepository.save(shipper);
-            
-            // Return ShipperResponse DTO
-            ShipperResponse response = new ShipperResponse(savedShipper);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-            
+            log.info("Internal: Creating shipper profile for userId: {}", request.get("userId"));
+
+            ShipperRequest shipperRequest = new ShipperRequest();
+            shipperRequest.setName((String) request.get("name"));
+            shipperRequest.setPhone((String) request.get("phone"));
+            shipperRequest.setEmail((String) request.get("email"));
+            shipperRequest.setVehicleType((String) request.get("vehicleType"));
+            shipperRequest.setVehicleNumber((String) request.get("vehicleNumber"));
+
+            var shipper = shipperService.createShipper(shipperRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body(shipper);
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid shipper creation: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to create shipper profile", 
-                               "detail", e.getMessage()));
+            log.error("Error creating shipper: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of("error", "Unable to create shipper"));
         }
     }
 }

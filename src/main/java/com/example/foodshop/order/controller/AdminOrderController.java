@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -39,7 +40,7 @@ public class AdminOrderController {
             @RequestParam(required = false) String orderNumber,
             @RequestParam(required = false) Long userId) {
         try {
-            Pageable pageable = PageRequest.of(page, size);
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
             Page<OrderResponse> orders = orderService.getAllOrders(pageable, status, orderNumber, userId);
             return ResponseEntity.ok(orders);
         } catch (Exception e) {
@@ -129,7 +130,7 @@ public class AdminOrderController {
             @RequestParam(defaultValue = "20") int size) {
         try {
             log.info("Admin getting orders ready for assignment");
-            Pageable pageable = PageRequest.of(page, size);
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
             Page<OrderResponse> orders = orderService.getOrdersReadyForAssignment(pageable);
             return ResponseEntity.ok(orders);
         } catch (Exception e) {
@@ -150,7 +151,7 @@ public class AdminOrderController {
             @RequestParam(required = false) OrderStatus status) {
         try {
             log.info("Admin getting orders for shipper {}", shipperId);
-            Pageable pageable = PageRequest.of(page, size);
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
             Page<OrderResponse> orders = orderService.getOrdersByShipper(shipperId, pageable, status);
             return ResponseEntity.ok(orders);
         } catch (Exception e) {

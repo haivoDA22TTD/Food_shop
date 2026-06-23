@@ -52,6 +52,12 @@ public class OrderService {
     @Autowired
     private com.example.foodshop.order.repository.ShipperRepository shipperRepository;
     
+    @Autowired
+    private com.example.foodshop.order.client.IdentityServiceClient identityServiceClient;
+
+    @Autowired
+    private com.example.foodshop.order.repository.UserAddressRepository userAddressRepository;
+    
     public OrderResponse createOrderFromCart(Long userId, CreateOrderRequest request, String authToken) {
         try {
             // Get user's cart
@@ -163,6 +169,28 @@ public class OrderService {
                 log.info("Cleared entire cart");
             }
             
+            // Save address if requested
+            if (Boolean.TRUE.equals(request.getSaveAddress())) {
+                try {
+                    com.example.foodshop.order.entity.UserAddress addr = new com.example.foodshop.order.entity.UserAddress();
+                    addr.setUserId(userId);
+                    addr.setFullAddress(request.getShippingAddress());
+                    addr.setProvinceCode(request.getProvinceCode());
+                    addr.setDistrictCode(request.getDistrictCode());
+                    addr.setWardCode(request.getWardCode());
+                    addr.setStreet(request.getStreet());
+                    addr.setPhoneNumber(request.getPhoneNumber());
+                    addr.setLabel(request.getAddressLabel());
+                    if (userAddressRepository.countByUserId(userId) == 0) {
+                        addr.setIsDefault(true);
+                    }
+                    userAddressRepository.save(addr);
+                    log.info("Saved address for user {}", userId);
+                } catch (Exception e) {
+                    log.warn("Failed to save address for user {}: {}", userId, e.getMessage());
+                }
+            }
+
             log.info("Created order {} for user {} with total amount {}", 
                     order.getOrderNumber(), userId, totalAmount);
             
@@ -419,10 +447,18 @@ public class OrderService {
         response.setCreatedAt(order.getCreatedAt());
         response.setUpdatedAt(order.getUpdatedAt());
         
-        // Set user information
+        // Fetch user information from Identity Service
         response.setUserId(order.getUserId());
-        response.setUsername("User #" + order.getUserId()); // Fallback username
-        response.setUserEmail(null);
+        try {
+            com.example.foodshop.order.client.UserDTO user = identityServiceClient.getUserById(order.getUserId());
+            response.setUsername(user.getUsername());
+            response.setUserEmail(user.getEmail());
+        } catch (Exception e) {
+            log.warn("Failed to fetch user info for userId {}: {}", order.getUserId(), e.getMessage());
+            // Fallback to showing User ID if Identity Service is unavailable
+            response.setUsername("User #" + order.getUserId());
+            response.setUserEmail(null);
+        }
         
         // Add shipper information
         response.setShipperId(order.getShipperId());
@@ -435,7 +471,15 @@ public class OrderService {
     }
     
     private OrderItemResponse convertToOrderItemResponse(OrderItem orderItem) {
-        return new OrderItemResponse(orderItem);
+        return new OrderItemResponse(
+                orderItem.getId(),
+                orderItem.getProductId(),
+                orderItem.getProductName(),
+                orderItem.getProductPrice(),
+                orderItem.getProductImage(),
+                orderItem.getQuantity(),
+                orderItem.getSubtotal()
+        );
     }
     
     /**

@@ -26,7 +26,19 @@ public class CreateOrderRequest {
      * If null or empty, all items in cart will be checked out (backward compatible)
      */
     private List<Long> selectedProductIds;
-    
+
+    private Boolean saveAddress = false;
+
+    private String addressLabel;
+
+    private Integer provinceCode;
+
+    private Integer districtCode;
+
+    private Integer wardCode;
+
+    private String street;
+
     // Constructors
     public CreateOrderRequest() {
     }
@@ -87,4 +99,22 @@ public class CreateOrderRequest {
     public void setSelectedProductIds(List<Long> selectedProductIds) {
         this.selectedProductIds = selectedProductIds;
     }
+
+    public Boolean getSaveAddress() { return saveAddress; }
+    public void setSaveAddress(Boolean saveAddress) { this.saveAddress = saveAddress; }
+
+    public String getAddressLabel() { return addressLabel; }
+    public void setAddressLabel(String addressLabel) { this.addressLabel = addressLabel; }
+
+    public Integer getProvinceCode() { return provinceCode; }
+    public void setProvinceCode(Integer provinceCode) { this.provinceCode = provinceCode; }
+
+    public Integer getDistrictCode() { return districtCode; }
+    public void setDistrictCode(Integer districtCode) { this.districtCode = districtCode; }
+
+    public Integer getWardCode() { return wardCode; }
+    public void setWardCode(Integer wardCode) { this.wardCode = wardCode; }
+
+    public String getStreet() { return street; }
+    public void setStreet(String street) { this.street = street; }
 }

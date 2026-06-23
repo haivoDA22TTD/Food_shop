@@ -41,17 +41,14 @@ public class SecurityConfig {
                 // Health check endpoint
                 .requestMatchers("/actuator/health").permitAll()
                 
-                // Internal endpoints for microservices communication (no auth required)
+                // Internal endpoints for service-to-service communication
                 .requestMatchers("/internal/**").permitAll()
                 
                 // Admin endpoints require ADMIN role
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 
-                // Shipper endpoints require SHIPPER role
-                .requestMatchers("/api/orders/shipper/**").hasRole("SHIPPER")
-                
                 // User endpoints require authentication
-                .requestMatchers("/api/orders/**", "/api/cart/**").authenticated()
+                .requestMatchers("/api/orders/**", "/api/cart/**", "/api/user/addresses/**", "/api/shipper/**").authenticated()
                 
                 // Deny all other requests
                 .anyRequest().denyAll()

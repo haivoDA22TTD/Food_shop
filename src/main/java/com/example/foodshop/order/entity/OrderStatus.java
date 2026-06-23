@@ -5,8 +5,6 @@ public enum OrderStatus {
     CONFIRMED("Đã xác nhận"),
     PREPARING("Đang chuẩn bị"),
     READY_FOR_PICKUP("Sẵn sàng lấy hàng"),
-    ASSIGNED("Đã phân công shipper"),
-    IN_TRANSIT("Đang giao hàng"),
     DELIVERED("Đã giao hàng"),
     CANCELLED("Đã hủy");
     
@@ -33,10 +31,6 @@ public enum OrderStatus {
             case PREPARING:
                 return newStatus == READY_FOR_PICKUP || newStatus == CANCELLED;
             case READY_FOR_PICKUP:
-                return newStatus == ASSIGNED || newStatus == DELIVERED;
-            case ASSIGNED:
-                return newStatus == IN_TRANSIT;
-            case IN_TRANSIT:
                 return newStatus == DELIVERED;
             case DELIVERED:
             case CANCELLED:
