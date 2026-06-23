@@ -36,27 +36,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             jwt = authorizationHeader.substring(7);
             try {
                 username = jwtUtil.extractUsername(jwt);
+            } catch (Exception e) {
+                logger.warn("Failed to extract username from JWT: " + e.getMessage());
+            }
+
+            try {
                 userId = jwtUtil.extractUserId(jwt);
+            } catch (Exception e) {
+                logger.warn("Failed to extract userId from JWT (continuing without): " + e.getMessage());
+            }
+
+            try {
                 role = jwtUtil.extractRole(jwt);
             } catch (Exception e) {
-                logger.warn("Invalid JWT token: " + e.getMessage());
+                logger.warn("Failed to extract role from JWT: " + e.getMessage());
             }
+
+            logger.info("JWT extraction result - username: {}, userId: {}, role: {}", username, userId, role);
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             if (jwtUtil.validateToken(jwt)) {
-                // Create authorities based on role
+                String effectiveRole = (role != null) ? role : "USER";
+                logger.info("Setting authentication for user '{}' with role '{}'", username, effectiveRole);
+
                 List<SimpleGrantedAuthority> authorities = List.of(
-                    new SimpleGrantedAuthority("ROLE_" + role)
+                    new SimpleGrantedAuthority("ROLE_" + effectiveRole)
                 );
 
-                // Create custom authentication token with user details
-                OrderUserDetails userDetails = new OrderUserDetails(userId, username, role);
+                OrderUserDetails userDetails = new OrderUserDetails(userId, username, effectiveRole);
                 UsernamePasswordAuthenticationToken authenticationToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
                 
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            } else {
+                logger.warn("JWT token validation failed for user '{}'", username);
             }
         }
 

@@ -1,23 +1,25 @@
 package com.example.foodshop.order.config;
 
 import com.example.foodshop.order.security.JwtAuthenticationFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
@@ -30,30 +32,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // Disable CORS at service level - API Gateway handles CORS
             .cors(cors -> cors.disable())
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(jsonAuthenticationEntryPoint())
+                .accessDeniedHandler(jsonAccessDeniedHandler())
+            )
             .authorizeHttpRequests(auth -> auth
-                // Allow OPTIONS requests for CORS preflight (handled by API Gateway)
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                
-                // Health check endpoint
                 .requestMatchers("/actuator/health").permitAll()
-                
-                // Internal endpoints for service-to-service communication
                 .requestMatchers("/internal/**").permitAll()
-                
-                // Admin endpoints require ADMIN role
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
-                // Shipper endpoints require SHIPPER role
                 .requestMatchers("/api/shipper/**").hasRole("SHIPPER")
-
-                // User endpoints require authentication
                 .requestMatchers("/api/orders/**", "/api/cart/**", "/api/user/addresses/**").authenticated()
-                
-                // Deny all other requests
                 .anyRequest().denyAll()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -61,5 +53,26 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // CORS configuration removed - API Gateway handles all CORS
+    @Bean
+    public AuthenticationEntryPoint jsonAuthenticationEntryPoint() {
+        return (HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) -> {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setCharacterEncoding("UTF-8");
+            new ObjectMapper().writeValue(response.getWriter(),
+                    Map.of("error", "Unauthorized", "message", "Authentication required: " + authException.getMessage()));
+        };
+    }
+
+    @Bean
+    public AccessDeniedHandler jsonAccessDeniedHandler() {
+        return (HttpServletRequest request, HttpServletResponse response,
+                org.springframework.security.access.AccessDeniedException accessDeniedException) -> {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setCharacterEncoding("UTF-8");
+            new ObjectMapper().writeValue(response.getWriter(),
+                    Map.of("error", "Forbidden", "message", "Access denied: " + accessDeniedException.getMessage()));
+        };
+    }
 }
