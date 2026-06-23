@@ -36,7 +36,7 @@ app:
   gateway:
     # Route directly to identity service in production to reduce discovery-related timeouts.
     identity-uri: ${IDENTITY_SERVICE_URL:https://identity-service-olir.onrender.com}
-    order-uri: ${ORDER_SERVICE_URL:https://order-service.onrender.com}
+    order-uri: ${ORDER_SERVICE_URL:https://order-service-vgs6.onrender.com}
     product-uri: ${PRODUCT_SERVICE_URL:https://product-service.onrender.com}
 
 eureka:
