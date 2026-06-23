@@ -21,7 +21,7 @@ public class Cart {
     @Column(name = "user_id", unique = true, nullable = false)
     private Long userId;
     
-    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @JsonManagedReference
     private List<CartItem> cartItems = new ArrayList<>();
     
