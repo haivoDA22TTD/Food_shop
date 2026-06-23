@@ -22,6 +22,7 @@ public class CorsConfig {
         // Use specific origins instead of patterns to avoid duplicate CORS headers
         corsConfig.setAllowedOrigins(Arrays.asList(
                 "https://frontend-qpuj.onrender.com",
+                "https://frontend-gpuj.onrender.com",
                 "https://frontend-gpu1.onrender.com",
                 "http://localhost:5173",
                 "http://localhost:3000",
