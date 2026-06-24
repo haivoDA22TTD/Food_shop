@@ -36,6 +36,13 @@ public class AdminShipperController {
         try {
             log.info("Admin creating new shipper: {}", request.getName());
             ShipperResponse shipper = shipperService.createShipper(request);
+            
+            // Link shipper to user account if userId is provided (e.g., from Identity Service)
+            if (request.getUserId() != null) {
+                log.info("Linking shipper {} to user {}", shipper.getId(), request.getUserId());
+                shipper = shipperService.linkShipperToUser(shipper.getId(), request.getUserId());
+            }
+            
             return ResponseEntity.status(HttpStatus.CREATED).body(shipper);
         } catch (IllegalArgumentException e) {
             log.warn("Invalid shipper creation: {}", e.getMessage());

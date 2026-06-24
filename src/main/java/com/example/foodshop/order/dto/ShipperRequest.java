@@ -28,6 +28,8 @@ public class ShipperRequest {
     
     private String notes;
     
+    private Long userId;
+    
     // Constructors
     public ShipperRequest() {
     }
@@ -94,5 +96,13 @@ public class ShipperRequest {
     
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+    
+    public Long getUserId() {
+        return userId;
+    }
+    
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }
