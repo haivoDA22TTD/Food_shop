@@ -119,14 +119,10 @@ public class AdminDashboardService {
         }
 
         try {
-            Object[] shipperStats = shipperRepository.getShipperStatistics();
-            if (shipperStats != null && shipperStats[0] != null) {
-                dashboard.setTotalShippers(((Number) shipperStats[0]).longValue());
-            } else {
-                dashboard.setTotalShippers(0L);
-            }
+            long shipperCount = shipperRepository.count();
+            dashboard.setTotalShippers(shipperCount);
         } catch (Exception e) {
-            log.warn("Could not get shipper stats: {}", e.getMessage());
+            log.warn("Could not get shipper count: {}", e.getMessage());
             dashboard.setTotalShippers(0L);
         }
 
