@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/products")
@@ -28,5 +29,15 @@ public class ApiProductController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(product);
+    }
+
+    @PutMapping("/{id}/decrement-stock")
+    public ResponseEntity<?> decrementStock(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
+        Integer quantity = body.getOrDefault("quantity", 1);
+        boolean success = productService.decrementStock(id, quantity);
+        if (!success) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Insufficient stock or product not found"));
+        }
+        return ResponseEntity.ok(Map.of("message", "Stock decremented successfully"));
     }
 }

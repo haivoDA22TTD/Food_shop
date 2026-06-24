@@ -39,4 +39,18 @@ public class ProductService {
     public void deleteProduct(Long id) {
         productRepository.deleteById(id);
     }
+
+    @Transactional
+    public boolean decrementStock(Long productId, int quantity) {
+        Product product = productRepository.findById(productId).orElse(null);
+        if (product == null) {
+            return false;
+        }
+        if (product.getStock() < quantity) {
+            return false;
+        }
+        product.setStock(product.getStock() - quantity);
+        productRepository.save(product);
+        return true;
+    }
 }
