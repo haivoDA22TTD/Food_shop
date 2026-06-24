@@ -118,6 +118,26 @@ public class AdminShipperController {
     }
     
     /**
+     * Link shipper to user account
+     */
+    @PutMapping("/{shipperId}/link-user/{userId}")
+    public ResponseEntity<?> linkShipperToUser(@PathVariable Long shipperId, @PathVariable Long userId) {
+        try {
+            log.info("Admin linking shipper {} to user {}", shipperId, userId);
+            ShipperResponse shipper = shipperService.linkShipperToUser(shipperId, userId);
+            return ResponseEntity.ok(shipper);
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid shipper linking: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error linking shipper {} to user {}: {}", shipperId, userId, e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Unable to link shipper to user"));
+        }
+    }
+
+    /**
      * Get shipper by ID
      */
     @GetMapping("/{shipperId}")

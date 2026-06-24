@@ -34,6 +34,15 @@ public class InternalShipperController {
             shipperRequest.setVehicleNumber((String) request.get("vehicleNumber"));
 
             var shipper = shipperService.createShipper(shipperRequest);
+
+            // Link shipper to user if userId is provided
+            Object userIdObj = request.get("userId");
+            if (userIdObj != null) {
+                Long userId = ((Number) userIdObj).longValue();
+                log.info("Linking shipper {} to user {}", shipper.getId(), userId);
+                shipper = shipperService.linkShipperToUser(shipper.getId(), userId);
+            }
+
             return ResponseEntity.status(HttpStatus.CREATED).body(shipper);
         } catch (IllegalArgumentException e) {
             log.warn("Invalid shipper creation: {}", e.getMessage());
