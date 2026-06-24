@@ -15,6 +15,7 @@ import OAuth2Redirect from './pages/OAuth2Redirect'
 import AdminProducts from './pages/AdminProducts'
 import AdminOrders from './pages/AdminOrders'
 import AdminShippers from './pages/AdminShippers'
+import AdminDashboard from './pages/AdminDashboard'
 import ShipperLogin from './pages/ShipperLogin'
 import ShipperDashboard from './pages/ShipperDashboard'
 import Chatbot from './components/Chatbot'
@@ -36,6 +37,7 @@ function App() {
             <Route path="checkout" element={<Checkout />} />
             <Route path="orders" element={<Orders />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="admin/dashboard" element={<AdminDashboard />} />
             <Route path="admin/products" element={<AdminProducts />} />
             <Route path="admin/orders" element={<AdminOrders />} />
             <Route path="admin/shippers" element={<AdminShippers />} />

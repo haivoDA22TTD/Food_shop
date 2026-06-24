@@ -54,6 +54,9 @@ export default function Navbar() {
                 </Link>
                 {user.role?.toUpperCase() === 'ADMIN' && (
                   <>
+                    <Link to="/admin/dashboard" className="text-gray-700 hover:text-primary-600 transition-colors">
+                      📊 Tổng quan
+                    </Link>
                     <Link to="/admin/products" className="text-gray-700 hover:text-primary-600 transition-colors">
                       Quản lý SP
                     </Link>
@@ -134,6 +137,9 @@ export default function Navbar() {
                 </Link>
                 {user.role?.toUpperCase() === 'ADMIN' && (
                   <>
+                    <Link to="/admin/dashboard" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                      📊 Tổng quan
+                    </Link>
                     <Link to="/admin/products" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">
                       Quản lý sản phẩm
                     </Link>
