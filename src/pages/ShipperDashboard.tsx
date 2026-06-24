@@ -115,6 +115,17 @@ const ShipperDashboard: React.FC = () => {
     }
   };
 
+  const handleAccept = async (orderId: number) => {
+    try {
+      await axios.put(`/api/shipper/orders/${orderId}/accept`);
+      toast.success('Đã nhận đơn hàng!');
+      fetchOrders(state.pagination.page, state.selectedStatus);
+    } catch (error: any) {
+      const msg = error?.response?.data?.error || 'Không thể nhận đơn hàng';
+      toast.error(msg);
+    }
+  };
+
   const handlePickup = async (orderId: number) => {
     try {
       await axios.put(`/api/shipper/orders/${orderId}/pickup`);
@@ -244,12 +255,20 @@ const ShipperDashboard: React.FC = () => {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            {order.status === 'CONFIRMED' && (
+                              <button
+                                onClick={() => handleAccept(order.id)}
+                                className="text-blue-600 hover:text-blue-900"
+                              >
+                                Nhận đơn
+                              </button>
+                            )}
                             {order.status === 'READY_FOR_PICKUP' && !order.pickedUpAt && (
                               <button
                                 onClick={() => handlePickup(order.id)}
                                 className="text-blue-600 hover:text-blue-900"
                               >
-                                Nhận đơn
+                                Lấy hàng
                               </button>
                             )}
                             {order.status === 'READY_FOR_PICKUP' && order.pickedUpAt && (
@@ -259,9 +278,6 @@ const ShipperDashboard: React.FC = () => {
                               >
                                 Giao hàng
                               </button>
-                            )}
-                            {order.status === 'CONFIRMED' && (
-                              <span className="text-gray-400 text-xs">Chờ chuẩn bị</span>
                             )}
                           </td>
                         </tr>
