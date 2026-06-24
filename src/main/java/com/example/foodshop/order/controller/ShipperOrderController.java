@@ -104,6 +104,27 @@ public class ShipperOrderController {
         }
     }
 
+    @PutMapping("/orders/{orderId}/accept")
+    public ResponseEntity<?> acceptOrder(
+            Authentication authentication,
+            @PathVariable Long orderId) {
+        try {
+            Long userId = extractUserId(authentication);
+            log.info("Shipper {} accepting order {}", userId, orderId);
+
+            ShipperResponse shipper = shipperService.getShipperByUserId(userId);
+            OrderResponse order = orderService.acceptOrderByShipper(orderId, shipper.getId());
+            return ResponseEntity.ok(order);
+        } catch (IllegalArgumentException e) {
+            log.warn("Cannot accept order: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error accepting order: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Unable to accept order"));
+        }
+    }
+
     @PutMapping("/orders/{orderId}/pickup")
     public ResponseEntity<?> markAsPickedUp(
             Authentication authentication,

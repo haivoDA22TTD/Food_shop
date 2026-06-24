@@ -611,6 +611,34 @@ public class OrderService {
     }
     
     /**
+     * Shipper accepts an assigned order, transitioning from CONFIRMED to READY_FOR_PICKUP
+     */
+    @Transactional
+    public OrderResponse acceptOrderByShipper(Long orderId, Long shipperId) {
+        log.info("Shipper {} accepting order {}", shipperId, orderId);
+        
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        
+        // Verify shipper is assigned
+        if (!shipperId.equals(order.getShipperId())) {
+            throw new IllegalArgumentException("Order is not assigned to this shipper");
+        }
+        
+        // Verify status - can accept from CONFIRMED or PREPARING
+        if (order.getStatus() != OrderStatus.CONFIRMED && order.getStatus() != OrderStatus.PREPARING) {
+            throw new IllegalArgumentException("Order must be in CONFIRMED or PREPARING status to accept");
+        }
+        
+        // Transition to READY_FOR_PICKUP
+        order.setStatus(OrderStatus.READY_FOR_PICKUP);
+        Order updatedOrder = orderRepository.save(order);
+        
+        log.info("Order {} accepted by shipper {}, status changed to READY_FOR_PICKUP", orderId, shipperId);
+        return convertToOrderResponse(updatedOrder);
+    }
+    
+    /**
      * Mark order as picked up by shipper
      */
     @Transactional

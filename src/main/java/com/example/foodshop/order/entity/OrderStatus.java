@@ -27,7 +27,7 @@ public enum OrderStatus {
             case PENDING:
                 return newStatus == CONFIRMED || newStatus == CANCELLED;
             case CONFIRMED:
-                return newStatus == PREPARING || newStatus == CANCELLED;
+                return newStatus == PREPARING || newStatus == READY_FOR_PICKUP || newStatus == CANCELLED;
             case PREPARING:
                 return newStatus == READY_FOR_PICKUP || newStatus == CANCELLED;
             case READY_FOR_PICKUP:
