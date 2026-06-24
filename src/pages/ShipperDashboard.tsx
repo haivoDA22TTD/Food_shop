@@ -76,7 +76,7 @@ const ShipperDashboard: React.FC = () => {
 
     try {
       if (!token) {
-        toast.error('Authentication token not found. Please login again.');
+        toast.error('Không tìm thấy token xác thực. Vui lòng đăng nhập lại.');
         return;
       }
 
@@ -111,7 +111,7 @@ const ShipperDashboard: React.FC = () => {
   const updateOrderStatus = async (orderId: number, newStatus: string, notes?: string) => {
     try {
       if (!token) {
-        toast.error('Authentication token not found. Please login again.');
+        toast.error('Không tìm thấy token xác thực. Vui lòng đăng nhập lại.');
         return;
       }
 
@@ -121,7 +121,7 @@ const ShipperDashboard: React.FC = () => {
         await axios.put(`/api/shipper/orders/${orderId}/deliver`, { notes });
       }
 
-      toast.success(`Order status updated to ${newStatus}`);
+      toast.success(`Đã cập nhật trạng thái đơn hàng thành ${translateStatus(newStatus)}`);
       fetchOrders(state.pagination.page, state.selectedStatus);
     } catch (error: any) {
       const msg = error?.response?.data?.error || 'Không thể cập nhật trạng thái';
@@ -158,6 +158,16 @@ const ShipperDashboard: React.FC = () => {
     }
   };
 
+  const translateStatus = (status: string) => {
+    switch (status) {
+      case 'ALL': return 'Tất cả';
+      case 'ASSIGNED': return 'Đã giao';
+      case 'IN_TRANSIT': return 'Đang giao';
+      case 'DELIVERED': return 'Đã giao xong';
+      default: return status;
+    }
+  };
+
   const canMarkInTransit = (order: Order) => {
     return order.status === 'ASSIGNED' || order.status === 'READY_FOR_PICKUP';
   };
@@ -169,7 +179,7 @@ const ShipperDashboard: React.FC = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">My Delivery Orders</h1>
+        <h1 className="text-3xl font-bold mb-6">Đơn hàng giao hàng của tôi</h1>
 
         {/* Status Filter */}
         <div className="mb-6 flex gap-2">
@@ -183,7 +193,7 @@ const ShipperDashboard: React.FC = () => {
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
-              {status.replace('_', ' ')}
+              {translateStatus(status)}
             </button>
           ))}
         </div>
@@ -191,7 +201,7 @@ const ShipperDashboard: React.FC = () => {
         {/* Loading State */}
         {state.loading && (
           <div className="text-center py-8">
-            <p className="text-gray-600">Loading orders...</p>
+            <p className="text-gray-600">Đang tải đơn hàng...</p>
           </div>
         )}
 
@@ -207,7 +217,7 @@ const ShipperDashboard: React.FC = () => {
           <>
             {state.orders.length === 0 ? (
               <div className="text-center py-8 bg-gray-50 rounded-lg">
-                <p className="text-gray-600">No orders found</p>
+                <p className="text-gray-600">Không có đơn hàng nào</p>
               </div>
             ) : (
               <div className="bg-white shadow-md rounded-lg overflow-hidden">
@@ -215,19 +225,19 @@ const ShipperDashboard: React.FC = () => {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Order Number
+                        Mã đơn
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Customer
+                        Khách hàng
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Address
+                        Địa chỉ
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
+                        Trạng thái
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
+                        Thao tác
                       </th>
                     </tr>
                   </thead>
@@ -255,7 +265,7 @@ const ShipperDashboard: React.FC = () => {
                                 order.status
                               )}`}
                             >
-                              {order.status}
+                              {translateStatus(order.status)}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
@@ -264,7 +274,7 @@ const ShipperDashboard: React.FC = () => {
                                 onClick={() => updateOrderStatus(order.id, 'IN_TRANSIT')}
                                 className="text-blue-600 hover:text-blue-900"
                               >
-                                Mark In Transit
+                                Đang giao
                               </button>
                             )}
                             {canMarkDelivered(order) && (
@@ -272,7 +282,7 @@ const ShipperDashboard: React.FC = () => {
                                 onClick={() => updateOrderStatus(order.id, 'DELIVERED')}
                                 className="text-green-600 hover:text-green-900"
                               >
-                                Mark Delivered
+                                Đã giao xong
                               </button>
                             )}
                           </td>
@@ -283,7 +293,7 @@ const ShipperDashboard: React.FC = () => {
                           <tr>
                             <td colSpan={5} className="px-6 py-4 bg-gray-50">
                               <div className="space-y-4">
-                                <h4 className="font-semibold">Order Items:</h4>
+                                <h4 className="font-semibold">Mặt hàng:</h4>
                                 <ul className="list-disc list-inside space-y-1">
                                   {order.orderItems.map((item) => (
                                     <li key={item.id} className="text-sm text-gray-700">
@@ -293,11 +303,11 @@ const ShipperDashboard: React.FC = () => {
                                   ))}
                                 </ul>
                                 <p className="text-sm">
-                                  <strong>Total Amount:</strong> ${order.totalAmount.toFixed(2)}
+                                  <strong>Tổng tiền:</strong> ${order.totalAmount.toFixed(2)}
                                 </p>
                                 {order.deliveryNotes && (
                                   <p className="text-sm">
-                                    <strong>Delivery Notes:</strong> {order.deliveryNotes}
+                                    <strong>Ghi chú giao hàng:</strong> {order.deliveryNotes}
                                   </p>
                                 )}
                               </div>
@@ -319,17 +329,17 @@ const ShipperDashboard: React.FC = () => {
                   disabled={state.pagination.page === 0}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
                 >
-                  Previous
+                  Trang trước
                 </button>
                 <span className="text-gray-700">
-                  Page {state.pagination.page + 1} of {state.pagination.totalPages}
+                  Trang {state.pagination.page + 1} / {state.pagination.totalPages}
                 </span>
                 <button
                   onClick={() => handlePageChange(state.pagination.page + 1)}
                   disabled={state.pagination.page >= state.pagination.totalPages - 1}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
                 >
-                  Next
+                  Trang sau
                 </button>
               </div>
             )}
