@@ -179,6 +179,7 @@ public class UserService {
         // Create shipper profile in Order Service via Gateway with admin JWT
         try {
             Map<String, Object> shipperProfileRequest = new HashMap<>();
+            shipperProfileRequest.put("userId", savedUser.getId());
             shipperProfileRequest.put("name", request.getName());
             shipperProfileRequest.put("phone", request.getPhone());
             shipperProfileRequest.put("email", request.getEmail());
