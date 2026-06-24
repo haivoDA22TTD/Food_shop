@@ -66,6 +66,23 @@ public class ProductValidationService {
             return false;
         }
     }
+
+    public boolean decrementStock(Long productId, int quantity) {
+        try {
+            String url = productServiceUrl + "/api/products/" + productId + "/decrement-stock";
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+            java.util.Map<String, Integer> body = new java.util.HashMap<>();
+            body.put("quantity", quantity);
+            org.springframework.http.HttpEntity<java.util.Map<String, Integer>> entity = new org.springframework.HttpEntity<>(body, headers);
+            restTemplate.put(url, entity);
+            log.info("Decremented stock for product {} by {}", productId, quantity);
+            return true;
+        } catch (Exception e) {
+            log.error("Error decrementing stock for product {}: {}", productId, e.getMessage());
+            return false;
+        }
+    }
     
     // DTO for product details from Product Service
     public static class ProductDetails {

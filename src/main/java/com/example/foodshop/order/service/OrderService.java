@@ -122,6 +122,11 @@ public class OrderService {
             // Save order first
             order = orderRepository.save(order);
             
+            // Decrement product stock
+            for (var cartItem : itemsToCheckout) {
+                productValidationService.decrementStock(cartItem.getProductId(), cartItem.getQuantity());
+            }
+            
             // Try to auto-confirm the order
             orderAutomationService.autoConfirmOrder(order);
             
