@@ -28,11 +28,6 @@ interface Order {
   createdAt: string;
 }
 
-interface PaginationInfo {
-  pageNumber: number;
-  pageSize: number;
-}
-
 interface DashboardState {
   orders: Order[];
   loading: boolean;
@@ -43,52 +38,64 @@ interface DashboardState {
     totalPages: number;
     totalElements: number;
   };
-  selectedStatus: 'ALL' | 'ASSIGNED' | 'IN_TRANSIT' | 'DELIVERED';
+  selectedStatus: string;
   expandedOrderId: number | null;
 }
 
-/**
- * Shipper dashboard component for viewing and managing assigned orders
- * Validates: Requirements 4.1, 4.2, 4.5, 4.6, 5.1, 5.6
- */
+const STATUS_FILTERS = ['ALL', 'CONFIRMED', 'READY_FOR_PICKUP', 'DELIVERED'] as const;
+
+const translateStatus = (status: string): string => {
+  switch (status) {
+    case 'ALL': return 'Tất cả';
+    case 'CONFIRMED': return 'Đã xác nhận';
+    case 'PREPARING': return 'Đang chuẩn bị';
+    case 'READY_FOR_PICKUP': return 'Sẵn sàng lấy hàng';
+    case 'DELIVERED': return 'Đã giao xong';
+    case 'CANCELLED': return 'Đã hủy';
+    default: return status;
+  }
+};
+
+const getStatusColor = (status: string): string => {
+  switch (status) {
+    case 'CONFIRMED': return 'bg-yellow-100 text-yellow-800';
+    case 'PREPARING': return 'bg-orange-100 text-orange-800';
+    case 'READY_FOR_PICKUP': return 'bg-blue-100 text-blue-800';
+    case 'DELIVERED': return 'bg-green-100 text-green-800';
+    case 'CANCELLED': return 'bg-red-100 text-red-800';
+    default: return 'bg-gray-100 text-gray-800';
+  }
+};
+
 const ShipperDashboard: React.FC = () => {
   const { token } = useAuthStore();
   const [state, setState] = useState<DashboardState>({
     orders: [],
     loading: true,
     error: null,
-    pagination: {
-      page: 0,
-      size: 20,
-      totalPages: 0,
-      totalElements: 0,
-    },
+    pagination: { page: 0, size: 20, totalPages: 0, totalElements: 0 },
     selectedStatus: 'ALL',
     expandedOrderId: null,
   });
 
   useEffect(() => {
-    fetchOrders(state.pagination.page, state.selectedStatus);
+    fetchOrders(0, 'ALL');
   }, []);
 
   const fetchOrders = async (page: number, status: string) => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
-
     try {
       if (!token) {
-        toast.error('Không tìm thấy token xác thực. Vui lòng đăng nhập lại.');
+        toast.error('Vui lòng đăng nhập lại.');
         return;
       }
-
       const params: Record<string, string> = {
         page: page.toString(),
         size: state.pagination.size.toString(),
       };
-
       if (status !== 'ALL') {
         params['status'] = status;
       }
-
       const { data } = await axios.get('/api/shipper/orders', { params });
       setState((prev) => ({
         ...prev,
@@ -108,28 +115,29 @@ const ShipperDashboard: React.FC = () => {
     }
   };
 
-  const updateOrderStatus = async (orderId: number, newStatus: string, notes?: string) => {
+  const handlePickup = async (orderId: number) => {
     try {
-      if (!token) {
-        toast.error('Không tìm thấy token xác thực. Vui lòng đăng nhập lại.');
-        return;
-      }
-
-      if (newStatus === 'IN_TRANSIT') {
-        await axios.put(`/api/shipper/orders/${orderId}/pickup`);
-      } else if (newStatus === 'DELIVERED') {
-        await axios.put(`/api/shipper/orders/${orderId}/deliver`, { notes });
-      }
-
-      toast.success(`Đã cập nhật trạng thái đơn hàng thành ${translateStatus(newStatus)}`);
+      await axios.put(`/api/shipper/orders/${orderId}/pickup`);
+      toast.success('Đã nhận đơn hàng!');
       fetchOrders(state.pagination.page, state.selectedStatus);
     } catch (error: any) {
-      const msg = error?.response?.data?.error || 'Không thể cập nhật trạng thái';
+      const msg = error?.response?.data?.error || 'Không thể nhận đơn hàng';
       toast.error(msg);
     }
   };
 
-  const handleStatusFilter = (status: 'ALL' | 'ASSIGNED' | 'IN_TRANSIT' | 'DELIVERED') => {
+  const handleDeliver = async (orderId: number) => {
+    try {
+      await axios.put(`/api/shipper/orders/${orderId}/deliver`, {});
+      toast.success('Đã giao hàng thành công!');
+      fetchOrders(state.pagination.page, state.selectedStatus);
+    } catch (error: any) {
+      const msg = error?.response?.data?.error || 'Không thể giao hàng';
+      toast.error(msg);
+    }
+  };
+
+  const handleStatusFilter = (status: string) => {
     setState((prev) => ({ ...prev, selectedStatus: status }));
     fetchOrders(0, status);
   };
@@ -145,48 +153,17 @@ const ShipperDashboard: React.FC = () => {
     }));
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ASSIGNED':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'IN_TRANSIT':
-        return 'bg-blue-100 text-blue-800';
-      case 'DELIVERED':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const translateStatus = (status: string) => {
-    switch (status) {
-      case 'ALL': return 'Tất cả';
-      case 'ASSIGNED': return 'Đã giao';
-      case 'IN_TRANSIT': return 'Đang giao';
-      case 'DELIVERED': return 'Đã giao xong';
-      default: return status;
-    }
-  };
-
-  const canMarkInTransit = (order: Order) => {
-    return order.status === 'ASSIGNED' || order.status === 'READY_FOR_PICKUP';
-  };
-
-  const canMarkDelivered = (order: Order) => {
-    return order.status === 'IN_TRANSIT';
-  };
-
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6">Đơn hàng giao hàng của tôi</h1>
 
         {/* Status Filter */}
-        <div className="mb-6 flex gap-2">
-          {['ALL', 'ASSIGNED', 'IN_TRANSIT', 'DELIVERED'].map((status) => (
+        <div className="mb-6 flex gap-2 flex-wrap">
+          {STATUS_FILTERS.map((status) => (
             <button
               key={status}
-              onClick={() => handleStatusFilter(status as any)}
+              onClick={() => handleStatusFilter(status)}
               className={`px-4 py-2 rounded-lg transition-colors ${
                 state.selectedStatus === status
                   ? 'bg-blue-600 text-white'
@@ -261,29 +238,30 @@ const ShipperDashboard: React.FC = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
-                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                                order.status
-                              )}`}
+                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}
                             >
                               {translateStatus(order.status)}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                            {canMarkInTransit(order) && (
+                            {order.status === 'READY_FOR_PICKUP' && !order.pickedUpAt && (
                               <button
-                                onClick={() => updateOrderStatus(order.id, 'IN_TRANSIT')}
+                                onClick={() => handlePickup(order.id)}
                                 className="text-blue-600 hover:text-blue-900"
                               >
-                                Đang giao
+                                Nhận đơn
                               </button>
                             )}
-                            {canMarkDelivered(order) && (
+                            {order.status === 'READY_FOR_PICKUP' && order.pickedUpAt && (
                               <button
-                                onClick={() => updateOrderStatus(order.id, 'DELIVERED')}
+                                onClick={() => handleDeliver(order.id)}
                                 className="text-green-600 hover:text-green-900"
                               >
-                                Đã giao xong
+                                Giao hàng
                               </button>
+                            )}
+                            {order.status === 'CONFIRMED' && (
+                              <span className="text-gray-400 text-xs">Chờ chuẩn bị</span>
                             )}
                           </td>
                         </tr>
@@ -297,8 +275,7 @@ const ShipperDashboard: React.FC = () => {
                                 <ul className="list-disc list-inside space-y-1">
                                   {order.orderItems.map((item) => (
                                     <li key={item.id} className="text-sm text-gray-700">
-                                      {item.productName} x {item.quantity} - $
-                                      {item.subtotal.toFixed(2)}
+                                      {item.productName} x {item.quantity} - ${item.subtotal.toFixed(2)}
                                     </li>
                                   ))}
                                 </ul>
@@ -307,7 +284,12 @@ const ShipperDashboard: React.FC = () => {
                                 </p>
                                 {order.deliveryNotes && (
                                   <p className="text-sm">
-                                    <strong>Ghi chú giao hàng:</strong> {order.deliveryNotes}
+                                    <strong>Ghi chú:</strong> {order.deliveryNotes}
+                                  </p>
+                                )}
+                                {order.pickedUpAt && (
+                                  <p className="text-sm text-blue-600">
+                                    Đã nhận lúc: {new Date(order.pickedUpAt).toLocaleString('vi-VN')}
                                   </p>
                                 )}
                               </div>
