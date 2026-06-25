@@ -48,6 +48,9 @@ public class PaymentService {
     private VNPayService vnPayService;
     
     @Autowired
+    private ZaloPayService zaloPayService;
+    
+    @Autowired
     private OrderFeignClient orderFeignClient;
     
     @Autowired
@@ -160,6 +163,14 @@ public class PaymentService {
                 
                 String paymentUrl = vnPayService.createPaymentUrl(payment, request.getReturnUrl());
                 payment.setPaymentUrl(paymentUrl);
+            } else if (request.getPaymentMethod() == PaymentMethod.ZALOPAY) {
+                // Generate ZaloPay payment URL
+                payment.setPaymentStatus(PaymentStatus.PENDING);
+                payment = paymentRepository.save(payment);
+                
+                String ipnUrl = request.getIpnUrl() != null ? request.getIpnUrl() : "https://api-gateway-4tdc.onrender.com/api/payments/zalopay-callback";
+                String paymentUrl = zaloPayService.createPaymentUrl(payment, ipnUrl, request.getReturnUrl());
+                payment.setPaymentUrl(paymentUrl);
             } else {
                 // Other online payment methods
                 payment.setPaymentStatus(PaymentStatus.PENDING);
@@ -243,6 +254,47 @@ public class PaymentService {
         } catch (Exception e) {
             log.error("Error handling VNPay callback: {}", e.getMessage(), e);
             throw new PaymentException("Error processing payment callback");
+        }
+    }
+    
+    public PaymentResponse handleZaloPayCallback(Map<String, String> params) {
+        try {
+            String appTransId = params.get("app_trans_id");
+            
+            Payment payment = paymentRepository.findByPaymentNumber(appTransId)
+                    .orElseThrow(() -> new PaymentException("Payment not found for ZaloPay transaction: " + appTransId));
+            
+            boolean isValid = zaloPayService.verifyCallback(params);
+            int returnCode = Integer.parseInt(params.getOrDefault("return_code", "-1"));
+            
+            if (isValid && returnCode == 1) {
+                payment.setPaymentStatus(PaymentStatus.COMPLETED);
+                payment.setPaidAt(LocalDateTime.now());
+                payment.setTransactionId(params.get("zp_trans_token"));
+                
+                updateOrderStatus(payment.getOrderId(), "CONFIRMED", "Payment completed via ZaloPay");
+                updateSagaOnSuccess(payment);
+                
+                log.info("ZaloPay payment completed: {}", appTransId);
+            } else {
+                payment.setPaymentStatus(PaymentStatus.FAILED);
+                compensateSagaOnFailure(payment, "ZaloPay payment failed: " + returnCode);
+                log.warn("ZaloPay payment failed: {} - return_code: {}", appTransId, returnCode);
+            }
+            
+            ObjectMapper mapper = new ObjectMapper();
+            payment.setPaymentGatewayResponse(mapper.writeValueAsString(params));
+            
+            payment = paymentRepository.save(payment);
+            cachePayment(payment);
+            
+            return convertToResponse(payment);
+            
+        } catch (PaymentException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error handling ZaloPay callback: {}", e.getMessage(), e);
+            throw new PaymentException("Error processing ZaloPay callback");
         }
     }
     

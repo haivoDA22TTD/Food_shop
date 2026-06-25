@@ -3,6 +3,7 @@ package com.example.foodshop.payment.entity;
 public enum PaymentMethod {
     COD("Thanh toán khi nhận hàng"),
     VNPAY("VNPay"),
+    ZALOPAY("ZaloPay"),
     MOMO("MoMo"),
     BANK_TRANSFER("Chuyển khoản ngân hàng");
     

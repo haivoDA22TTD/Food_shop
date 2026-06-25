@@ -88,4 +88,14 @@ public class PaymentController {
         PaymentResponse response = paymentService.handleVNPayCallback(params);
         return ResponseEntity.ok(response);
     }
+    
+    @PostMapping("/zalopay-callback")
+    public ResponseEntity<Map<String, Object>> handleZaloPayCallback(@RequestBody Map<String, String> params) {
+        try {
+            paymentService.handleZaloPayCallback(params);
+            return ResponseEntity.ok(Map.of("return_code", 1, "return_message", "success"));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("return_code", -1, "return_message", e.getMessage()));
+        }
+    }
 }

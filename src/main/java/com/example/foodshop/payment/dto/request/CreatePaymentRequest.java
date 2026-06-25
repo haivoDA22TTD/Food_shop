@@ -17,6 +17,8 @@ public class CreatePaymentRequest {
     
     private String returnUrl;
     
+    private String ipnUrl;
+    
     // Constructors
     public CreatePaymentRequest() {
     }
@@ -59,5 +61,13 @@ public class CreatePaymentRequest {
     
     public void setReturnUrl(String returnUrl) {
         this.returnUrl = returnUrl;
+    }
+    
+    public String getIpnUrl() {
+        return ipnUrl;
+    }
+    
+    public void setIpnUrl(String ipnUrl) {
+        this.ipnUrl = ipnUrl;
     }
 }
