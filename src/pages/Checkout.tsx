@@ -227,8 +227,26 @@ export default function Checkout() {
       // Clear selected items from localStorage
       localStorage.removeItem('selectedItems')
       
-      // Note: Backend will remove only selected items from cart
-      // No need to clear entire cart here
+      const orderId = response.data.id
+      
+      // For online payment methods, create payment and redirect
+      if (formData.paymentMethod === 'ZALOPAY' || formData.paymentMethod === 'BANK_TRANSFER') {
+        try {
+          const paymentResponse = await axios.post('/api/payments', {
+            orderId: orderId,
+            paymentMethod: formData.paymentMethod,
+            returnUrl: window.location.origin + '/orders',
+          })
+          
+          if (paymentResponse.data.paymentUrl) {
+            window.location.href = paymentResponse.data.paymentUrl
+            return
+          }
+        } catch (paymentErr) {
+          console.error('Payment creation error:', paymentErr)
+          // Order was created, just show success
+        }
+      }
       
       alert(`Đặt hàng thành công! Mã đơn hàng: ${response.data.orderNumber}`)
       navigate('/orders')
@@ -547,6 +565,21 @@ export default function Checkout() {
                     🏧 Chuyển khoản ngân hàng (QR Code VCB)
                   </label>
                 </div>
+                
+                <div className="flex items-center">
+                  <input
+                    id="zalopay"
+                    name="paymentMethod"
+                    type="radio"
+                    value="ZALOPAY"
+                    checked={formData.paymentMethod === 'ZALOPAY'}
+                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                  />
+                  <label htmlFor="zalopay" className="ml-3 block text-sm font-medium text-gray-700">
+                    💜 ZaloPay (Thẻ ATM/Visa/Master/JCB)
+                  </label>
+                </div>
               </div>
               
               {/* Payment Method Description */}
@@ -568,6 +601,15 @@ export default function Checkout() {
                     <p>• Không cần thẻ Visa/MasterCard</p>
                   </div>
                 )}
+                {formData.paymentMethod === 'ZALOPAY' && (
+                  <div>
+                    <p className="font-medium text-purple-700 mb-1">💡 Thanh toán qua ZaloPay</p>
+                    <p>• Hỗ trợ thẻ ATM nội địa, Visa, MasterCard, JCB</p>
+                    <p>• Hỗ trợ ví ZaloPay và-app ZaloPay</p>
+                    <p>• Bảo mật SSL, xác thực OTP</p>
+                    <p>• Đơn hàng được xử lý ngay lập tức</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -577,7 +619,8 @@ export default function Checkout() {
               className="w-full btn-primary disabled:opacity-50"
             >
               {loading ? 'Đang xử lý...' : syncing ? 'Đang đồng bộ...' : 
-               formData.paymentMethod === 'COD' ? 'Đặt hàng' : 'Thanh toán'}
+               formData.paymentMethod === 'COD' ? 'Đặt hàng' : 
+               formData.paymentMethod === 'ZALOPAY' ? 'Thanh toán ZaloPay' : 'Thanh toán'}
             </button>
           </form>
         </motion.div>
