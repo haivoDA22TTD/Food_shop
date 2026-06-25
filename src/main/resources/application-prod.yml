@@ -38,6 +38,7 @@ app:
     identity-uri: ${IDENTITY_SERVICE_URL:https://identity-service-olir.onrender.com}
     order-uri: ${ORDER_SERVICE_URL:https://order-service-vgs6.onrender.com}
     product-uri: ${PRODUCT_SERVICE_URL:https://product-service.onrender.com}
+    payment-uri: ${PAYMENT_SERVICE_URL:https://payment-service.onrender.com}
 
 eureka:
   client:
