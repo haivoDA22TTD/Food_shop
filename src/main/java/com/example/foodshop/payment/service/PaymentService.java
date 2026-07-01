@@ -296,7 +296,7 @@ public class PaymentService {
             payment = paymentRepository.save(payment);
             cachePayment(payment);
 
-            return mapToPaymentResponse(payment);
+            return convertToResponse(payment);
 
         } catch (PaymentException e) {
             throw e;
