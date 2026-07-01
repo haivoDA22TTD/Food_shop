@@ -134,32 +134,27 @@ public class OrderService {
             order = orderRepository.findById(order.getId())
                 .orElseThrow(() -> new RuntimeException("Order not found after creation"));
             
-            // Create payment record (skip for online payments - frontend handles those)
-            String pm = request.getPaymentMethod();
-            if (!"ZALOPAY".equals(pm) && !"VNPAY".equals(pm)) {
-                try {
-                    CreatePaymentRequest paymentRequest = new CreatePaymentRequest(
-                        order.getId(),
-                        userId,
-                        totalAmount,
-                        request.getPaymentMethod()
-                    );
-                    
-                    PaymentResponse paymentResponse = paymentServiceClient.createPayment(
-                        paymentRequest, 
-                        authToken
-                    ).getBody();
-                    
-                    log.info("Created payment {} for order {}", 
-                            paymentResponse != null ? paymentResponse.getPaymentNumber() : "unknown", 
-                            order.getOrderNumber());
-                            
-                } catch (Exception e) {
-                    log.warn("Failed to create payment for order {}: {}", order.getOrderNumber(), e.getMessage());
-                    // Continue with order creation even if payment creation fails
-                }
-            } else {
-                log.info("Skipping payment creation for online method {} - frontend will handle", pm);
+            // Create payment record
+            try {
+                CreatePaymentRequest paymentRequest = new CreatePaymentRequest(
+                    order.getId(),
+                    userId,
+                    totalAmount,
+                    request.getPaymentMethod()
+                );
+                
+                PaymentResponse paymentResponse = paymentServiceClient.createPayment(
+                    paymentRequest, 
+                    authToken
+                ).getBody();
+                
+                log.info("Created payment {} for order {}", 
+                        paymentResponse != null ? paymentResponse.getPaymentNumber() : "unknown", 
+                        order.getOrderNumber());
+                        
+            } catch (Exception e) {
+                log.warn("Failed to create payment for order {}: {}", order.getOrderNumber(), e.getMessage());
+                // Continue with order creation even if payment creation fails
             }
             
             // Clear cart after successful order creation
