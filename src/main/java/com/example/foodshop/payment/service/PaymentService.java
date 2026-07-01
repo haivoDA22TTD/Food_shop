@@ -304,6 +304,8 @@ public class PaymentService {
             log.error("Error handling ZaloPay callback: {}", e.getMessage(), e);
             throw new PaymentException("Error handling ZaloPay callback: " + e.getMessage());
         }
+    }
+
     private void updateSagaOnSuccess(Payment payment) {
         try {
             sagaRepository.findByPaymentId(payment.getId()).ifPresent(saga -> {
