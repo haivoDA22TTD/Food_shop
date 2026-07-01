@@ -44,8 +44,11 @@ public class SecurityConfig {
                 // Swagger UI endpoints
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 
-                // Payment callback endpoints (VNPay, MoMo)
-                .requestMatchers("/api/payments/callback/**", "/api/payments/vnpay-callback", "/api/payments/momo-callback").permitAll()
+                // Payment callback endpoints (VNPay, MoMo, ZaloPay)
+                .requestMatchers("/api/payments/callback/**", 
+                                 "/api/payments/vnpay-callback",
+                                 "/api/payments/momo-callback",
+                                 "/api/payments/zalopay-callback").permitAll()
                 
                 // Admin endpoints require ADMIN role
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
