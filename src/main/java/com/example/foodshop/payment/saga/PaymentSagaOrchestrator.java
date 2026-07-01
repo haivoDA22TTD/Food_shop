@@ -48,9 +48,6 @@ public class PaymentSagaOrchestrator {
     
     @Autowired
     private VNPayService vnPayService;
-
-    @Autowired
-    private ZaloPayService zaloPayService;
     
     @Autowired
     private ZaloPayService zaloPayService;
