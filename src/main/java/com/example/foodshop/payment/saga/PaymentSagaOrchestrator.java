@@ -13,6 +13,7 @@ import com.example.foodshop.payment.repository.PaymentRepository;
 import com.example.foodshop.payment.repository.PaymentSagaRepository;
 import com.example.foodshop.payment.service.OrderFeignClient;
 import com.example.foodshop.payment.service.VNPayService;
+import com.example.foodshop.payment.service.ZaloPayService;
 import com.example.foodshop.payment.service.VoucherService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -46,6 +47,9 @@ public class PaymentSagaOrchestrator {
     
     @Autowired
     private VNPayService vnPayService;
+
+    @Autowired
+    private ZaloPayService zaloPayService;
     
     @Autowired
     private ObjectMapper objectMapper;
@@ -253,6 +257,15 @@ public class PaymentSagaOrchestrator {
                 // Generate VNPay URL
                 String returnUrl = extractReturnUrl(saga);
                 String paymentUrl = vnPayService.createPaymentUrl(payment, returnUrl);
+                payment.setPaymentUrl(paymentUrl);
+                payment.setPaymentStatus(PaymentStatus.PENDING);
+                paymentRepository.save(payment);
+
+            } else if (payment.getPaymentMethod() == PaymentMethod.ZALOPAY) {
+                // Generate ZaloPay URL
+                String returnUrl = extractReturnUrl(saga);
+                String ipnUrl = "https://api-gateway-4tdc.onrender.com/api/payments/zalopay-callback";
+                String paymentUrl = zaloPayService.createPaymentUrl(payment, ipnUrl, returnUrl);
                 payment.setPaymentUrl(paymentUrl);
                 payment.setPaymentStatus(PaymentStatus.PENDING);
                 paymentRepository.save(payment);
