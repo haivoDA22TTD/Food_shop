@@ -235,31 +235,41 @@ export default function Checkout() {
           const paymentResponse = await axios.post('/api/payments', {
             orderId: orderId,
             paymentMethod: formData.paymentMethod,
-            returnUrl: window.location.origin + '/orders',
+            returnUrl: `${window.location.origin}/payment/callback?orderId=${orderId}`,
           })
           
           if (paymentResponse.data.paymentUrl) {
+            // Redirect to payment gateway immediately
+            // Don't set loading to false - let the redirect happen
             window.location.href = paymentResponse.data.paymentUrl
-            return
+            // Browser will redirect - no code below this should execute
+          } else {
+            // Payment URL not found - show error
+            setError('Không thể tạo link thanh toán. Vui lòng thử lại.')
+            setLoading(false)
           }
-        } catch (paymentErr) {
+        } catch (paymentErr: any) {
           console.error('Payment creation error:', paymentErr)
-          // Order was created, just show success
+          setError('Không thể tạo thanh toán. Vui lòng thử lại.')
+          setLoading(false)
         }
+        // Important: Always return here to prevent showing "success" message
+        return
       }
       
+      // Only show success for COD payments
+      setLoading(false)
       alert(`Đặt hàng thành công! Mã đơn hàng: ${response.data.orderNumber}`)
       navigate('/orders')
     } catch (err: any) {
       console.error('Order creation error:', err)
+      setLoading(false)
       const errorMessage = err?.response?.data?.error || err?.response?.data?.message || 'Không thể đặt hàng. Vui lòng thử lại.'
       setError(errorMessage)
       
       if (errorMessage.includes('cart') || errorMessage.includes('empty')) {
         setError('Giỏ hàng trống trên server. Vui lòng thêm sản phẩm vào giỏ hàng và thử lại.')
       }
-    } finally {
-      setLoading(false)
     }
   }
 

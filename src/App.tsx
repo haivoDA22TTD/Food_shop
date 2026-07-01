@@ -12,6 +12,7 @@ import Checkout from './pages/Checkout'
 import Orders from './pages/Orders'
 import Profile from './pages/Profile'
 import OAuth2Redirect from './pages/OAuth2Redirect'
+import PaymentCallback from './pages/PaymentCallback'
 import AdminProducts from './pages/AdminProducts'
 import AdminOrders from './pages/AdminOrders'
 import AdminShippers from './pages/AdminShippers'
@@ -36,6 +37,7 @@ function App() {
             <Route path="cart" element={<Cart />} />
             <Route path="checkout" element={<Checkout />} />
             <Route path="orders" element={<Orders />} />
+            <Route path="payment/callback" element={<PaymentCallback />} />
             <Route path="profile" element={<Profile />} />
             <Route path="admin/dashboard" element={<AdminDashboard />} />
             <Route path="admin/products" element={<AdminProducts />} />

@@ -22,6 +22,7 @@ interface Order {
 }
 
 const statusColors: Record<string, string> = {
+  PENDING: 'bg-yellow-100 text-yellow-800',
   CONFIRMED: 'bg-blue-100 text-blue-800',
   PREPARING: 'bg-purple-100 text-purple-800',
   READY_FOR_PICKUP: 'bg-indigo-100 text-indigo-800',
@@ -30,6 +31,7 @@ const statusColors: Record<string, string> = {
 }
 
 const statusLabels: Record<string, string> = {
+  PENDING: 'Chờ thanh toán',
   CONFIRMED: 'Đã xác nhận',
   PREPARING: 'Đang chuẩn bị',
   READY_FOR_PICKUP: 'Sẵn sàng lấy hàng',
@@ -158,6 +160,7 @@ export default function Orders() {
                     {order.paymentMethod === 'COD' && '💵 Thanh toán khi nhận hàng'}
                     {order.paymentMethod === 'BANK_TRANSFER' && '🏧 Chuyển khoản QR'}
                     {order.paymentMethod === 'VNPAY' && '🏦 VNPay'}
+                    {order.paymentMethod === 'ZALOPAY' && '💜 ZaloPay'}
                     {order.paymentMethod === 'MOMO' && '📱 MoMo'}
                   </span>
                 </div>
@@ -165,6 +168,13 @@ export default function Orders() {
                   <div className="flex justify-between items-center mt-1">
                     <span className="text-sm text-gray-600">Mã thanh toán:</span>
                     <span className="text-sm font-mono">{order.paymentNumber}</span>
+                  </div>
+                )}
+                {/* Show pending payment warning for online payment methods */}
+                {(order.paymentMethod === 'ZALOPAY' || order.paymentMethod === 'BANK_TRANSFER' || order.paymentMethod === 'VNPAY') && 
+                 order.status === 'PENDING' && (
+                  <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+                    ⏳ Đơn hàng đang chờ thanh toán
                   </div>
                 )}
               </div>
