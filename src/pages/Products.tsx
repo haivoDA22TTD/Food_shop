@@ -25,7 +25,7 @@ export default function Products() {
   const [sortBy, setSortBy] = useState('')
   const [categories, setCategories] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 1024)
 
   useEffect(() => {
     const onResize = () => setIsDesktop(window.innerWidth >= 1024)
@@ -75,81 +75,6 @@ export default function Products() {
   }
 
   const hasFilters = search || category || minPrice || maxPrice || sortBy
-
-  const FilterPanel = () => (
-    <div className="space-y-6">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Tìm kiếm</label>
-        <input
-          type="text"
-          placeholder="Nhập tên sản phẩm..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-        />
-      </div>
-
-      {categories.length > 0 && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Danh mục</label>
-          <select
-            value={category}
-            onChange={e => setCategory(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            <option value="">Tất cả</option>
-            {categories.map(c => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Khoảng giá</label>
-        <div className="flex gap-2 items-center">
-          <input
-            type="number"
-            placeholder="Từ"
-            value={minPrice}
-            onChange={e => setMinPrice(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-          <span className="text-gray-500">-</span>
-          <input
-            type="number"
-            placeholder="Đến"
-            value={maxPrice}
-            onChange={e => setMaxPrice(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Sắp xếp</label>
-        <select
-          value={sortBy}
-          onChange={e => setSortBy(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-        >
-          <option value="">Mặc định</option>
-          <option value="price-asc">Giá: Thấp đến Cao</option>
-          <option value="price-desc">Giá: Cao đến Thấp</option>
-          <option value="name">Tên A-Z</option>
-        </select>
-      </div>
-
-      {hasFilters && (
-        <button
-          onClick={clearFilters}
-          className="w-full py-2 text-sm text-red-600 hover:text-red-800 border border-red-300 rounded-lg hover:bg-red-50 transition"
-        >
-          Xóa bộ lọc
-        </button>
-      )}
-    </div>
-  )
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -225,7 +150,80 @@ export default function Products() {
             >
               <div className="lg:sticky lg:top-24 bg-white border border-gray-200 rounded-xl p-6">
                 <h2 className="text-lg font-bold mb-4">Bộ lọc</h2>
-                <FilterPanel />
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tìm kiếm</label>
+                    <input
+                      type="text"
+                      placeholder="Nhập tên sản phẩm..."
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+
+                  {categories.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Danh mục</label>
+                      <select
+                        value={category}
+                        onChange={e => setCategory(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      >
+                        <option value="">Tất cả</option>
+                        {categories.map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Khoảng giá</label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="Từ"
+                        value={minPrice}
+                        onChange={e => setMinPrice(e.target.value.replace(/\D/g, ''))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                      <span className="text-gray-500">-</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="Đến"
+                        value={maxPrice}
+                        onChange={e => setMaxPrice(e.target.value.replace(/\D/g, ''))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Sắp xếp</label>
+                    <select
+                      value={sortBy}
+                      onChange={e => setSortBy(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value="">Mặc định</option>
+                      <option value="price-asc">Giá: Thấp đến Cao</option>
+                      <option value="price-desc">Giá: Cao đến Thấp</option>
+                      <option value="name">Tên A-Z</option>
+                    </select>
+                  </div>
+
+                  {hasFilters && (
+                    <button
+                      onClick={clearFilters}
+                      className="w-full py-2 text-sm text-red-600 hover:text-red-800 border border-red-300 rounded-lg hover:bg-red-50 transition"
+                    >
+                      Xóa bộ lọc
+                    </button>
+                  )}
+                </div>
               </div>
             </motion.aside>
           )}
