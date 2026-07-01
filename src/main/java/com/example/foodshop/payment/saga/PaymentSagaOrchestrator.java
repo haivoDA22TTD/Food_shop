@@ -15,6 +15,7 @@ import com.example.foodshop.payment.service.OrderFeignClient;
 import com.example.foodshop.payment.service.VNPayService;
 import com.example.foodshop.payment.service.ZaloPayService;
 import com.example.foodshop.payment.service.VoucherService;
+import com.example.foodshop.payment.service.ZaloPayService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +49,9 @@ public class PaymentSagaOrchestrator {
     @Autowired
     private VNPayService vnPayService;
 
+    @Autowired
+    private ZaloPayService zaloPayService;
+    
     @Autowired
     private ZaloPayService zaloPayService;
     
@@ -140,8 +144,11 @@ public class PaymentSagaOrchestrator {
                 throw new PaymentException("Order does not belong to user");
             }
             
-            if (!"PENDING".equals(order.getStatus())) {
-                throw new PaymentException("Order is not in PENDING status");
+            PaymentMethod pm = extractPaymentMethod(saga);
+            boolean isOnlinePayment = pm == PaymentMethod.ZALOPAY || pm == PaymentMethod.VNPAY;
+            
+            if (!"PENDING".equals(order.getStatus()) && !(isOnlinePayment && "CONFIRMED".equals(order.getStatus()))) {
+                throw new PaymentException("Order is not in PENDING or CONFIRMED status");
             }
             
             saga.setStatus(SagaStatus.ORDER_VALIDATED);
@@ -262,7 +269,6 @@ public class PaymentSagaOrchestrator {
                 paymentRepository.save(payment);
 
             } else if (payment.getPaymentMethod() == PaymentMethod.ZALOPAY) {
-                // Generate ZaloPay URL
                 String returnUrl = extractReturnUrl(saga);
                 String ipnUrl = "https://api-gateway-4tdc.onrender.com/api/payments/zalopay-callback";
                 String paymentUrl = zaloPayService.createPaymentUrl(payment, ipnUrl, returnUrl);
