@@ -89,6 +89,13 @@ vnpay:
   url: ${VNPAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
   return-url: ${VNPAY_RETURN_URL}
 
+# ZaloPay Configuration
+zalopay:
+  app-id: ${ZALO_APP_ID:2554}
+  key1: ${ZALO_KEY1:sdngKKJmqEMzvh5QQcdD2A9XBSKUNaYn}
+  key2: ${ZALO_KEY2:trMrHtvjo6myautxDUiAcYsVtaeQ8nhf}
+  api-endpoint: ${ZALO_API_ENDPOINT:https://sb-openapi.zalopay.vn/v2/create}
+
 # Application Configuration
 app:
   payment:
