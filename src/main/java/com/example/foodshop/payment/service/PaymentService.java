@@ -257,47 +257,53 @@ public class PaymentService {
         }
     }
     
-    public PaymentResponse handleZaloPayCallback(Map<String, String> params) {
+    public PaymentResponse handleZaloPayCallback(String data, String mac) {
         try {
-            String appTransId = params.get("app_trans_id");
-            
-            Payment payment = paymentRepository.findByPaymentNumber(appTransId)
+            // 1. Verify MAC: HMAC_SHA256(key2, data)
+            boolean isValid = zaloPayService.verifyCallback(data, mac);
+            if (!isValid) {
+                log.warn("ZaloPay callback MAC verification failed");
+                throw new PaymentException("Invalid ZaloPay callback signature");
+            }
+
+            // 2. Parse data JSON để lấy app_trans_id và return_code
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Object> dataMap = mapper.readValue(data, Map.class);
+
+            String appTransId = dataMap.getOrDefault("app_trans_id", "").toString();
+            int returnCode = Integer.parseInt(dataMap.getOrDefault("return_code", "-1").toString());
+
+            // 3. Tìm payment theo transactionId (đã lưu lúc tạo URL)
+            Payment payment = paymentRepository.findByTransactionId(appTransId)
                     .orElseThrow(() -> new PaymentException("Payment not found for ZaloPay transaction: " + appTransId));
-            
-            boolean isValid = zaloPayService.verifyCallback(params);
-            int returnCode = Integer.parseInt(params.getOrDefault("return_code", "-1"));
-            
-            if (isValid && returnCode == 1) {
+
+            if (returnCode == 1) {
                 payment.setPaymentStatus(PaymentStatus.COMPLETED);
                 payment.setPaidAt(LocalDateTime.now());
-                payment.setTransactionId(params.get("zp_trans_token"));
-                
+                payment.setTransactionId(dataMap.getOrDefault("zp_trans_id", appTransId).toString());
+
                 updateOrderStatus(payment.getOrderId(), "CONFIRMED", "Payment completed via ZaloPay");
                 updateSagaOnSuccess(payment);
-                
+
                 log.info("ZaloPay payment completed: {}", appTransId);
             } else {
                 payment.setPaymentStatus(PaymentStatus.FAILED);
                 compensateSagaOnFailure(payment, "ZaloPay payment failed: " + returnCode);
                 log.warn("ZaloPay payment failed: {} - return_code: {}", appTransId, returnCode);
             }
-            
-            ObjectMapper mapper = new ObjectMapper();
-            payment.setPaymentGatewayResponse(mapper.writeValueAsString(params));
-            
+
+            payment.setPaymentGatewayResponse(data);
             payment = paymentRepository.save(payment);
             cachePayment(payment);
-            
-            return convertToResponse(payment);
-            
+
+            return mapToPaymentResponse(payment);
+
         } catch (PaymentException e) {
             throw e;
         } catch (Exception e) {
             log.error("Error handling ZaloPay callback: {}", e.getMessage(), e);
-            throw new PaymentException("Error processing ZaloPay callback");
+            throw new PaymentException("Error handling ZaloPay callback: " + e.getMessage());
         }
-    }
-    
     private void updateSagaOnSuccess(Payment payment) {
         try {
             sagaRepository.findByPaymentId(payment.getId()).ifPresent(saga -> {

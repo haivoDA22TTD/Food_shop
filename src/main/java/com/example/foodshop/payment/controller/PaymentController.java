@@ -90,9 +90,13 @@ public class PaymentController {
     }
     
     @PostMapping("/zalopay-callback")
-    public ResponseEntity<Map<String, Object>> handleZaloPayCallback(@RequestBody Map<String, String> params) {
+    public ResponseEntity<Map<String, Object>> handleZaloPayCallback(
+            @RequestBody Map<String, Object> body) {
         try {
-            paymentService.handleZaloPayCallback(params);
+            // ZaloPay gửi: { "data": "json_string", "mac": "hmac" }
+            String data = body.getOrDefault("data", "").toString();
+            String mac  = body.getOrDefault("mac",  "").toString();
+            paymentService.handleZaloPayCallback(data, mac);
             return ResponseEntity.ok(Map.of("return_code", 1, "return_message", "success"));
         } catch (Exception e) {
             return ResponseEntity.ok(Map.of("return_code", -1, "return_message", e.getMessage()));
