@@ -454,6 +454,14 @@ public class OrderService {
         response.setDeliveredAt(order.getDeliveredAt());
         response.setDeliveryNotes(order.getDeliveryNotes());
         
+        // Lookup shipper name and phone from ShipperRepository
+        if (order.getShipperId() != null) {
+            shipperRepository.findById(order.getShipperId()).ifPresent(shipper -> {
+                response.setShipperName(shipper.getName());
+                response.setShipperPhone(shipper.getPhone());
+            });
+        }
+        
         return response;
     }
     
