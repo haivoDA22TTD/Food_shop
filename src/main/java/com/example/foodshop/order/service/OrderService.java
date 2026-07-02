@@ -127,35 +127,17 @@ public class OrderService {
                 productValidationService.decrementStock(cartItem.getProductId(), cartItem.getQuantity());
             }
             
-            // Try to auto-confirm the order
+            // Try to auto-confirm the order (chỉ cho COD, không cho thanh toán online)
             orderAutomationService.autoConfirmOrder(order);
             
             // Reload order to get updated status
             order = orderRepository.findById(order.getId())
                 .orElseThrow(() -> new RuntimeException("Order not found after creation"));
             
-            // Create payment record
-            try {
-                CreatePaymentRequest paymentRequest = new CreatePaymentRequest(
-                    order.getId(),
-                    userId,
-                    totalAmount,
-                    request.getPaymentMethod()
-                );
-                
-                PaymentResponse paymentResponse = paymentServiceClient.createPayment(
-                    paymentRequest, 
-                    authToken
-                ).getBody();
-                
-                log.info("Created payment {} for order {}", 
-                        paymentResponse != null ? paymentResponse.getPaymentNumber() : "unknown", 
-                        order.getOrderNumber());
-                        
-            } catch (Exception e) {
-                log.warn("Failed to create payment for order {}: {}", order.getOrderNumber(), e.getMessage());
-                // Continue with order creation even if payment creation fails
-            }
+            // NOTE: Không tự gọi Payment Service ở đây.
+            // Frontend sẽ tự gọi POST /api/payments sau khi nhận orderId từ response này.
+            // Việc Order Service tự gọi Payment Service gây ra lỗi "Payment already exists"
+            // khi frontend gọi lần 2.
             
             // Clear cart after successful order creation
             if (request.getSelectedProductIds() != null && !request.getSelectedProductIds().isEmpty()) {
