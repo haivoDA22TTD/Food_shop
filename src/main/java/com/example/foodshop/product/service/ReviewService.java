@@ -40,6 +40,7 @@ public class ReviewService {
             UserRef newUser = new UserRef();
             newUser.setId(authUserId);
             newUser.setUsername(authUsername);
+            newUser.setEmail(authUsername + "@placeholder.local");
             return userRefRepository.save(newUser);
         });
 
