@@ -12,6 +12,7 @@ public class ReviewResponse {
     private Integer rating;
     private String comment;
     private LocalDateTime createdAt;
+    private Long orderId;
     private UserSummary user;
 
     @Data
