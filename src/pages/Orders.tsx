@@ -8,7 +8,7 @@ interface OrderItem {
   productId: number
   productName: string
   quantity: number
-  price: number
+  productPrice: number
 }
 
 interface Order {
@@ -313,7 +313,7 @@ export default function Orders() {
                         )}
                       </div>
                       <span className="font-semibold ml-4">
-                        {(item.price * item.quantity).toLocaleString('vi-VN')} đ
+                        {(item.productPrice * item.quantity).toLocaleString('vi-VN')} đ
                       </span>
                     </div>
                   )
