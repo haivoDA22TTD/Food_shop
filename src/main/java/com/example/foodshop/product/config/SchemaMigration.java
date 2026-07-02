@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.Map;
+
 @Component
 public class SchemaMigration {
     private static final Logger log = LoggerFactory.getLogger(SchemaMigration.class);
@@ -17,21 +20,18 @@ public class SchemaMigration {
     @PostConstruct
     public void migrate() {
         try {
-            jdbcTemplate.execute(
-                "ALTER TABLE reviews DROP FOREIGN KEY IF EXISTS FKqwqg1lxgahsxdspnwqfac6sv6"
+            List<Map<String, Object>> fks = jdbcTemplate.queryForList(
+                "SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS " +
+                "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'reviews' " +
+                "AND CONSTRAINT_TYPE = 'FOREIGN KEY'"
             );
-            log.info("Dropped old FK constraint on reviews.order_id");
+            for (Map<String, Object> fk : fks) {
+                String name = (String) fk.get("CONSTRAINT_NAME");
+                jdbcTemplate.execute("ALTER TABLE reviews DROP FOREIGN KEY `" + name + "`");
+                log.info("Dropped FK constraint: {}", name);
+            }
         } catch (Exception e) {
-            log.warn("Could not drop FK constraint (may already be gone): " + e.getMessage());
-        }
-
-        try {
-            jdbcTemplate.execute(
-                "ALTER TABLE reviews MODIFY COLUMN order_id BIGINT NOT NULL"
-            );
-            log.info("Ensured order_id column is BIGINT NOT NULL");
-        } catch (Exception e) {
-            log.warn("Could not modify order_id column: " + e.getMessage());
+            log.warn("Could not drop FK constraints: " + e.getMessage());
         }
     }
 }
