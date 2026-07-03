@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import axios from '../api/axios'
 import { useCartStore } from '../store/cartStore'
 import { useAuthStore } from '../store/authStore'
+import ZaloPayModal from '../components/ZaloPayModal'
 
 interface SavedAddress {
   id: number
@@ -45,6 +46,11 @@ export default function Checkout() {
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([])
   const [loadingAddresses, setLoadingAddresses] = useState(false)
   const [deletingAddressId, setDeletingAddressId] = useState<number | null>(null)
+
+  // ZaloPay QR modal state
+  const [showZaloPayModal, setShowZaloPayModal] = useState(false)
+  const [zpPaymentUrl, setZpPaymentUrl] = useState('')
+  const [zpOrderId, setZpOrderId] = useState(0)
 
   // Location data from API
   const [provinces, setProvinces] = useState<Array<{ code: number; name: string }>>([])
@@ -228,23 +234,22 @@ export default function Checkout() {
       localStorage.removeItem('selectedItems')
       
       const orderId = response.data.id
-      
-      // For online payment methods, create payment and redirect
-      if (formData.paymentMethod === 'ZALOPAY' || formData.paymentMethod === 'BANK_TRANSFER') {
+
+      // For online payment methods
+      if (formData.paymentMethod === 'ZALOPAY') {
         try {
           const paymentResponse = await axios.post('/api/payments', {
             orderId: orderId,
             paymentMethod: formData.paymentMethod,
             returnUrl: `${window.location.origin}/payment/callback?orderId=${orderId}`,
           })
-          
+
           if (paymentResponse.data.paymentUrl) {
-            // Redirect to payment gateway immediately
-            // Don't set loading to false - let the redirect happen
-            window.location.href = paymentResponse.data.paymentUrl
-            // Browser will redirect - no code below this should execute
+            setZpPaymentUrl(paymentResponse.data.paymentUrl)
+            setZpOrderId(orderId)
+            setShowZaloPayModal(true)
+            setLoading(false)
           } else {
-            // Payment URL not found - show error
             setError('Không thể tạo link thanh toán. Vui lòng thử lại.')
             setLoading(false)
           }
@@ -253,7 +258,28 @@ export default function Checkout() {
           setError('Không thể tạo thanh toán. Vui lòng thử lại.')
           setLoading(false)
         }
-        // Important: Always return here to prevent showing "success" message
+        return
+      }
+
+      if (formData.paymentMethod === 'BANK_TRANSFER') {
+        try {
+          const paymentResponse = await axios.post('/api/payments', {
+            orderId: orderId,
+            paymentMethod: formData.paymentMethod,
+            returnUrl: `${window.location.origin}/payment/callback?orderId=${orderId}`,
+          })
+
+          if (paymentResponse.data.paymentUrl) {
+            window.location.href = paymentResponse.data.paymentUrl
+          } else {
+            setError('Không thể tạo link thanh toán. Vui lòng thử lại.')
+            setLoading(false)
+          }
+        } catch (paymentErr: any) {
+          console.error('Payment creation error:', paymentErr)
+          setError('Không thể tạo thanh toán. Vui lòng thử lại.')
+          setLoading(false)
+        }
         return
       }
       
@@ -285,6 +311,12 @@ export default function Checkout() {
     } finally {
       setDeletingAddressId(null)
     }
+  }
+
+  const handleZaloPaySuccess = () => {
+    setShowZaloPayModal(false)
+    setLoading(false)
+    navigate('/orders')
   }
 
   if (checkoutItems.length === 0 && !syncing) {
@@ -669,6 +701,14 @@ export default function Checkout() {
           </div>
         </motion.div>
       </div>
+
+      <ZaloPayModal
+        isOpen={showZaloPayModal}
+        onClose={() => setShowZaloPayModal(false)}
+        orderId={zpOrderId}
+        paymentUrl={zpPaymentUrl}
+        onSuccess={handleZaloPaySuccess}
+      />
     </div>
   )
 }
