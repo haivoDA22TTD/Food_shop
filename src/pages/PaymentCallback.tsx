@@ -13,43 +13,66 @@ export default function PaymentCallback() {
 
   useEffect(() => {
     const checkPaymentStatus = async () => {
-      // Get parameters from URL
       const orderId = searchParams.get('orderId')
-      const status = searchParams.get('status')
-      
+
+      // ZaloPay trả về status=1 (thành công) hoặc status=0 (thất bại)
+      // Một số gateway trả về status=success/failed
+      const statusParam = searchParams.get('status')
+      const appTransId = searchParams.get('apptransid') || searchParams.get('app_trans_id')
+
+      console.log('Payment callback params:', { orderId, statusParam, appTransId })
+
       if (!orderId) {
         setError('Không tìm thấy thông tin đơn hàng')
         setLoading(false)
         return
       }
 
-      try {
-        // If status from URL indicates success/failure, use it
-        if (status === 'success') {
-          setSuccess(true)
-          setLoading(false)
-          return
-        } else if (status === 'failed' || status === 'cancelled') {
-          setError('Thanh toán không thành công')
-          setLoading(false)
-          return
-        }
+      // Xác định kết quả từ params ZaloPay
+      // ZaloPay: status=1 thành công, status=0 thất bại
+      const isSuccessFromParam =
+        statusParam === '1' ||
+        statusParam === 'success' ||
+        statusParam === 'SUCCESS'
 
-        // Otherwise, check order status from server
+      const isFailedFromParam =
+        statusParam === '0' ||
+        statusParam === '-49' ||
+        statusParam === 'failed' ||
+        statusParam === 'cancelled' ||
+        statusParam === 'FAILED'
+
+      try {
+        // Luôn check order status từ server để đảm bảo chính xác
         const response = await axios.get(`/api/orders/${orderId}`)
-        setOrderNumber(response.data.orderNumber)
-        
-        // Check if order is confirmed (payment successful)
-        if (response.data.status === 'CONFIRMED' || response.data.status === 'PREPARING') {
+        const order = response.data
+        setOrderNumber(order.orderNumber || '')
+
+        if (order.status === 'CONFIRMED' || order.status === 'PREPARING' ||
+            order.status === 'READY_FOR_PICKUP' || order.status === 'DELIVERED') {
           setSuccess(true)
-        } else if (response.data.status === 'PENDING') {
-          setError('Thanh toán đang được xử lý. Vui lòng đợi trong giây lát.')
+        } else if (isSuccessFromParam) {
+          // ZaloPay nói thành công nhưng order chưa update → đợi callback IPN
+          // Vẫn hiện thành công cho user
+          setSuccess(true)
+        } else if (isFailedFromParam) {
+          setError('Thanh toán không thành công hoặc đã bị hủy')
+        } else if (order.status === 'PENDING' || order.status === 'CONFIRMED') {
+          // Đang xử lý
+          setSuccess(true)
+        } else if (order.status === 'CANCELLED') {
+          setError('Đơn hàng đã bị hủy do thanh toán không thành công')
         } else {
-          setError('Thanh toán không thành công')
+          setError('Thanh toán đang được xử lý. Vui lòng kiểm tra đơn hàng sau.')
         }
       } catch (err: any) {
         console.error('Error checking payment status:', err)
-        setError('Không thể kiểm tra trạng thái thanh toán')
+        // Nếu không check được server, dùng param từ ZaloPay
+        if (isSuccessFromParam) {
+          setSuccess(true)
+        } else {
+          setError('Không thể kiểm tra trạng thái thanh toán. Vui lòng kiểm tra đơn hàng.')
+        }
       } finally {
         setLoading(false)
       }
@@ -62,8 +85,9 @@ export default function PaymentCallback() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary-600 mx-auto mb-4" />
           <p className="text-lg text-gray-700">Đang kiểm tra trạng thái thanh toán...</p>
+          <p className="text-sm text-gray-500 mt-2">Vui lòng đợi trong giây lát</p>
         </div>
       </div>
     )
@@ -83,21 +107,16 @@ export default function PaymentCallback() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-3">
-              Thanh toán thành công!
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-3">Thanh toán thành công!</h1>
             {orderNumber && (
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 mb-2">
                 Mã đơn hàng: <span className="font-mono font-semibold">{orderNumber}</span>
               </p>
             )}
             <p className="text-gray-600 mb-8">
               Đơn hàng của bạn đã được xác nhận và đang được xử lý.
             </p>
-            <button
-              onClick={() => navigate('/orders')}
-              className="btn-primary w-full mb-3"
-            >
+            <button onClick={() => navigate('/orders')} className="btn-primary w-full mb-3">
               Xem đơn hàng
             </button>
             <button
@@ -114,16 +133,11 @@ export default function PaymentCallback() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-3">
-              Thanh toán không thành công
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-3">Thanh toán không thành công</h1>
             <p className="text-gray-600 mb-8">
               {error || 'Đã có lỗi xảy ra trong quá trình thanh toán. Vui lòng thử lại.'}
             </p>
-            <button
-              onClick={() => navigate('/orders')}
-              className="btn-primary w-full mb-3"
-            >
+            <button onClick={() => navigate('/orders')} className="btn-primary w-full mb-3">
               Xem đơn hàng
             </button>
             <button
