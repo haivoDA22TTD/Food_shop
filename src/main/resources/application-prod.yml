@@ -60,7 +60,7 @@ jwt:
 
 gemini:
   api-key: ${GEMINI_API_KEY:}
-  api-url: ${GEMINI_API_URL:https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent}
+  api-url: ${GEMINI_API_URL:https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent}
   enabled: ${GEMINI_ENABLED:true}
 
 cloudinary:

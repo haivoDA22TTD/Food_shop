@@ -34,12 +34,6 @@ cloudinary:
   api-secret: ${CLOUDINARY_API_SECRET:}
   folder: ${CLOUDINARY_FOLDER:food-shop}
 
-# Google Gemini AI Configuration
-gemini:
-  api-key: ${GEMINI_API_KEY:}
-  api-url: ${GEMINI_API_URL:https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent}
-  enabled: ${GEMINI_ENABLED:true}
-
 management:
   endpoints:
     web:
