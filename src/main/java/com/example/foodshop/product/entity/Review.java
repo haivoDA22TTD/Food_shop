@@ -27,8 +27,10 @@ public class Review {
     @JoinColumn(name = "user_id", nullable = false)
     private UserRef user;
 
-    @Column(name = "order_id", nullable = false)
-    private Long orderId;
+    @ManyToOne
+    @JoinColumn(name = "order_id", nullable = false)
+    @JsonBackReference
+    private OrderRef order;
 
     @Column(nullable = false)
     private Integer rating;
