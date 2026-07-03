@@ -58,6 +58,11 @@ eureka:
 jwt:
   secret: ${JWT_SECRET}
 
+gemini:
+  api-key: ${GEMINI_API_KEY:}
+  api-url: ${GEMINI_API_URL:https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent}
+  enabled: ${GEMINI_ENABLED:true}
+
 cloudinary:
   enabled: ${CLOUDINARY_ENABLED:true}
   cloud-name: ${CLOUDINARY_CLOUD_NAME:}
