@@ -310,7 +310,6 @@ MIT License
 - 📧 Email: 110122068@st.tvu.edu.vn
 - 💬 Issues: [GitHub Issues](https://github.com/haivoDA22TTD/food_shop/issues)
 - 🐛 Bug Reports: [Report Bug](https://github.com/haivoDA22TTD/food_shop/issues/new?labels=bug)
-- ✨ Feature Requests: [Request Feature](https://github.com/haivoDA22TTD/food_shop/issues/new?labels=enhancement)
 
 ---
 
