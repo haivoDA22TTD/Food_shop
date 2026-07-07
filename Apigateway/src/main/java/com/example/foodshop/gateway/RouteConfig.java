@@ -1,0 +1,84 @@
+package com.example.foodshop.gateway;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class RouteConfig {
+
+    @Value("${app.gateway.identity-uri:lb://IDENTITY-SERVICE}")
+    private String identityServiceUri;
+    
+    @Value("${app.gateway.order-uri:lb://ORDER-SERVICE}")
+    private String orderServiceUri;
+    
+    @Value("${app.gateway.product-uri:lb://PRODUCT-SERVICE}")
+    private String productServiceUri;
+    
+    @Value("${app.gateway.payment-uri:lb://PAYMENT-SERVICE}")
+    private String paymentServiceUri;
+
+    @Bean
+    public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
+        return builder.routes()
+                // Identity Service routes
+                .route("identity-service", r -> r
+                        .path("/api/auth/**", "/api/passkey/**", "/api/users/**", "/oauth2/**", "/login/oauth2/**")
+                        .filters(f -> f
+                                .retry(config -> config
+                                        .setRetries(2)
+                                        .setMethods(org.springframework.http.HttpMethod.GET, org.springframework.http.HttpMethod.POST)
+                                        .setStatuses(org.springframework.http.HttpStatus.BAD_GATEWAY,
+                                                org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
+                                                org.springframework.http.HttpStatus.GATEWAY_TIMEOUT))
+                                .circuitBreaker(config -> config
+                                        .setName("authServiceCircuitBreaker")
+                                        .setFallbackUri("forward:/fallback/auth")))
+                        .uri(identityServiceUri))
+                // Order Service routes (includes shipper endpoints)
+                .route("order-service", r -> r
+                        .path("/api/orders/**", "/api/cart/**", "/api/admin/orders/**", "/api/admin/shippers/**", "/api/admin/dashboard", "/api/shipper/**", "/api/user/addresses/**")
+                        .filters(f -> f
+                                .retry(config -> config
+                                        .setRetries(2)
+                                        .setMethods(org.springframework.http.HttpMethod.GET, 
+                                                  org.springframework.http.HttpMethod.POST,
+                                                  org.springframework.http.HttpMethod.PUT)
+                                        .setStatuses(org.springframework.http.HttpStatus.BAD_GATEWAY,
+                                                org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
+                                                org.springframework.http.HttpStatus.GATEWAY_TIMEOUT)))
+                        .uri(orderServiceUri))
+                // Product Service routes
+                .route("product-service", r -> r
+                        .path("/api/products/**", "/api/admin/products/**", "/api/reviews/**", "/api/chatbot/**", "/api/upload/**")
+                        .filters(f -> f
+                                .retry(config -> config
+                                        .setRetries(2)
+                                        .setMethods(org.springframework.http.HttpMethod.GET, org.springframework.http.HttpMethod.POST)
+                                        .setStatuses(org.springframework.http.HttpStatus.BAD_GATEWAY,
+                                                org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
+                                                org.springframework.http.HttpStatus.GATEWAY_TIMEOUT))
+                                .circuitBreaker(config -> config
+                                        .setName("productServiceCircuitBreaker")
+                                        .setFallbackUri("forward:/fallback/product")))
+                        .uri(productServiceUri))
+                // Payment Service routes
+                .route("payment-service", r -> r
+                        .path("/api/payments/**", "/api/vouchers/**", "/api/admin/payments/**", "/api/admin/vouchers/**")
+                        .filters(f -> f
+                                .retry(config -> config
+                                        .setRetries(2)
+                                        .setMethods(org.springframework.http.HttpMethod.GET, org.springframework.http.HttpMethod.POST)
+                                        .setStatuses(org.springframework.http.HttpStatus.BAD_GATEWAY,
+                                                org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
+                                                org.springframework.http.HttpStatus.GATEWAY_TIMEOUT))
+                                .circuitBreaker(config -> config
+                                        .setName("paymentServiceCircuitBreaker")
+                                        .setFallbackUri("forward:/fallback/payment")))
+                        .uri(paymentServiceUri))
+                .build();
+    }
+}

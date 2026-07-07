@@ -1,0 +1,252 @@
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+import axios from '../api/axios'
+
+interface CartItem {
+  id: number
+  productId: number
+  productName: string
+  productPrice: number
+  productImage?: string
+  quantity: number
+  subtotal: number
+  availableStock: number
+  inStock: boolean
+}
+
+interface CartState {
+  items: CartItem[]
+  totalItems: number
+  totalAmount: number
+  loading: boolean
+  error: string | null
+  
+  // Selected items for checkout
+  selectedItems: number[] // Array of productIds
+  
+  // Actions
+  fetchCart: () => Promise<void>
+  addToCart: (productId: number, quantity: number, productData?: any) => Promise<void>
+  updateQuantity: (productId: number, quantity: number) => Promise<void>
+  removeFromCart: (productId: number) => Promise<void>
+  clearCart: () => void
+  syncCartWithServer: () => Promise<void>
+  
+  // Selection actions
+  toggleSelectItem: (productId: number) => void
+  selectAllItems: () => void
+  deselectAllItems: () => void
+  getSelectedTotal: () => number
+  getSelectedCount: () => number
+}
+
+export const useCartStore = create<CartState>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      totalItems: 0,
+      totalAmount: 0,
+      loading: false,
+      error: null,
+      selectedItems: [], // Initialize empty selection
+
+      fetchCart: async () => {
+        set({ loading: true, error: null })
+        try {
+          const response = await axios.get('/api/orders/cart')
+          const cart = response.data
+          const items = cart.cartItems || []
+          set({
+            items,
+            totalItems: cart.totalItems || 0,
+            totalAmount: cart.totalAmount || 0,
+            loading: false,
+            // Auto-select all items when fetching cart
+            selectedItems: items.map((item: CartItem) => item.productId),
+          })
+        } catch (error: any) {
+          // If not authenticated, use local cart
+          console.log('Using local cart')
+          set({ loading: false })
+        }
+      },
+
+      addToCart: async (productId: number, quantity: number, productData?: any) => {
+        set({ loading: true, error: null })
+        
+        // Try to add to server cart first
+        try {
+          await axios.post('/api/orders/cart/items', { productId, quantity })
+          await get().fetchCart()
+          set({ loading: false })
+          return
+        } catch (error: any) {
+          console.log('Server cart failed, using local cart:', error?.response?.status)
+          
+          // Always use local cart if server fails (for any reason)
+          const currentItems = get().items
+          const existingItem = currentItems.find(item => item.productId === productId)
+          
+          let newItems: CartItem[]
+          if (existingItem) {
+            // Update quantity
+            newItems = currentItems.map(item =>
+              item.productId === productId
+                ? { ...item, quantity: item.quantity + quantity, subtotal: item.productPrice * (item.quantity + quantity) }
+                : item
+            )
+          } else {
+            // Add new item
+            const newItem: CartItem = {
+              id: Date.now(),
+              productId,
+              productName: productData?.name || 'Sản phẩm',
+              productPrice: productData?.price || 0,
+              productImage: productData?.image,
+              quantity,
+              subtotal: (productData?.price || 0) * quantity,
+              availableStock: productData?.stock || 999,
+              inStock: true,
+            }
+            newItems = [...currentItems, newItem]
+          }
+          
+          const totalItems = newItems.reduce((sum, item) => sum + item.quantity, 0)
+          const totalAmount = newItems.reduce((sum, item) => sum + item.subtotal, 0)
+          
+          set({
+            items: newItems,
+            totalItems,
+            totalAmount,
+            loading: false,
+            // Auto-select newly added item
+            selectedItems: [...get().selectedItems, productId],
+          })
+          return
+        }
+      },
+
+      updateQuantity: async (productId: number, quantity: number) => {
+        set({ loading: true, error: null })
+        
+        try {
+          await axios.put(`/api/orders/cart/items/${productId}`, { quantity })
+          await get().fetchCart()
+          set({ loading: false })
+        } catch (error: any) {
+          console.log('Server update failed, using local cart')
+          
+          // Always use local cart if server fails
+          const currentItems = get().items
+          const newItems = currentItems.map(item =>
+            item.productId === productId
+              ? { ...item, quantity, subtotal: item.productPrice * quantity }
+              : item
+          )
+          
+          const totalItems = newItems.reduce((sum, item) => sum + item.quantity, 0)
+          const totalAmount = newItems.reduce((sum, item) => sum + item.subtotal, 0)
+          
+          set({
+            items: newItems,
+            totalItems,
+            totalAmount,
+            loading: false,
+          })
+        }
+      },
+
+      removeFromCart: async (productId: number) => {
+        set({ loading: true, error: null })
+        
+        try {
+          await axios.delete(`/api/orders/cart/items/${productId}`)
+          await get().fetchCart()
+          set({ loading: false })
+        } catch (error: any) {
+          console.log('Server remove failed, using local cart')
+          
+          // Always use local cart if server fails
+          const currentItems = get().items
+          const newItems = currentItems.filter(item => item.productId !== productId)
+          
+          const totalItems = newItems.reduce((sum, item) => sum + item.quantity, 0)
+          const totalAmount = newItems.reduce((sum, item) => sum + item.subtotal, 0)
+          
+          set({
+            items: newItems,
+            totalItems,
+            totalAmount,
+            loading: false,
+            // Remove from selection
+            selectedItems: get().selectedItems.filter(id => id !== productId),
+          })
+        }
+      },
+
+      clearCart: () => {
+        set({ items: [], totalItems: 0, totalAmount: 0, selectedItems: [] })
+      },
+
+      syncCartWithServer: async () => {
+        const localItems = get().items
+        if (localItems.length === 0) return
+        
+        try {
+          // Clear server cart first to avoid duplicates
+          try {
+            await axios.delete('/api/orders/cart')
+          } catch (error) {
+            console.log('Server cart already empty or error clearing')
+          }
+          
+          // Sync each local item to server
+          for (const item of localItems) {
+            await axios.post('/api/orders/cart/items', {
+              productId: item.productId,
+              quantity: item.quantity,
+            })
+          }
+          
+          // Fetch updated cart from server
+          await get().fetchCart()
+        } catch (error) {
+          console.error('Failed to sync cart:', error)
+        }
+      },
+      
+      // Selection actions
+      toggleSelectItem: (productId: number) => {
+        const currentSelected = get().selectedItems
+        if (currentSelected.includes(productId)) {
+          set({ selectedItems: currentSelected.filter(id => id !== productId) })
+        } else {
+          set({ selectedItems: [...currentSelected, productId] })
+        }
+      },
+      
+      selectAllItems: () => {
+        const allProductIds = get().items.map(item => item.productId)
+        set({ selectedItems: allProductIds })
+      },
+      
+      deselectAllItems: () => {
+        set({ selectedItems: [] })
+      },
+      
+      getSelectedTotal: () => {
+        const { items, selectedItems } = get()
+        return items
+          .filter(item => selectedItems.includes(item.productId))
+          .reduce((sum, item) => sum + item.subtotal, 0)
+      },
+      
+      getSelectedCount: () => {
+        return get().selectedItems.length
+      },
+    }),
+    {
+      name: 'cart-storage',
+    }
+  )
+)
