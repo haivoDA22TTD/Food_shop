@@ -9,7 +9,7 @@ Food Shop là hệ thống đặt đồ ăn trực tuyến với kiến trúc Mi
 - **API Gateway**: Spring Cloud Gateway
 - **Backend Services**: Spring Boot REST API
 - **Frontend**: React + Vite + TypeScript
-- **AI Chatbot**: Tích hợp Google Gemini (planned)
+- **AI Chatbot**: Tích hợp Google Gemini 
 
 ---
 
